@@ -1,54 +1,32 @@
-const { createClient } = require('@supabase/supabase-js');
+const { Pool } = require('pg');
+const { config } = require('./config');
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
-  console.warn('[DB] Supabase 환경변수가 설정되지 않았습니다.');
+const pool = new Pool({
+  connectionString: config.databaseUrl,
+  ssl: { rejectUnauthorized: false },
+});
+
+async function query(text, params = []) {
+  return pool.query(text, params);
 }
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
-
-// 기존 query 함수 대체
-async function query(table, action, payload = {}) {
-  let result;
-
+async function withTransaction(callback) {
+  const client = await pool.connect();
   try {
-    if (action === 'select') {
-      result = await supabase.from(table).select('*');
-    }
-
-    if (action === 'insert') {
-      result = await supabase.from(table).insert(payload);
-    }
-
-    if (action === 'update') {
-      const { id, ...rest } = payload;
-      result = await supabase.from(table).update(rest).eq('id', id);
-    }
-
-    if (action === 'delete') {
-      result = await supabase.from(table).delete().eq('id', payload.id);
-    }
-
-    if (result.error) {
-      throw result.error;
-    }
-
-    return result.data;
+    await client.query('begin');
+    const result = await callback(client);
+    await client.query('commit');
+    return result;
   } catch (error) {
-    console.error('[DB ERROR]', error);
+    await client.query('rollback');
     throw error;
+  } finally {
+    client.release();
   }
 }
 
-// transaction은 Supabase에서는 따로 안 씀 (단순 처리)
-async function withTransaction(callback) {
-  return callback();
-}
-
 module.exports = {
-  supabase,
+  pool,
   query,
   withTransaction,
 };
