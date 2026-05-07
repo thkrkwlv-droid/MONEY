@@ -5,15 +5,19 @@ const ASSET_TYPES = ['입출금', '저축/적금', '현금', '증권', '카드�
 
 function Section({ title, description, children }) {
   return (
-    <article className="panel stack gap-md">
-      <div className="section-heading compact">
+    <details className="panel stack gap-md management-accordion">
+      <summary className="section-heading compact accordion-summary">
         <div>
           <h3>{title}</h3>
           <p className="muted">{description}</p>
         </div>
+        <span className="accordion-icon">⌄</span>
+      </summary>
+
+      <div className="accordion-content">
+        {children}
       </div>
-      {children}
-    </article>
+    </details>
   );
 }
 
