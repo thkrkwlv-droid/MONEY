@@ -103,6 +103,41 @@ create index if not exists idx_recurring_next_run_date on recurring_transactions
 create index if not exists idx_fixed_expenses_next_run_date on fixed_expenses(next_run_date) where is_active = true;
 create index if not exists idx_budgets_month on budgets(month_start);
 
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'categories_name_unique'
+  ) then
+    alter table categories
+    add constraint categories_name_unique unique (name);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'app_settings_id_unique'
+  ) then
+    alter table app_settings
+    add constraint app_settings_id_unique unique (id);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'transactions_source_unique'
+  ) then
+    alter table transactions
+    add constraint transactions_source_unique unique (source_type, source_id, transaction_date);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'budgets_month_category_unique'
+  ) then
+    alter table budgets
+    add constraint budgets_month_category_unique unique (month_start, category_id);
+  end if;
+end $$;
+
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
 
