@@ -91,12 +91,12 @@ export function calcChangeRate(current, previous) {
 
 // 결제수단 기본 목록
 export const PAYMENT_METHODS = [
-  '체크카드', 
-  '신용카드', 
-  '현금', 
-  '계좌이체', 
-  '자동이체', 
-  '간편결제', 
+  '체크카드',
+  '신용카드',
+  '계좌이체',
+  '자동이체',
+  '현금',
+  '간편결제',
   '기타',
 ];
 
