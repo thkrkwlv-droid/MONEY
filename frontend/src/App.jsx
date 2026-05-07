@@ -413,22 +413,22 @@ function App() {
     return <PinLock onUnlock={handleUnlock} />;
   }
 
-  return (
+    return (
     <div className="app-shell">
       <header className="hero-header panel">
-      <div>
-        <h1>가계부</h1>
-      </div>
+        <div>
+          <h1>가계부</h1>
+        </div>
 
-      <label className="month-picker">
-        <span>조회 월</span>
-        <input
-          type="month"
-          value={month}
-          onChange={(event) => setMonth(event.target.value)}
-        />
-      </label>
-    </header>
+        <label className="month-picker">
+          <span>조회 월</span>
+          <input
+            type="month"
+            value={month}
+            onChange={(event) => setMonth(event.target.value)}
+          />
+        </label>
+      </header>
 
       {(message || error) && (
         <div className={`notice-card ${error ? 'danger' : 'success'}`}>
@@ -437,79 +437,91 @@ function App() {
       )}
 
       <div className="app-layout">
-  <aside className="side-nav panel">
-    {tabs.map((tab) => (
-      <button
-        key={tab.id}
-        type="button"
-        className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-        onClick={() => setActiveTab(tab.id)}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </aside>
+        <aside className="side-nav panel">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </aside>
 
-  <main className="stack gap-lg content-area">
-    {activeTab === 'dashboard' && (
-      <DashboardPanel
-        month={month}
-        data={data}
-        onMonthChange={setMonth}
-        onApplyFixed={applyFixedExpenses}
-      />
-    )}
+        <main className="stack gap-lg content-area">
+          {activeTab === 'dashboard' && (
+            <DashboardPanel
+              dashboard={data.dashboard}
+              budgets={data.budgets}
+              month={month}
+              onMoveMonth={moveMonth}
+              onRunAutomation={handleRunAutomation}
+              isSyncing={isSyncing}
+            />
+          )}
 
-    {activeTab === 'entry' && (
-      <QuickEntryPanel
-        month={month}
-        categories={data.categories}
-        favorites={data.favorites}
-        recurringTransactions={data.recurringTransactions}
-        fixedExpenses={data.fixedExpenses}
-        onSaveTransaction={saveTransaction}
-        onSaveFavorite={saveFavorite}
-        onSaveRecurring={saveRecurring}
-        onSaveFixedExpense={saveFixedExpense}
-      />
-    )}
+          {activeTab === 'entry' && (
+            <QuickEntryForm
+              categories={data.categories}
+              form={form}
+              setForm={setForm}
+              onSubmit={handleSubmitTransaction}
+              onApplyFavorite={applyFavorite}
+              favorites={data.favorites}
+              recentCategories={data.recentCategories}
+              autocomplete={autocomplete}
+              isSaving={isSaving}
+              editingTransaction={editingTransaction}
+              onCancelEdit={handleCancelEdit}
+            />
+          )}
 
-    {activeTab === 'transactions' && (
-      <TransactionsPanel
-        month={month}
-        transactions={data.transactions}
-        categories={data.categories}
-        onSaveTransaction={saveTransaction}
-        onDeleteTransaction={removeTransaction}
-      />
-    )}
+          {activeTab === 'history' && (
+            <TransactionTable
+              transactions={data.transactions}
+              categories={data.categories}
+              filters={filters}
+              setFilters={setFilters}
+              onEdit={handleEditTransaction}
+              onDelete={handleDeleteTransaction}
+            />
+          )}
 
-    {activeTab === 'calendar' && <CalendarView month={month} transactions={data.transactions} />}
+          {activeTab === 'calendar' && (
+            <CalendarView month={month} transactions={data.transactions} />
+          )}
 
-    {activeTab === 'manage' && (
-      <ManagementPanel
-        month={month}
-        categories={data.categories}
-        favorites={data.favorites}
-        recurringTransactions={data.recurringTransactions}
-        fixedExpenses={data.fixedExpenses}
-        budgets={data.budgets}
-        settings={data.settings}
-        onSaveCategory={saveCategory}
-        onDeleteCategory={removeCategory}
-        onSaveFavorite={saveFavorite}
-        onDeleteFavorite={removeFavorite}
-        onSaveRecurring={saveRecurring}
-        onDeleteRecurring={removeRecurring}
-        onSaveFixedExpense={saveFixedExpense}
-        onDeleteFixedExpense={removeFixedExpense}
-        onSaveBudget={saveBudget}
-        onDeleteBudget={removeBudget}
-        onToggleTheme={handleToggleTheme}
-        onSavePin={handleSavePin}
-        onExportBackup={handleExportBackup}
-        onImportBackup={handleImportBackup}
-      />
-    )}
-  </main>
-</div>
+          {activeTab === 'manage' && (
+            <ManagementPanel
+              month={month}
+              categories={data.categories}
+              favorites={data.favorites}
+              recurringTransactions={data.recurringTransactions}
+              fixedExpenses={data.fixedExpenses}
+              budgets={data.budgets}
+              settings={data.settings}
+              onSaveCategory={saveCategory}
+              onDeleteCategory={removeCategory}
+              onSaveFavorite={saveFavorite}
+              onDeleteFavorite={removeFavorite}
+              onSaveRecurring={saveRecurring}
+              onDeleteRecurring={removeRecurring}
+              onSaveFixedExpense={saveFixedExpense}
+              onDeleteFixedExpense={removeFixedExpense}
+              onSaveBudget={saveBudget}
+              onDeleteBudget={removeBudget}
+              onToggleTheme={handleToggleTheme}
+              onSavePin={handleSavePin}
+              onExportBackup={handleExportBackup}
+              onImportBackup={handleImportBackup}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
