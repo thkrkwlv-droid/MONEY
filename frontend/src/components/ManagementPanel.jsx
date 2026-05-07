@@ -62,7 +62,6 @@ function ManagementPanel({
     name: '',
     asset_type: '입출금',
     balanceInput: '',
-    display_order: 0,
     memo: '',
   });
   const [pinEnabled, setPinEnabled] = useState(Boolean(settings?.pin_enabled));
@@ -85,7 +84,6 @@ function ManagementPanel({
     name: '',
     asset_type: '입출금',
     balanceInput: '',
-    display_order: 0,
     memo: '',
   });
 
@@ -297,7 +295,6 @@ function ManagementPanel({
           await onSaveAsset({
             ...assetForm,
             balance: parseAmount(assetForm.balanceInput),
-            display_order: Number(assetForm.display_order || 0),
           });
           resetAssetForm();
         }}>
@@ -331,15 +328,6 @@ function ManagementPanel({
             />
           </label>
 
-          <label>
-            <span>정렬순서</span>
-            <input
-              type="number"
-              value={assetForm.display_order}
-              onChange={(e) => setAssetForm((prev) => ({ ...prev, display_order: Number(e.target.value) }))}
-            />
-          </label>
-
           <label className="field-span-2">
             <span>메모</span>
             <input value={assetForm.memo || ''} onChange={(e) => setAssetForm((prev) => ({ ...prev, memo: e.target.value }))} />
@@ -352,7 +340,7 @@ function ManagementPanel({
         </form>
 
         <div className="list-grid small-cards">
-          {(assets || []).map((item) => (
+          {[...(assets || [])].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0)).map((item) => (
             <div key={item.id} className="mini-card">
               <strong>{item.name}</strong>
               <p className="muted">{item.asset_type} · {formatAmount(item.balance)}원</p>
