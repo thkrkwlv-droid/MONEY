@@ -37,7 +37,6 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
     <section className="stack gap-lg">
       <div className="panel toolbar-row">
         <div>
-          <p className="eyebrow">대시보드</p>
           <h2>{formatMonthKo(month)} 요약</h2>
           <p className="muted">이번 달 수입 / 지출 / 잔액, 카테고리 합계와 흐름 그래프를 한 번에 볼 수 있습니다.</p>
         </div>
