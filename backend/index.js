@@ -18,6 +18,7 @@ const {
   recurringSchema,
   fixedExpenseSchema,
   budgetSchema,
+  assetSchema,
   pinSchema,
 } = require('./src/validators');
 
@@ -160,6 +161,15 @@ async function getBudgets(month) {
      group by b.id, c.name
      order by category_name asc`,
     [start],
+  );
+  return rows;
+}
+
+async function getAssets() {
+  const { rows } = await query(
+    `select *
+     from asset_accounts
+     order by display_order asc, created_at asc`,
   );
   return rows;
 }
@@ -347,8 +357,7 @@ async function getAutocomplete(queryText = '') {
 
 async function getBootstrap(month) {
   await ensureAutomationFresh();
-  const [categories, favorites, recurringTransactions, fixedExpenses, settings, transactions, dashboard, recentCategories, budgets] =
-    await Promise.all([
+const [categories, favorites, recurringTransactions, fixedExpenses, settings, transactions, dashboard, recentCategories, budgets, assets] =    await Promise.all([
       getCategories(),
       getFavorites(),
       getRecurringTransactions(),
@@ -358,6 +367,7 @@ async function getBootstrap(month) {
       getDashboard(month),
       getRecentCategories(),
       getBudgets(month),
+      getAssets(),
     ]);
 
   return {
@@ -370,6 +380,7 @@ async function getBootstrap(month) {
     dashboard,
     recentCategories,
     budgets,
+    assets,
   };
 }
 
@@ -779,6 +790,53 @@ app.put('/api/budgets/:id', asyncHandler(async (req, res) => {
 
 app.delete('/api/budgets/:id', asyncHandler(async (req, res) => {
   await query(`delete from budgets where id = $1`, [req.params.id]);
+  res.json({ success: true });
+}));
+
+app.get('/api/assets', asyncHandler(async (_req, res) => {
+  res.json(await getAssets());
+}));
+
+app.post('/api/assets', asyncHandler(async (req, res) => {
+  const payload = assetSchema.parse({
+    ...req.body,
+    memo: normalizeText(req.body.memo),
+  });
+
+  const result = await query(
+    `insert into asset_accounts (name, asset_type, balance, display_order, memo)
+     values ($1, $2, $3, $4, $5)
+     returning *`,
+    [payload.name, payload.asset_type, payload.balance, payload.display_order, payload.memo],
+  );
+
+  res.status(201).json(result.rows[0]);
+}));
+
+app.put('/api/assets/:id', asyncHandler(async (req, res) => {
+  const payload = assetSchema.parse({
+    ...req.body,
+    memo: normalizeText(req.body.memo),
+  });
+
+  const result = await query(
+    `update asset_accounts
+     set name = $1,
+         asset_type = $2,
+         balance = $3,
+         display_order = $4,
+         memo = $5,
+         updated_at = now()
+     where id = $6
+     returning *`,
+    [payload.name, payload.asset_type, payload.balance, payload.display_order, payload.memo, req.params.id],
+  );
+
+  res.json(result.rows[0]);
+}));
+
+app.delete('/api/assets/:id', asyncHandler(async (req, res) => {
+  await query(`delete from asset_accounts where id = $1`, [req.params.id]);
   res.json({ success: true });
 }));
 
