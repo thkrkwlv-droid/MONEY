@@ -82,6 +82,7 @@ function App() {
     dashboard: null,
     recentCategories: [],
     budgets: [],
+    assets: [],
   });
   const [form, setForm] = useState(INITIAL_FORM);
   const [filters, setFilters] = useState({ search: '', type: '', categoryId: '', startDate: '', endDate: '' });
@@ -355,6 +356,26 @@ function App() {
     }
   }
 
+  async function saveAsset(payload) {
+    try {
+      if (payload.id) await updateAsset(payload.id, payload);
+      else await createAsset(payload);
+      await refreshCurrentMonth(payload.id ? '기초자산을 수정했습니다.' : '기초자산을 추가했습니다.');
+    } catch (err) {
+      setError(err.message || '기초자산 저장에 실패했습니다.');
+    }
+  }
+
+  async function removeAsset(id) {
+    if (!window.confirm('기초자산을 삭제할까요?')) return;
+    try {
+      await deleteAsset(id);
+      await refreshCurrentMonth('기초자산을 삭제했습니다.');
+    } catch (err) {
+      setError(err.message || '기초자산 삭제에 실패했습니다.');
+    }
+  }
+  
   async function handleToggleTheme(nextDarkMode) {
     try {
       await updateTheme(nextDarkMode);
@@ -541,6 +562,7 @@ function App() {
               recurringTransactions={data.recurringTransactions}
               fixedExpenses={data.fixedExpenses}
               budgets={data.budgets}
+              assets={data.assets}
               settings={data.settings}
               onSaveCategory={saveCategory}
               onDeleteCategory={removeCategory}
@@ -552,6 +574,8 @@ function App() {
               onDeleteFixedExpense={removeFixedExpense}
               onSaveBudget={saveBudget}
               onDeleteBudget={removeBudget}
+              onSaveAsset={saveAsset}
+              onDeleteAsset={removeAsset}
               onToggleTheme={handleToggleTheme}
               onSavePin={handleSavePin}
               onExportBackup={handleExportBackup}
