@@ -66,7 +66,7 @@ const INITIAL_FORM = {
   amountInput: '',
   category_id: '',
   note: '',
-  payment_method: '현금',
+  payment_method: '체크카드',
 };
 
 function App() {
@@ -186,7 +186,7 @@ function App() {
         amount,
         category_id: categoryId,
         note: form.note,
-        payment_method: form.payment_method || '현금',
+        payment_method: form.payment_method || '체크카드',
       };
 
       if (editingTransaction) {
@@ -203,7 +203,7 @@ function App() {
         amountInput: '',
         category_id: preservedCategory || '',
         note: '',
-        payment_method: form.payment_method || '현금',
+        payment_method: form.payment_method || '체크카드',
       });
 
       await refreshCurrentMonth(editingTransaction ? '내역을 수정했습니다.' : '내역을 저장했습니다.');
@@ -223,7 +223,7 @@ function App() {
       amountInput: String(Number(transaction.amount || 0).toLocaleString('ko-KR')),
       category_id: transaction.category_id || '',
       note: transaction.note || '',
-      payment_method: transaction.payment_method || '현금',
+      payment_method: transaction.payment_method || '체크카드',
     });
     setActiveTab('entry');
   }
@@ -250,7 +250,7 @@ function App() {
       amountInput: Number(favorite.amount).toLocaleString('ko-KR'),
       category_id: favorite.category_id || defaultCategoryId || '',
       note: favorite.note || '',
-      payment_method: favorite.payment_method || '현금',
+      payment_method: favorite.payment_method || '체크카드',
     });
     setActiveTab('entry');
     setMessage(`${favorite.name} 즐겨찾기를 불러왔습니다.`);
