@@ -79,6 +79,12 @@ export const createBudget = (data) => post('/api/budgets', data);
 export const updateBudget = (id, data) => put(`/api/budgets/${id}`, data);
 export const deleteBudget = (id) => del(`/api/budgets/${id}`);
 
+// 기초자산
+export const fetchAssets = () => get('/api/assets');
+export const createAsset = (data) => post('/api/assets', data);
+export const updateAsset = (id, data) => put(`/api/assets/${id}`, data);
+export const deleteAsset = (id) => del(`/api/assets/${id}`);
+
 // 설정
 export const fetchSettings = () => get('/api/settings');
 export const updateTheme = (darkMode) => put('/api/settings/theme', { dark_mode: darkMode });
