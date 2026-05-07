@@ -56,6 +56,14 @@ const budgetSchema = z.object({
   amount: z.coerce.number().int().nonnegative(),
 });
 
+const assetSchema = z.object({
+  name: z.string().min(1).max(120),
+  asset_type: z.string().min(1).max(50).default('입출금'),
+  balance: z.coerce.number().int().default(0),
+  display_order: z.coerce.number().int().default(0),
+  memo: z.string().max(500).nullable().optional(),
+});
+
 const pinSchema = z.object({
   pin: z.string().regex(/^\d{4,8}$/),
 });
@@ -67,5 +75,6 @@ module.exports = {
   recurringSchema,
   fixedExpenseSchema,
   budgetSchema,
+  assetSchema,
   pinSchema,
 };
