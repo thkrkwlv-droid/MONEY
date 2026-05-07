@@ -36,6 +36,27 @@ import ManagementPanel from './components/ManagementPanel';
 import PinLock from './components/PinLock';
 import { currentMonth, nextMonth, parseAmount, prevMonth, today } from './utils';
 
+function monthToDigits(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 6);
+}
+
+function formatMonthInput(digits) {
+  if (digits.length === 6) {
+    return `${digits.slice(0, 4)}년 ${digits.slice(4, 6)}월`;
+  }
+
+  return digits;
+}
+
+function isValidMonthDigits(digits) {
+  if (digits.length !== 6) return false;
+
+  const year = Number(digits.slice(0, 4));
+  const monthNumber = Number(digits.slice(4, 6));
+
+  return year >= 1900 && year <= 2099 && monthNumber >= 1 && monthNumber <= 12;
+}
+
 const INITIAL_FORM = {
   transaction_date: today(),
   type: 'expense',
@@ -47,6 +68,7 @@ const INITIAL_FORM = {
 
 function App() {
   const [month, setMonth] = useState(currentMonth());
+  const [monthInput, setMonthInput] = useState(monthToDigits(currentMonth()));
   const [data, setData] = useState({
     categories: [],
     favorites: [],
@@ -393,9 +415,22 @@ function App() {
     setMessage('잠금이 해제되었습니다.');
   }
 
-  function moveMonth(direction) {
-    setMonth((prev) => (direction < 0 ? prevMonth(prev) : nextMonth(prev)));
+  function handleMonthInputChange(event) {
+    const digits = monthToDigits(event.target.value);
+    setMonthInput(digits);
+
+    if (isValidMonthDigits(digits)) {
+      setMonth(`${digits.slice(0, 4)}-${digits.slice(4, 6)}`);
+    }
   }
+  
+  function moveMonth(direction) {
+  setMonth((prev) => {
+    const next = direction < 0 ? prevMonth(prev) : nextMonth(prev);
+    setMonthInput(monthToDigits(next));
+    return next;
+  });
+}
 
   const tabs = [
     { id: 'dashboard', label: '대시보드' },
@@ -423,9 +458,11 @@ function App() {
         <label className="month-picker">
           <span>조회 월</span>
           <input
-            type="month"
-            value={month}
-            onChange={(event) => setMonth(event.target.value)}
+            type="text"
+            inputMode="numeric"
+            placeholder="예: 202606"
+            value={formatMonthInput(monthInput)}
+            onChange={handleMonthInputChange}
           />
         </label>
       </header>
