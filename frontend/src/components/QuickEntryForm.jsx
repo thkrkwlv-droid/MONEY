@@ -120,17 +120,16 @@ function QuickEntryForm({
 
         <label>
           <span>결제수단</span>
-          <input
-            list="payment-method-suggestions"
-            placeholder="현금 / 카드 / 이체"
+          <select
             value={form.payment_method}
             onChange={(e) => setForm((prev) => ({ ...prev, payment_method: e.target.value }))}
-          />
-          <datalist id="payment-method-suggestions">
-            {[...new Set([...(autocomplete?.paymentMethods || []), ...PAYMENT_METHODS])].map((method) => (
-              <option key={method} value={method} />
+          >
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method} value={method}>
+                {method}
+              </option>
             ))}
-          </datalist>
+          </select>
         </label>
 
         <div className="field-span-2 stack gap-sm">
