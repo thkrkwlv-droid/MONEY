@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { PAYMENT_METHODS, formatAmount, parseAmount, today, WEEKDAY_NAMES } from '../utils';
 
+const ASSET_TYPES = ['입출금', '저축/적금', '현금', '증권', '카드대금', '기타'];
+
 function Section({ title, description, children }) {
   return (
     <article className="panel stack gap-md">
@@ -22,6 +24,7 @@ function ManagementPanel({
   recurringTransactions,
   fixedExpenses,
   budgets,
+  assets,
   settings,
   onSaveCategory,
   onDeleteCategory,
@@ -33,6 +36,8 @@ function ManagementPanel({
   onDeleteFixedExpense,
   onSaveBudget,
   onDeleteBudget,
+  onSaveAsset,
+  onDeleteAsset,
   onToggleTheme,
   onSavePin,
   onExportBackup,
@@ -48,6 +53,14 @@ function ManagementPanel({
     id: '', name: '', amountInput: '', category_id: '', note: '', payment_method: '자동이체', day_of_month: 25, start_date: today(), is_active: true,
   });
   const [budgetForm, setBudgetForm] = useState({ id: '', month_start: `${month}-01`, category_id: '', amountInput: '' });
+  const [assetForm, setAssetForm] = useState({
+    id: '',
+    name: '',
+    asset_type: '입출금',
+    balanceInput: '',
+    display_order: 0,
+    memo: '',
+  });
   const [pinEnabled, setPinEnabled] = useState(Boolean(settings?.pin_enabled));
   const [pin, setPin] = useState('');
 
@@ -63,6 +76,14 @@ function ManagementPanel({
     id: '', name: '', amountInput: '', category_id: '', note: '', payment_method: '자동이체', day_of_month: 25, start_date: today(), is_active: true,
   });
   const resetBudgetForm = () => setBudgetForm({ id: '', month_start: `${month}-01`, category_id: '', amountInput: '' });
+  const resetAssetForm = () => setAssetForm({
+    id: '',
+    name: '',
+    asset_type: '입출금',
+    balanceInput: '',
+    display_order: 0,
+    memo: '',
+  });
 
   const handleBackupFile = async (event) => {
     const file = event.target.files?.[0];
@@ -266,6 +287,93 @@ function ManagementPanel({
         </div>
       </Section>
 
+            <Section title="기초자산 관리" description="은행별 잔액, 현금, 카드대금 등 현재 보유 자산을 입력합니다.">
+        <form className="form-grid compact-form" onSubmit={async (e) => {
+          e.preventDefault();
+          await onSaveAsset({
+            ...assetForm,
+            balance: parseAmount(assetForm.balanceInput),
+            display_order: Number(assetForm.display_order || 0),
+          });
+          resetAssetForm();
+        }}>
+          <label>
+            <span>자산명</span>
+            <input
+              value={assetForm.name}
+              onChange={(e) => setAssetForm((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="예: 국민은행, 카카오뱅크, 현금"
+              required
+            />
+          </label>
+
+          <label>
+            <span>유형</span>
+            <select value={assetForm.asset_type} onChange={(e) => setAssetForm((prev) => ({ ...prev, asset_type: e.target.value }))}>
+              {ASSET_TYPES.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
+          </label>
+
+          <label>
+            <span>현재 금액</span>
+            <input
+              value={assetForm.balanceInput}
+              onChange={(e) => setAssetForm((prev) => ({
+                ...prev,
+                balanceInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '',
+              }))}
+              placeholder="예: 1,000,000"
+              required
+            />
+          </label>
+
+          <label>
+            <span>정렬순서</span>
+            <input
+              type="number"
+              value={assetForm.display_order}
+              onChange={(e) => setAssetForm((prev) => ({ ...prev, display_order: Number(e.target.value) }))}
+            />
+          </label>
+
+          <label className="field-span-2">
+            <span>메모</span>
+            <input value={assetForm.memo || ''} onChange={(e) => setAssetForm((prev) => ({ ...prev, memo: e.target.value }))} />
+          </label>
+
+          <div className="actions">
+            <button type="submit" className="primary-button">{assetForm.id ? '기초자산 수정' : '기초자산 추가'}</button>
+            {assetForm.id && <button type="button" className="secondary-button" onClick={resetAssetForm}>취소</button>}
+          </div>
+        </form>
+
+        <div className="list-grid small-cards">
+          {(assets || []).map((item) => (
+            <div key={item.id} className="mini-card">
+              <strong>{item.name}</strong>
+              <p className="muted">{item.asset_type} · {formatAmount(item.balance)}원</p>
+              {item.memo && <p className="muted">{item.memo}</p>}
+
+              <div className="actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setAssetForm({
+                    ...item,
+                    balanceInput: formatAmount(item.balance),
+                    display_order: item.display_order || 0,
+                    memo: item.memo || '',
+                  })}
+                >
+                  수정
+                </button>
+                <button type="button" className="ghost-button" onClick={() => onDeleteAsset(item.id)}>삭제</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+      
       <Section title="백업 · 복원 · 잠금 · 다크모드" description="개인용 서비스 운영에 필요한 보조 기능을 제공합니다.">
         <div className="settings-grid">
           <div className="mini-card stack gap-sm">
