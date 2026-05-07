@@ -416,17 +416,19 @@ function App() {
   return (
     <div className="app-shell">
       <header className="hero-header panel">
-        <div>
-          <p className="eyebrow">Supabase + Render 기반</p>
-          <h1>개인용 웹 가계부</h1>
-          <p className="muted">DB 기반으로 새로고침 후에도 데이터가 유지되며, 반복 입력과 고정지출 자동 반영까지 지원합니다.</p>
-        </div>
-        <div className="hero-actions">
-          <span className="badge">선택 월: {month}</span>
-          <button type="button" className="secondary-button" onClick={() => setMonth(currentMonth())}>이번 달로 이동</button>
-          <button type="button" className="secondary-button" onClick={() => setActiveTab('entry')}>빠른 입력 열기</button>
-        </div>
-      </header>
+      <div>
+        <h1>가계부</h1>
+      </div>
+
+      <label className="month-picker">
+        <span>조회 월</span>
+        <input
+          type="month"
+          value={month}
+          onChange={(event) => setMonth(event.target.value)}
+        />
+      </label>
+    </header>
 
       {(message || error) && (
         <div className={`notice-card ${error ? 'danger' : 'success'}`}>
@@ -434,20 +436,21 @@ function App() {
         </div>
       )}
 
-      <nav className="tab-nav panel">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <div className="app-layout">
+        <aside className="side-nav panel">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </aside>
 
-      <main className="stack gap-lg">
+        <main className="stack gap-lg content-area">
         {activeTab === 'dashboard' && (
           <DashboardPanel
             dashboard={data.dashboard}
