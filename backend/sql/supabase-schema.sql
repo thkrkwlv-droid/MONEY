@@ -85,6 +85,17 @@ create table if not exists budgets (
   unique (month_start, category_id)
 );
 
+create table if not exists asset_accounts (
+  id uuid primary key default gen_random_uuid(),
+  name varchar(120) not null,
+  asset_type varchar(50) not null default '입출금',
+  balance bigint not null default 0,
+  display_order integer not null default 0,
+  memo text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists app_settings (
   id boolean primary key default true check (id = true),
   dark_mode boolean not null default false,
@@ -102,6 +113,7 @@ create index if not exists idx_transactions_note on transactions using gin (to_t
 create index if not exists idx_recurring_next_run_date on recurring_transactions(next_run_date) where is_active = true;
 create index if not exists idx_fixed_expenses_next_run_date on fixed_expenses(next_run_date) where is_active = true;
 create index if not exists idx_budgets_month on budgets(month_start);
+create index if not exists idx_asset_accounts_order on asset_accounts(display_order, created_at);
 
 do $$
 begin
