@@ -144,6 +144,40 @@ h1, h2, h3, p { margin: 0; }
   align-items: flex-start;
 }
 
+.management-accordion {
+  padding: 0;
+  overflow: hidden;
+}
+
+.management-accordion summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 20px;
+}
+
+.management-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.accordion-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.accordion-icon {
+  font-size: 20px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+
+.management-accordion[open] .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  padding: 0 20px 20px;
+}
 .section-heading.compact {
   align-items: center;
 }
