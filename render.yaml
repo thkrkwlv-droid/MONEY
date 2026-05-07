@@ -22,7 +22,4 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: household-ledger-api
-          property: host
+        sync: false
