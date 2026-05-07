@@ -113,6 +113,7 @@ create index if not exists idx_transactions_note on transactions using gin (to_t
 create index if not exists idx_recurring_next_run_date on recurring_transactions(next_run_date) where is_active = true;
 create index if not exists idx_fixed_expenses_next_run_date on fixed_expenses(next_run_date) where is_active = true;
 create index if not exists idx_budgets_month on budgets(month_start);
+create index if not exists idx_asset_accounts_order on asset_accounts(display_order, created_at);
 
 do $$
 begin
