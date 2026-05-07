@@ -65,10 +65,34 @@ a { color: inherit; }
   flex-wrap: wrap;
 }
 
-.tab-nav {
+.month-picker {
+  min-width: 180px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.month-picker input {
+  margin-top: 6px;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.side-nav {
+  position: sticky;
+  top: 24px;
   display: flex;
+  flex-direction: column;
   gap: 10px;
-  flex-wrap: wrap;
+}
+
+.content-area {
+  min-width: 0;
 }
 
 .tab-button {
@@ -373,6 +397,19 @@ input, select {
   .form-grid.compact-form,
   .calendar-grid {
     grid-template-columns: 1fr;
+  }
+    .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side-nav {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .side-nav .tab-button {
+    white-space: nowrap;
   }
   .field-span-2 { grid-column: auto; }
   .chart-panel, .chart-panel-wide { min-height: 340px; }
