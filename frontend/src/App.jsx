@@ -114,7 +114,8 @@ function App() {
   }, [message, error]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = data.settings?.theme_mode || (data.settings?.dark_mode ? 'dark' : 'light');
+    document.documentElement.dataset.theme = 
+      data.settings?.theme_mode || (data.settings?.dark_mode ? 'dark' : 'light');
   }, [data.settings?.theme_mode, data.settings?.dark_mode]);
 
   useEffect(() => {
