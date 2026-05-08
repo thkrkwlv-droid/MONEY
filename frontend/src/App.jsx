@@ -11,6 +11,7 @@ import {
   createAsset,
   updateAsset,
   deleteAsset,
+  recalculateAssets,
   deleteCategory,
   deleteFavorite,
   deleteFixedExpense,
@@ -384,6 +385,17 @@ function App() {
       setError(err.message || '기초자산 삭제에 실패했습니다.');
     }
   }
+
+  async function handleRecalculateAssets() {
+    if (!window.confirm('기초자산 기준으로 모든 거래를 다시 반영해 자산 금액을 재계산할까요?')) return;
+  
+    try {
+      await recalculateAssets();
+      await refreshCurrentMonth('자산 금액을 재계산했습니다.');
+    } catch (err) {
+      setError(err.message || '자산 재계산에 실패했습니다.');
+    }
+  }
   
   async function handleChangeTheme(themeMode) {
     try {
@@ -609,6 +621,7 @@ function App() {
               onDeleteBudget={removeBudget}
               onSaveAsset={saveAsset}
               onDeleteAsset={removeAsset}
+              onRecalculateAssets={handleRecalculateAssets}
               onChangeTheme={handleChangeTheme}
               onSaveLedgerName={handleSaveLedgerName}
               onSavePin={handleSavePin}
