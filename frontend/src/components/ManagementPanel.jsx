@@ -372,8 +372,6 @@ function ManagementPanel({
           </button>
         </div>
 
-        <div className="asset-list">
-
         <div className="list-grid small-cards">
           {[...(assets || [])].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0)).map((item) => (
             <div key={item.id} className="mini-card">
