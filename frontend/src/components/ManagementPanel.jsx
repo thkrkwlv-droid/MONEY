@@ -379,27 +379,26 @@ function ManagementPanel({
           ))}
         </div>
       </Section>
-
-      <div className="mini-card stack gap-sm">
-        <strong>가계부 이름</strong>
-        <p className="muted">상단에 표시될 가계부 이름을 설정합니다.</p>
-        <input
-          value={ledgerName}
-          maxLength={80}
-          onChange={(e) => setLedgerName(e.target.value)}
-          placeholder="예: 우리 가계부"
-        />
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => onSaveLedgerName(ledgerName)}
-        >
-          이름 저장
-        </button>
-      </div>
       
       <Section title="백업 · 복원 · 잠금 · 다크모드" description="개인용 서비스 운영에 필요한 보조 기능을 제공합니다.">
         <div className="settings-grid">
+                    <div className="mini-card stack gap-sm">
+            <strong>가계부 이름</strong>
+            <p className="muted">상단에 표시될 가계부 이름을 설정합니다.</p>
+            <input
+              value={ledgerName}
+              maxLength={80}
+              onChange={(e) => setLedgerName(e.target.value)}
+              placeholder="예: 우리 가계부"
+            />
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => onSaveLedgerName(ledgerName)}
+            >
+              이름 저장
+            </button>
+          </div>
           <div className="mini-card stack gap-sm">
             <strong>테마 모드</strong>
             <p className="muted">원하는 색감의 화면 테마를 선택합니다.</p>
