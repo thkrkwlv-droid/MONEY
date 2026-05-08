@@ -110,7 +110,6 @@ create table if not exists app_settings (
 
 create index if not exists idx_transactions_date on transactions(transaction_date desc);
 create index if not exists idx_transactions_category on transactions(category_id);
-create index if not exists idx_transactions_asset on transactions(asset_account_id);
 create index if not exists idx_transactions_type on transactions(type);
 create index if not exists idx_transactions_payment on transactions(payment_method);
 create index if not exists idx_transactions_note on transactions using gin (to_tsvector('simple', coalesce(note, '')));
@@ -162,6 +161,8 @@ add column if not exists ledger_name varchar(80) not null default '가계부';
 
 alter table transactions
 add column if not exists asset_account_id uuid references asset_accounts(id) on delete set null;
+
+create index if not exists idx_transactions_asset on transactions(asset_account_id);
 
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
