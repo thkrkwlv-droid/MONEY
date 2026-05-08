@@ -29,6 +29,7 @@ import {
   updatePin,
   updateRecurring,
   updateTheme,
+  updateLedgerName,
   updateTransaction,
 } from './api';
 import QuickEntryForm from './components/QuickEntryForm';
@@ -77,7 +78,7 @@ function App() {
     favorites: [],
     recurringTransactions: [],
     fixedExpenses: [],
-    settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW' },
+    settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW', ledger_name: '가계부' },
     transactions: [],
     dashboard: null,
     recentCategories: [],
@@ -386,6 +387,15 @@ function App() {
     }
   }
 
+  async function handleSaveLedgerName(ledgerName) {
+    try {
+      await updateLedgerName(ledgerName);
+      await refreshCurrentMonth('가계부 이름을 저장했습니다.');
+    } catch (err) {
+      setError(err.message || '가계부 이름 저장에 실패했습니다.');
+    }
+  }
+  
   async function handleSavePin(enabled, pin) {
     try {
       await updatePin(enabled, pin);
@@ -477,7 +487,7 @@ function App() {
     <div className="app-shell">
       <header className="hero-header panel">
         <div>
-          <h1>가계부</h1>
+          <h1>{data.settings?.ledger_name || '가계부'}</h1>
         </div>
 
         <label className="month-picker">
@@ -578,6 +588,7 @@ function App() {
               onSaveAsset={saveAsset}
               onDeleteAsset={removeAsset}
               onChangeTheme={handleChangeTheme}
+              onSaveLedgerName={handleSaveLedgerName}
               onSavePin={handleSavePin}
               onExportBackup={handleExportBackup}
               onImportBackup={handleImportBackup}
