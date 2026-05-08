@@ -1,4 +1,5 @@
-import { formatAmount, formatDateShort, formatMonthKo } from '../utils';
+import { useState } from 'react';
+import { formatAmount, formatMonthKo } from '../utils';
 
 function buildCalendarMatrix(month) {
   const [year, monthIndex] = month.split('-').map(Number);
@@ -7,49 +8,37 @@ function buildCalendarMatrix(month) {
   const startOffset = first.getDay();
   const days = [];
 
-  for (let i = 0; i < startOffset; i += 1) {
-    days.push(null);
-  }
+  for (let i = 0; i < startOffset; i += 1) days.push(null);
 
   for (let day = 1; day <= last.getDate(); day += 1) {
-    const iso = `${year}-${String(monthIndex).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    days.push(iso);
+    days.push(`${year}-${String(monthIndex).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
   }
 
-  while (days.length % 7 !== 0) {
-    days.push(null);
-  }
+  while (days.length % 7 !== 0) days.push(null);
 
   const rows = [];
-  for (let i = 0; i < days.length; i += 7) {
-    rows.push(days.slice(i, i + 7));
-  }
-
+  for (let i = 0; i < days.length; i += 7) rows.push(days.slice(i, i + 7));
   return rows;
 }
 
 function normalizeDateKey(value) {
   if (!value) return '';
-
-  if (typeof value === 'string') {
-    return value.slice(0, 10);
-  }
-
-  return new Date(value).toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
 }
 
 function CalendarView({ month, transactions = [] }) {
+  const [selectedDate, setSelectedDate] = useState(null);
   const rows = buildCalendarMatrix(month);
 
   const map = transactions.reduce((acc, item) => {
     const dateKey = normalizeDateKey(item.transaction_date);
     if (!dateKey) return acc;
-
     if (!acc[dateKey]) acc[dateKey] = [];
     acc[dateKey].push(item);
-
     return acc;
   }, {});
+
+  const selectedItems = selectedDate ? map[selectedDate] || [] : [];
 
   return (
     <section className="panel stack gap-lg">
@@ -57,7 +46,7 @@ function CalendarView({ month, transactions = [] }) {
         <div>
           <p className="eyebrow">캘린더 뷰</p>
           <h2>{formatMonthKo(month)} 달력</h2>
-          <p className="muted">날짜별 내역과 일일 수입/지출 합계를 한눈에 볼 수 있습니다.</p>
+          <p className="muted">날짜별 수입/지출 합계를 확인하고, 날짜를 눌러 상세 내역을 봅니다.</p>
         </div>
       </div>
 
@@ -71,44 +60,66 @@ function CalendarView({ month, transactions = [] }) {
         <div key={`row-${rowIndex}`} className="calendar-grid">
           {row.map((date, dayIndex) => {
             const items = date ? map[date] || [] : [];
-            const income = items
-              .filter((item) => item.type === 'income')
-              .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-            const expense = items
-              .filter((item) => item.type === 'expense')
-              .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+            const income = items.filter((item) => item.type === 'income').reduce((sum, item) => sum + Number(item.amount || 0), 0);
+            const expense = items.filter((item) => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
             return (
-              <div
+              <button
                 key={date || `blank-${rowIndex}-${dayIndex}`}
-                className={`calendar-cell ${date ? '' : 'empty'}`}
+                type="button"
+                className={`calendar-cell ${date ? '' : 'empty'} ${selectedDate === date ? 'selected' : ''}`}
+                onClick={() => date && setSelectedDate(date)}
+                disabled={!date}
               >
                 {date && (
                   <>
-                    <strong>{new Date(date).getDate()}</strong>
-                    <small className="muted">{formatDateShort(date)}</small>
-
+                    <strong>{Number(date.slice(8, 10))}</strong>
                     <div className="calendar-summary">
                       {income > 0 && <span className="positive-text">+{formatAmount(income)}</span>}
                       {expense > 0 && <span className="danger-text">-{formatAmount(expense)}</span>}
                     </div>
-
-                    <div className="calendar-items">
-                      {items.slice(0, 3).map((item) => (
-                        <div key={item.id} className="calendar-pill">
-                          <span>{item.category_name || '미분류'}</span>
-                          <span>{formatAmount(item.amount)}</span>
-                        </div>
-                      ))}
-                      {items.length > 3 && <div className="calendar-pill muted">+ {items.length - 3}건 더 보기</div>}
-                    </div>
                   </>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
       ))}
+
+      {selectedDate && (
+        <div className="calendar-detail-overlay" onClick={() => setSelectedDate(null)}>
+          <div className="calendar-detail-sheet panel" onClick={(e) => e.stopPropagation()}>
+            <div className="toolbar-row">
+              <div>
+                <h3>{selectedDate} 내역</h3>
+                <p className="muted">{selectedItems.length}건</p>
+              </div>
+              <button type="button" className="ghost-button" onClick={() => setSelectedDate(null)}>닫기</button>
+            </div>
+
+            {selectedItems.length === 0 ? (
+              <p className="muted">등록된 내역이 없습니다.</p>
+            ) : (
+              <div className="calendar-detail-list">
+                {selectedItems.map((item) => (
+                  <div key={item.id} className="calendar-detail-row">
+                    <div>
+                      <strong>{item.note || item.category_name || '미분류'}</strong>
+                      <p className="muted">
+                        {item.category_name || '미분류'} · {item.payment_method}
+                        {item.asset_account_name ? ` · ${item.asset_account_name}` : ''}
+                      </p>
+                    </div>
+                    <strong className={item.type === 'income' ? 'positive-text' : 'danger-text'}>
+                      {item.type === 'income' ? '+' : '-'}{formatAmount(item.amount)}원
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
