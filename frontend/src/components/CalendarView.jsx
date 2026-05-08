@@ -24,6 +24,7 @@ function buildCalendarMatrix(month) {
   for (let i = 0; i < days.length; i += 7) {
     rows.push(days.slice(i, i + 7));
   }
+
   return rows;
 }
 
@@ -37,15 +38,18 @@ function normalizeDateKey(value) {
   return new Date(value).toISOString().slice(0, 10);
 }
 
-const map = transactions.reduce((acc, item) => {
-  const dateKey = normalizeDateKey(item.transaction_date);
-  if (!dateKey) return acc;
+function CalendarView({ month, transactions = [] }) {
+  const rows = buildCalendarMatrix(month);
 
-  if (!acc[dateKey]) acc[dateKey] = [];
-  acc[dateKey].push(item);
+  const map = transactions.reduce((acc, item) => {
+    const dateKey = normalizeDateKey(item.transaction_date);
+    if (!dateKey) return acc;
 
-  return acc;
-}, {});
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(item);
+
+    return acc;
+  }, {});
 
   return (
     <section className="panel stack gap-lg">
@@ -63,22 +67,32 @@ const map = transactions.reduce((acc, item) => {
         ))}
       </div>
 
-      {rows.map((row, index) => (
-        <div key={index} className="calendar-grid">
-          {row.map((date) => {
+      {rows.map((row, rowIndex) => (
+        <div key={`row-${rowIndex}`} className="calendar-grid">
+          {row.map((date, dayIndex) => {
             const items = date ? map[date] || [] : [];
-            const income = items.filter((item) => item.type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
-            const expense = items.filter((item) => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
+            const income = items
+              .filter((item) => item.type === 'income')
+              .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+            const expense = items
+              .filter((item) => item.type === 'expense')
+              .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
             return (
-              <div key={date || `blank-${index}`} className={`calendar-cell ${date ? '' : 'empty'}`}>
+              <div
+                key={date || `blank-${rowIndex}-${dayIndex}`}
+                className={`calendar-cell ${date ? '' : 'empty'}`}
+              >
                 {date && (
                   <>
                     <strong>{new Date(date).getDate()}</strong>
                     <small className="muted">{formatDateShort(date)}</small>
+
                     <div className="calendar-summary">
                       {income > 0 && <span className="positive-text">+{formatAmount(income)}</span>}
                       {expense > 0 && <span className="danger-text">-{formatAmount(expense)}</span>}
                     </div>
+
                     <div className="calendar-items">
                       {items.slice(0, 3).map((item) => (
                         <div key={item.id} className="calendar-pill">
