@@ -648,3 +648,64 @@ input, select {
   color: var(--muted);
   border-color: var(--border);
 }
+
+.monthly-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.monthly-report-list {
+  display: grid;
+  gap: 10px;
+}
+
+.monthly-report-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel-soft);
+}
+
+.monthly-report-row.fixed {
+  border-color: color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: color-mix(in srgb, var(--primary) 9%, var(--panel));
+}
+
+.monthly-report-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.monthly-report-main strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.fixed-badge {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .monthly-report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .monthly-report-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
