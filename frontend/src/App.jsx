@@ -36,6 +36,7 @@ import QuickEntryForm from './components/QuickEntryForm';
 import DashboardPanel from './components/DashboardPanel';
 import TransactionTable from './components/TransactionTable';
 import CalendarView from './components/CalendarView';
+import MonthlyReport from './components/MonthlyReport';
 import ManagementPanel from './components/ManagementPanel';
 import PinLock from './components/PinLock';
 import { currentMonth, nextMonth, parseAmount, prevMonth, today } from './utils';
@@ -472,6 +473,7 @@ function App() {
     { id: 'entry', label: '빠른 입력' },
     { id: 'history', label: '내역 관리' },
     { id: 'calendar', label: '캘린더' },
+    { id: 'monthly-report', label: '월간 리포트' },
     { id: 'manage', label: '설정/관리' },
   ];
 
@@ -565,6 +567,14 @@ function App() {
             <CalendarView month={month} transactions={data.transactions} />
           )}
 
+          {activeTab === 'monthly-report' && (
+            <MonthlyReport
+              month={month}
+              transactions={data.transactions}
+              fixedExpenses={data.fixedExpenses}
+            />
+          )}
+          
           {activeTab === 'manage' && (
             <ManagementPanel
               month={month}
