@@ -2,6 +2,7 @@ import { PAYMENT_METHODS, formatAmount, parseAmount, today } from '../utils';
 
 function QuickEntryForm({
   categories,
+  assets = [],
   form,
   setForm,
   onSubmit,
@@ -151,6 +152,23 @@ function QuickEntryForm({
           </datalist>
         </label>
 
+        <label>
+          <span>자산/계좌</span>
+          <select
+            value={form.asset_account_id || ''}
+            onChange={(e) => setForm((prev) => ({ ...prev, asset_account_id: e.target.value }))}
+          >
+            <option value="">자산 선택 안 함</option>
+            {[...assets]
+              .sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0))
+              .map((asset) => (
+                <option key={asset.id} value={asset.id}>
+                  {asset.name} · {formatAmount(asset.balance)}원
+                </option>
+              ))}
+          </select>
+        </label>
+        
         <label>
           <span>결제수단</span>
           <select
