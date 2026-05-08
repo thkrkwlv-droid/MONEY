@@ -68,6 +68,7 @@ const INITIAL_FORM = {
   type: 'expense',
   amountInput: '',
   category_id: '',
+  asset_account_id: '',
   note: '',
   payment_method: '체크카드',
 };
@@ -189,6 +190,7 @@ function App() {
         type: form.type || 'expense',
         amount,
         category_id: categoryId,
+        asset_account_id: form.asset_account_id || null,
         note: form.note,
         payment_method: form.payment_method || '체크카드',
       };
@@ -206,6 +208,7 @@ function App() {
         type: 'expense',
         amountInput: '',
         category_id: preservedCategory || '',
+        asset_account_id: form.asset_account_id || '',
         note: '',
         payment_method: form.payment_method || '체크카드',
       });
@@ -226,6 +229,7 @@ function App() {
       type: transaction.type,
       amountInput: String(Number(transaction.amount || 0).toLocaleString('ko-KR')),
       category_id: transaction.category_id || '',
+      asset_account_id: transaction.asset_account_id || '',
       note: transaction.note || '',
       payment_method: transaction.payment_method || '체크카드',
     });
@@ -234,7 +238,7 @@ function App() {
 
   function handleCancelEdit() {
     setEditingTransaction(null);
-    setForm({ ...INITIAL_FORM, category_id: defaultCategoryId || '' });
+    setForm({ ...INITIAL_FORM, category_id: defaultCategoryId || '', asset_account_id: '' });
   }
 
   async function handleDeleteTransaction(id) {
@@ -253,6 +257,7 @@ function App() {
       type: favorite.type,
       amountInput: Number(favorite.amount).toLocaleString('ko-KR'),
       category_id: favorite.category_id || defaultCategoryId || '',
+      asset_account_id: '',
       note: favorite.note || '',
       payment_method: favorite.payment_method || '체크카드',
     });
@@ -541,6 +546,7 @@ function App() {
           {activeTab === 'entry' && (
             <QuickEntryForm
               categories={data.categories}
+              assets={data.assets}
               form={form}
               setForm={setForm}
               onSubmit={handleSubmitTransaction}
