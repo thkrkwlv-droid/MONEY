@@ -856,3 +856,18 @@ input, select {
 .calendar-detail-row > div {
   min-width: 0;
 }
+
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.pagination-status {
+  min-width: 72px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 800;
+}
