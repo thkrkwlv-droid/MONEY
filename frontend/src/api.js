@@ -84,6 +84,7 @@ export const fetchAssets = () => get('/api/assets');
 export const createAsset = (data) => post('/api/assets', data);
 export const updateAsset = (id, data) => put(`/api/assets/${id}`, data);
 export const deleteAsset = (id) => del(`/api/assets/${id}`);
+export const recalculateAssets = () => post('/api/assets/recalculate');
 
 // 설정
 export const fetchSettings = () => get('/api/settings');
