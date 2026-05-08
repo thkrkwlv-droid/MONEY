@@ -3,6 +3,18 @@ import { PAYMENT_METHODS, formatAmount, parseAmount, today, WEEKDAY_NAMES } from
 
 const ASSET_TYPES = ['입출금', '저축/적금', '현금', '증권', '카드대금', '기타'];
 
+const THEME_OPTIONS = [
+  { value: 'light', label: '라이트' },
+  { value: 'dark', label: '다크' },
+  { value: 'pastel-pink', label: '파스텔 핑크' },
+  { value: 'pastel-blue', label: '파스텔 블루' },
+  { value: 'pastel-purple', label: '파스텔 퍼플' },
+  { value: 'mint', label: '민트' },
+  { value: 'yellow', label: '옐로우' },
+  { value: 'beige', label: '베이지' },
+  { value: 'gray', label: '그레이' },
+];
+
 function Section({ title, description, children }) {
   return (
     <details className="panel stack gap-md management-accordion">
@@ -42,7 +54,7 @@ function ManagementPanel({
   onDeleteBudget,
   onSaveAsset,
   onDeleteAsset,
-  onToggleTheme,
+  onChangeTheme,
   onSavePin,
   onExportBackup,
   onImportBackup,
@@ -369,10 +381,18 @@ function ManagementPanel({
       <Section title="백업 · 복원 · 잠금 · 다크모드" description="개인용 서비스 운영에 필요한 보조 기능을 제공합니다.">
         <div className="settings-grid">
           <div className="mini-card stack gap-sm">
-            <strong>다크모드</strong>
-            <button type="button" className="secondary-button" onClick={() => onToggleTheme(!settings.dark_mode)}>
-              {settings.dark_mode ? '라이트 모드로 전환' : '다크 모드로 전환'}
-            </button>
+            <strong>테마 모드</strong>
+            <p className="muted">원하는 색감의 화면 테마를 선택합니다.</p>
+            <select
+              value={settings?.theme_mode || (settings?.dark_mode ? 'dark' : 'light')}
+              onChange={(e) => onChangeTheme(e.target.value)}
+            >
+              {THEME_OPTIONS.map((theme) => (
+                <option key={theme.value} value={theme.value}>
+                  {theme.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="mini-card stack gap-sm">
