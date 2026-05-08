@@ -54,6 +54,7 @@ function ManagementPanel({
   onDeleteBudget,
   onSaveAsset,
   onDeleteAsset,
+  onRecalculateAssets,
   onChangeTheme,
   onSaveLedgerName,
   onSavePin,
@@ -352,6 +353,26 @@ function ManagementPanel({
             {assetForm.id && <button type="button" className="secondary-button" onClick={resetAssetForm}>취소</button>}
           </div>
         </form>
+
+        <div className="asset-maintenance-card">
+          <div>
+            <strong>자산 금액 재계산</strong>
+
+            <p className="muted">
+              기초자산 금액을 기준으로 자산이 연결된 모든 거래를 다시 반영합니다.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onRecalculateAssets}
+          >
+            자산 재계산
+          </button>
+        </div>
+
+        <div className="asset-list">
 
         <div className="list-grid small-cards">
           {[...(assets || [])].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0)).map((item) => (
