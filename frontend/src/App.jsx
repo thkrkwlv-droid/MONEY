@@ -77,7 +77,7 @@ function App() {
     favorites: [],
     recurringTransactions: [],
     fixedExpenses: [],
-    settings: { dark_mode: false, pin_enabled: false, currency: 'KRW' },
+    settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW' },
     transactions: [],
     dashboard: null,
     recentCategories: [],
@@ -114,8 +114,8 @@ function App() {
   }, [message, error]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = data.settings?.dark_mode ? 'dark' : 'light';
-  }, [data.settings?.dark_mode]);
+    document.documentElement.dataset.theme = data.settings?.theme_mode || (data.settings?.dark_mode ? 'dark' : 'light');
+  }, [data.settings?.theme_mode, data.settings?.dark_mode]);
 
   useEffect(() => {
     if (!form.category_id && defaultCategoryId) {
@@ -376,10 +376,10 @@ function App() {
     }
   }
   
-  async function handleToggleTheme(nextDarkMode) {
+  async function handleChangeTheme(themeMode) {
     try {
-      await updateTheme(nextDarkMode);
-      await refreshCurrentMonth(nextDarkMode ? '다크 모드로 전환했습니다.' : '라이트 모드로 전환했습니다.');
+      await updateTheme(themeMode);
+      await refreshCurrentMonth('테마를 변경했습니다.');
     } catch (err) {
       setError(err.message || '테마 변경에 실패했습니다.');
     }
@@ -576,7 +576,7 @@ function App() {
               onDeleteBudget={removeBudget}
               onSaveAsset={saveAsset}
               onDeleteAsset={removeAsset}
-              onToggleTheme={handleToggleTheme}
+              onChangeTheme={handleChangeTheme}
               onSavePin={handleSavePin}
               onExportBackup={handleExportBackup}
               onImportBackup={handleImportBackup}
