@@ -99,6 +99,7 @@ create table if not exists asset_accounts (
 create table if not exists app_settings (
   id boolean primary key default true check (id = true),
   dark_mode boolean not null default false,
+  theme_mode varchar(30) not null default 'light',
   pin_enabled boolean not null default false,
   pin_hash text,
   currency varchar(10) not null default 'KRW',
@@ -149,6 +150,9 @@ begin
     add constraint budgets_month_category_unique unique (month_start, category_id);
   end if;
 end $$;
+
+alter table app_settings
+add column if not exists theme_mode varchar(30) not null default 'light';
 
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
