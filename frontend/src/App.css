@@ -709,3 +709,61 @@ input, select {
     flex-direction: column;
   }
 }
+
+.asset-total-card {
+  display: grid;
+  gap: 8px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--primary-soft), var(--panel));
+}
+
+.asset-total-card span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.asset-total-card strong {
+  font-size: clamp(28px, 5vw, 42px);
+  color: var(--primary);
+}
+
+.asset-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.asset-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.asset-card h3 {
+  margin: 6px 0 0;
+}
+
+.asset-card strong {
+  font-size: 24px;
+}
+
+.asset-type {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empty-state {
+  padding: 24px;
+}
+
+@media (max-width: 720px) {
+  .asset-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
