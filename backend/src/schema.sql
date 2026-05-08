@@ -91,6 +91,7 @@ create table if not exists asset_accounts (
   name varchar(120) not null,
   asset_type varchar(50) not null default '입출금',
   balance bigint not null default 0,
+  initial_balance bigint not null default 0,
   display_order integer not null default 0,
   memo text,
   created_at timestamptz not null default now(),
@@ -158,6 +159,13 @@ add column if not exists theme_mode varchar(30) not null default 'light';
 
 alter table app_settings
 add column if not exists ledger_name varchar(80) not null default '가계부';
+
+alter table asset_accounts
+add column if not exists initial_balance bigint not null default 0;
+
+update asset_accounts
+set initial_balance = balance
+where initial_balance = 0;
 
 alter table transactions
 add column if not exists asset_account_id uuid references asset_accounts(id) on delete set null;
