@@ -789,11 +789,11 @@ input, select {
 }
 
 .calendar-detail-sheet {
-  width: min(520px, 100%);
-  max-height: 72vh;
+  width: min(760px, 92vw);
+  max-height: 78vh;
   overflow: auto;
-  padding: 20px;
-  border-radius: 24px;
+  padding: 24px;
+  border-radius: 28px;
 }
 
 .calendar-detail-list {
@@ -802,11 +802,13 @@ input, select {
 }
 
 .calendar-detail-row {
-  display: flex;
-  justify-content: space-between;
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 14px;
-  padding: 14px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 18px;
   background: var(--panel-soft);
   border: 1px solid var(--border);
 }
@@ -820,6 +822,7 @@ input, select {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   margin-top: 18px;
+  align-items: start;
 }
 
 .calendar-detail-column {
@@ -841,4 +844,15 @@ input, select {
   .calendar-detail-columns {
     grid-template-columns: 1fr;
   }
+}
+
+.calendar-detail-row strong:first-child,
+.calendar-detail-row p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-detail-row > div {
+  min-width: 0;
 }
