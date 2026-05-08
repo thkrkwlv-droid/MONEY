@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatAmount, formatDateKo } from '../utils';
 
 function TransactionTable({ transactions, categories, filters, setFilters, onEdit, onDelete }) {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
       if (filters.type && transaction.type !== filters.type) return false;
@@ -17,6 +19,10 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
     });
   }, [transactions, filters]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pagedTransactions = filteredTransactions.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
@@ -31,7 +37,13 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
       <div className="filter-grid">
         <label>
           <span>키워드 검색</span>
-          <input value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))} placeholder="메모, 카테고리, 결제수단" />
+          <input 
+            value={filters.search} 
+            onChange={(e) => {
+              setPage(1);
+              setFilters((prev) => ({ ...prev, search: e.target.value }));
+            }} 
+            placeholder="메모, 카테고리, 결제수단" />
         </label>
         <label>
           <span>유형</span>
@@ -62,7 +74,7 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
 
       <div className="transaction-list">
         {filteredTransactions.length === 0 && <p className="muted">조건에 맞는 내역이 없습니다.</p>}
-        {filteredTransactions.map((transaction) => (
+        {pagedTransactions.map((transaction) => (
           <article key={transaction.id} className="transaction-card">
             <div className="transaction-main">
               <div>
@@ -88,6 +100,32 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
           </article>
         ))}
       </div>
+
+      {filteredTransactions.length > pageSize && (
+        <div className="pagination-row">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={safePage <= 1}
+          >
+            이전
+          </button>
+
+          <span className="pagination-status">
+            {safePage} / {totalPages}
+          </span>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={safePage >= totalPages}
+          >
+            다음
+          </button>
+        </div>
+      )}
     </section>
   );
 }
