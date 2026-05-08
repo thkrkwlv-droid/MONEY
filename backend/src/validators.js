@@ -61,6 +61,7 @@ const assetSchema = z.object({
   name: z.string().min(1).max(120),
   asset_type: z.string().min(1).max(50).default('입출금'),
   balance: z.coerce.number().int().default(0),
+  initial_balance: z.coerce.number().int().optional(),
   display_order: z.coerce.number().int().default(0),
   memo: z.string().max(500).nullable().optional(),
 });
