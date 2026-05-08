@@ -443,15 +443,15 @@ input, select {
     font-size: 12px;
   }
 
-  .calendar-cell {
-    min-height: 76px;
+    .calendar-cell {
+    min-height: 92px;
     border: none;
     border-radius: 12px;
-    padding: 4px 2px;
+    padding: 6px 2px;
     background: transparent;
     align-items: center;
     text-align: center;
-    gap: 2px;
+    gap: 3px;
   }
 
   .calendar-cell.empty {
@@ -469,9 +469,22 @@ input, select {
   }
 
   .calendar-summary {
-    gap: 0;
-    font-size: 11px;
-    line-height: 1.2;
+    min-height: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1px;
+    font-size: 10px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .calendar-summary span {
+    display: block;
+    max-width: 100%;
+    transform: scale(0.92);
+    transform-origin: center;
   }
 
   .calendar-items {
@@ -487,7 +500,12 @@ input, select {
   .side-nav .tab-button {
     white-space: nowrap;
   }
-  .field-span-2 { grid-column: auto; }
-  .chart-panel, .chart-panel-wide { min-height: 340px; }
-  .calendar-cell { min-height: auto; }
-}
+
+  .field-span-2 {
+    grid-column: auto;
+  }
+
+  .chart-panel,
+  .chart-panel-wide {
+    min-height: 340px;
+  }
