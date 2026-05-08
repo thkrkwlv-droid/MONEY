@@ -511,28 +511,34 @@ input, select {
   }
 
   .amount-quick-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-top: 10px;
 }
 
 .amount-chip {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 8px 12px;
+  border: 1px solid rgba(124, 92, 255, 0.18);
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.12), rgba(91, 140, 255, 0.08));
+  color: var(--primary);
+  border-radius: 14px;
+  padding: 10px 8px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 8px 18px rgba(124, 92, 255, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .amount-chip:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 12px 24px rgba(124, 92, 255, 0.14);
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.18), rgba(91, 140, 255, 0.12));
 }
 
 .amount-chip.reset {
+  border-color: var(--border);
+  background: var(--surface-soft);
   color: var(--muted);
+  box-shadow: none;
 }
