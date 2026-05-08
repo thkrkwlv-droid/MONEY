@@ -81,11 +81,44 @@ function QuickEntryForm({
         <label>
           <span>금액</span>
           <input
-            inputMode="numeric"
-            placeholder="예: 600,000"
             value={form.amountInput}
-            onChange={handleAmountChange}
+            onChange={(e) => setForm((prev) => ({ ...prev, amountInput: e.target.value }))}
+            placeholder="0"
+            required
           />
+        
+          <div className="amount-quick-buttons">
+            {[
+              { label: '+1만', value: 10000 },
+              { label: '+5만', value: 50000 },
+              { label: '+10만', value: 100000 },
+              { label: '+50만', value: 500000 },
+            ].map((button) => (
+              <button
+                key={button.value}
+                type="button"
+                className="amount-chip"
+                onClick={() => {
+                  const current = Number(String(form.amountInput || '').replace(/[^0-9]/g, '')) || 0;
+                  const next = current + button.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    amountInput: next.toLocaleString('ko-KR'),
+                  }));
+                }}
+              >
+                {button.label}
+              </button>
+            ))}
+        
+            <button
+              type="button"
+              className="amount-chip reset"
+              onClick={() => setForm((prev) => ({ ...prev, amountInput: '' }))}
+            >
+              초기화
+            </button>
+          </div>
         </label>
 
         <label>
