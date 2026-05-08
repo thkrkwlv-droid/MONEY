@@ -428,7 +428,7 @@ input, select {
   .list-grid.small-cards,
   .filter-grid,
   .form-grid,
-  .form-grid.compact-form,
+  .form-grid.compact-form {
     grid-template-columns: 1fr;
   }
     .app-layout {
