@@ -917,12 +917,18 @@ app.post('/api/assets', asyncHandler(async (req, res) => {
   });
 
   const result = await query(
-    `insert into asset_accounts (name, asset_type, balance, display_order, memo)
-     values ($1, $2, $3, $4, $5)
-     returning *`,
-    [payload.name, payload.asset_type, payload.balance, payload.display_order, payload.memo],
-  );
-
+    `insert into asset_accounts (name, asset_type, balance, initial_balance, display_order, memo)
+ values ($1, $2, $3, $4, $5, $6)
+ returning *`,
+[
+  payload.name,
+  payload.asset_type,
+  payload.balance,
+  payload.initial_balance ?? payload.balance,
+  payload.display_order,
+  payload.memo,
+],
+);
   res.status(201).json(result.rows[0]);
 }));
 
@@ -934,15 +940,24 @@ app.put('/api/assets/:id', asyncHandler(async (req, res) => {
 
   const result = await query(
     `update asset_accounts
-     set name = $1,
-         asset_type = $2,
-         balance = $3,
-         display_order = $4,
-         memo = $5,
-         updated_at = now()
-     where id = $6
-     returning *`,
-    [payload.name, payload.asset_type, payload.balance, payload.display_order, payload.memo, req.params.id],
+ set name = $1,
+     asset_type = $2,
+     balance = $3,
+     initial_balance = $4,
+     display_order = $5,
+     memo = $6,
+     updated_at = now()
+ where id = $7
+ returning *`,
+[
+  payload.name,
+  payload.asset_type,
+  payload.balance,
+  payload.initial_balance ?? payload.balance,
+  payload.display_order,
+  payload.memo,
+  req.params.id,
+],
   );
 
   res.json(result.rows[0]);
@@ -962,6 +977,38 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
     currency: settings.currency,
     ledger_name: settings.ledger_name || '가계부',
   });
+}));
+
+app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
+  await withTransaction(async (client) => {
+    await client.query(
+      `update asset_accounts
+       set balance = initial_balance,
+           updated_at = now()`,
+    );
+
+    await client.query(
+      `update asset_accounts a
+       set balance = a.initial_balance + coalesce(t.delta, 0),
+           updated_at = now()
+       from (
+         select
+           asset_account_id,
+           sum(
+             case
+               when type = 'income' then amount
+               else -amount
+             end
+           ) as delta
+         from transactions
+         where asset_account_id is not null
+         group by asset_account_id
+       ) t
+       where a.id = t.asset_account_id`,
+    );
+  });
+
+  res.json({ success: true });
 }));
 
 app.put('/api/settings/theme', asyncHandler(async (req, res) => {
