@@ -27,13 +27,25 @@ function buildCalendarMatrix(month) {
   return rows;
 }
 
-function CalendarView({ month, transactions }) {
-  const rows = buildCalendarMatrix(month);
-  const map = transactions.reduce((acc, item) => {
-    if (!acc[item.transaction_date]) acc[item.transaction_date] = [];
-    acc[item.transaction_date].push(item);
-    return acc;
-  }, {});
+function normalizeDateKey(value) {
+  if (!value) return '';
+
+  if (typeof value === 'string') {
+    return value.slice(0, 10);
+  }
+
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+const map = transactions.reduce((acc, item) => {
+  const dateKey = normalizeDateKey(item.transaction_date);
+  if (!dateKey) return acc;
+
+  if (!acc[dateKey]) acc[dateKey] = [];
+  acc[dateKey].push(item);
+
+  return acc;
+}, {});
 
   return (
     <section className="panel stack gap-lg">
@@ -58,7 +70,7 @@ function CalendarView({ month, transactions }) {
             const income = items.filter((item) => item.type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
             const expense = items.filter((item) => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
             return (
-              <div key={date || `blank-${index}-${Math.random()}`} className={`calendar-cell ${date ? '' : 'empty'}`}>
+              <div key={date || `blank-${index}`} className={`calendar-cell ${date ? '' : 'empty'}`}>
                 {date && (
                   <>
                     <strong>{new Date(date).getDate()}</strong>
