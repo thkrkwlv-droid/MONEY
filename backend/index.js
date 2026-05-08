@@ -85,7 +85,7 @@ async function getUncategorizedCategoryId(client) {
 
 async function getSettings() {
   const { rows } = await query(`select * from app_settings where id = true limit 1`);
-  return rows[0] || { dark_mode: false, pin_enabled: false, currency: 'KRW' };
+  return rows[0] || { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW' };
 }
 
 async function getRecentCategories() {
@@ -844,20 +844,27 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
   const settings = await getSettings();
   res.json({
     dark_mode: settings.dark_mode,
+    theme_mode: settings.theme_mode || (settings.dark_mode ? 'dark' : 'light'),
     pin_enabled: settings.pin_enabled,
     currency: settings.currency,
   });
 }));
 
 app.put('/api/settings/theme', asyncHandler(async (req, res) => {
-  const darkMode = Boolean(req.body.dark_mode);
+  const allowedThemes = ['light', 'dark', 'pastel-pink', 'pastel-blue', 'pastel-purple', 'mint', 'yellow', 'beige', 'gray'];
+  const themeMode = allowedThemes.includes(req.body.theme_mode) ? req.body.theme_mode : 'light';
+  const darkMode = themeMode === 'dark';
+
   const result = await query(
     `update app_settings
-     set dark_mode = $1, updated_at = now()
+     set dark_mode = $1,
+         theme_mode = $2,
+         updated_at = now()
      where id = true
-     returning dark_mode, pin_enabled, currency`,
-    [darkMode],
+     returning dark_mode, theme_mode, pin_enabled, currency`,
+    [darkMode, themeMode],
   );
+
   res.json(result.rows[0]);
 }));
 
