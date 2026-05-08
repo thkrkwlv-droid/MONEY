@@ -87,7 +87,7 @@ export const deleteAsset = (id) => del(`/api/assets/${id}`);
 
 // 설정
 export const fetchSettings = () => get('/api/settings');
-export const updateTheme = (darkMode) => put('/api/settings/theme', { dark_mode: darkMode });
+export const updateTheme = (themeMode) => put('/api/settings/theme', { theme_mode: themeMode });
 export const updatePin = (enabled, pin) => put('/api/settings/pin', { enabled, pin });
 export const unlockPin = (pin) => post('/api/settings/unlock', { pin });
 
