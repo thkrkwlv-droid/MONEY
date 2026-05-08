@@ -13,10 +13,11 @@ create table if not exists categories (
 
 create table if not exists transactions (
   id uuid primary key default gen_random_uuid(),
-  transaction_date date not null default current_date,
+  transaction_date date not null,
   type varchar(10) not null check (type in ('income', 'expense')),
-  amount bigint not null check (amount >= 0),
+  amount numeric(15,2) not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
+  asset_account_id uuid references asset_accounts(id) on delete set null,
   note text,
   payment_method varchar(50) not null default '현금',
   source_type varchar(20) not null default 'manual' check (source_type in ('manual', 'recurring', 'fixed_expense', 'restore')),
