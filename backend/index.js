@@ -242,6 +242,7 @@ async function getTransactions(filters = {}) {
     `select
         t.*,
         c.color as category_color,
+        c.name as category_name,
         a.name as asset_account_name,
         a.asset_type as asset_account_type
      from transactions t
@@ -457,26 +458,40 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
     note: normalizeText(req.body.note),
   });
 
-  const result = await query(
-    `insert into transactions (
-      transaction_date, type, amount, category_id, asset_account_id, note, payment_method, source_type, auto_generated
-    )
-    values ($1, $2, $3, $4, $5, $6, $7, 'manual', false)
-    returning *`,
-    [
-      payload.transaction_date,
-      payload.type,
-      payload.amount,
-      payload.category_id,
-      payload.asset_account_id,
-      payload.note,
-      payload.payment_method,
-    ],
-  );
+  const inserted = await withTransaction(async (client) => {
+    const result = await client.query(
+      `insert into transactions (
+        transaction_date, type, amount, category_id, asset_account_id, note, payment_method, source_type, auto_generated
+      )
+      values ($1, $2, $3, $4, $5, $6, $7, 'manual', false)
+      returning *`,
+      [
+        payload.transaction_date,
+        payload.type,
+        payload.amount,
+        payload.category_id,
+        payload.asset_account_id,
+        payload.note,
+        payload.payment_method,
+      ],
+    );
 
-  await applyAssetBalance(payload.asset_account_id, payload.type, payload.amount);
+    if (payload.asset_account_id) {
+      const delta = payload.type === 'income' ? Number(payload.amount || 0) : -Number(payload.amount || 0);
 
-  res.status(201).json(result.rows[0]);
+      await client.query(
+        `update asset_accounts
+         set balance = balance + $1,
+             updated_at = now()
+         where id = $2`,
+        [delta, payload.asset_account_id],
+      );
+    }
+
+    return result.rows[0];
+  });
+
+  res.status(201).json(inserted);
 }));
 
 app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
@@ -487,63 +502,95 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
     note: normalizeText(req.body.note),
   });
 
-  const beforeResult = await query(
-    `select asset_account_id, type, amount
-     from transactions
-     where id = $1`,
-    [req.params.id],
-  );
+  const updated = await withTransaction(async (client) => {
+    const beforeResult = await client.query(
+      `select asset_account_id, type, amount
+       from transactions
+       where id = $1`,
+      [req.params.id],
+    );
 
-  const before = beforeResult.rows[0];
+    const before = beforeResult.rows[0];
 
-  const result = await query(
-    `update transactions
-     set transaction_date = $1,
-         type = $2,
-         amount = $3,
-         category_id = $4,
-         asset_account_id = $5,
-         note = $6,
-         payment_method = $7,
-         updated_at = now()
-     where id = $8
-     returning *`,
-    [
-      payload.transaction_date,
-      payload.type,
-      payload.amount,
-      payload.category_id,
-      payload.asset_account_id,
-      payload.note,
-      payload.payment_method,
-      req.params.id,
-    ],
-  );
+    if (before?.asset_account_id) {
+      const reverseDelta = before.type === 'income' ? -Number(before.amount || 0) : Number(before.amount || 0);
 
-  if (before) {
-    await reverseAssetBalance(before.asset_account_id, before.type, before.amount);
-  }
+      await client.query(
+        `update asset_accounts
+         set balance = balance + $1,
+             updated_at = now()
+         where id = $2`,
+        [reverseDelta, before.asset_account_id],
+      );
+    }
 
-  await applyAssetBalance(payload.asset_account_id, payload.type, payload.amount);
+    const result = await client.query(
+      `update transactions
+       set transaction_date = $1,
+           type = $2,
+           amount = $3,
+           category_id = $4,
+           asset_account_id = $5,
+           note = $6,
+           payment_method = $7,
+           updated_at = now()
+       where id = $8
+       returning *`,
+      [
+        payload.transaction_date,
+        payload.type,
+        payload.amount,
+        payload.category_id,
+        payload.asset_account_id,
+        payload.note,
+        payload.payment_method,
+        req.params.id,
+      ],
+    );
 
-  res.json(result.rows[0]);
+    if (payload.asset_account_id) {
+      const applyDelta = payload.type === 'income' ? Number(payload.amount || 0) : -Number(payload.amount || 0);
+
+      await client.query(
+        `update asset_accounts
+         set balance = balance + $1,
+             updated_at = now()
+         where id = $2`,
+        [applyDelta, payload.asset_account_id],
+      );
+    }
+
+    return result.rows[0];
+  });
+
+  res.json(updated);
 }));
 
 app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
-  const beforeResult = await query(
-    `select asset_account_id, type, amount
-     from transactions
-     where id = $1`,
-    [req.params.id],
-  );
+  await withTransaction(async (client) => {
+    const beforeResult = await client.query(
+      `select asset_account_id, type, amount
+       from transactions
+       where id = $1`,
+      [req.params.id],
+    );
 
-  const before = beforeResult.rows[0];
+    const before = beforeResult.rows[0];
 
-  await query(`delete from transactions where id = $1`, [req.params.id]);
+    await client.query(`delete from transactions where id = $1`, [req.params.id]);
 
-  if (before) {
-    await reverseAssetBalance(before.asset_account_id, before.type, before.amount);
-  }
+    if (before?.asset_account_id) {
+      const reverseDelta = before.type === 'income' ? -Number(before.amount || 0) : Number(before.amount || 0);
+
+      await client.query(
+        `update asset_accounts
+         set balance = balance + $1,
+             updated_at = now()
+         where id = $2`,
+        [reverseDelta, before.asset_account_id],
+      );
+    }
+  });
 
   res.json({ success: true });
 }));
