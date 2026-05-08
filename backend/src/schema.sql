@@ -103,6 +103,7 @@ create table if not exists app_settings (
   pin_enabled boolean not null default false,
   pin_hash text,
   currency varchar(10) not null default 'KRW',
+  ledger_name varchar(80) not null default '가계부',
   updated_at timestamptz not null default now()
 );
 
@@ -153,6 +154,9 @@ end $$;
 
 alter table app_settings
 add column if not exists theme_mode varchar(30) not null default 'light';
+
+alter table app_settings
+add column if not exists ledger_name varchar(80) not null default '가계부';
 
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
