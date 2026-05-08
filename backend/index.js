@@ -174,6 +174,34 @@ async function getAssets() {
   return rows;
 }
 
+async function applyAssetBalance(assetAccountId, type, amount) {
+  if (!assetAccountId) return;
+
+  const delta = type === 'income' ? Number(amount || 0) : -Number(amount || 0);
+
+  await query(
+    `update asset_accounts
+     set balance = balance + $1,
+         updated_at = now()
+     where id = $2`,
+    [delta, assetAccountId],
+  );
+}
+
+async function reverseAssetBalance(assetAccountId, type, amount) {
+  if (!assetAccountId) return;
+
+  const delta = type === 'income' ? -Number(amount || 0) : Number(amount || 0);
+
+  await query(
+    `update asset_accounts
+     set balance = balance + $1,
+         updated_at = now()
+     where id = $2`,
+    [delta, assetAccountId],
+  );
+}
+
 async function getTransactions(filters = {}) {
   const conditions = [];
   const params = [];
@@ -213,10 +241,12 @@ async function getTransactions(filters = {}) {
   const { rows } = await query(
     `select
         t.*,
-        c.name as category_name,
-        c.color as category_color
+        c.color as category_color,
+        a.name as asset_account_name,
+        a.asset_type as asset_account_type
      from transactions t
      left join categories c on c.id = t.category_id
+     left join asset_accounts a on a.id = t.asset_account_id
      ${whereClause}
      order by t.transaction_date desc, t.created_at desc
      limit 300`,
@@ -423,24 +453,28 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
   const payload = transactionSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
+    asset_account_id: normalizeUuid(req.body.asset_account_id),
     note: normalizeText(req.body.note),
   });
 
   const result = await query(
     `insert into transactions (
-      transaction_date, type, amount, category_id, note, payment_method, source_type, auto_generated
+      transaction_date, type, amount, category_id, asset_account_id, note, payment_method, source_type, auto_generated
     )
-    values ($1, $2, $3, $4, $5, $6, 'manual', false)
+    values ($1, $2, $3, $4, $5, $6, $7, 'manual', false)
     returning *`,
     [
       payload.transaction_date,
       payload.type,
       payload.amount,
       payload.category_id,
+      payload.asset_account_id,
       payload.note,
       payload.payment_method,
     ],
   );
+
+  await applyAssetBalance(payload.asset_account_id, payload.type, payload.amount);
 
   res.status(201).json(result.rows[0]);
 }));
@@ -449,8 +483,18 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
   const payload = transactionSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
+    asset_account_id: normalizeUuid(req.body.asset_account_id),
     note: normalizeText(req.body.note),
   });
+
+  const beforeResult = await query(
+    `select asset_account_id, type, amount
+     from transactions
+     where id = $1`,
+    [req.params.id],
+  );
+
+  const before = beforeResult.rows[0];
 
   const result = await query(
     `update transactions
@@ -458,27 +502,49 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
          type = $2,
          amount = $3,
          category_id = $4,
-         note = $5,
-         payment_method = $6,
+         asset_account_id = $5,
+         note = $6,
+         payment_method = $7,
          updated_at = now()
-     where id = $7
+     where id = $8
      returning *`,
     [
       payload.transaction_date,
       payload.type,
       payload.amount,
       payload.category_id,
+      payload.asset_account_id,
       payload.note,
       payload.payment_method,
       req.params.id,
     ],
   );
 
+  if (before) {
+    await reverseAssetBalance(before.asset_account_id, before.type, before.amount);
+  }
+
+  await applyAssetBalance(payload.asset_account_id, payload.type, payload.amount);
+
   res.json(result.rows[0]);
 }));
 
 app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
+  const beforeResult = await query(
+    `select asset_account_id, type, amount
+     from transactions
+     where id = $1`,
+    [req.params.id],
+  );
+
+  const before = beforeResult.rows[0];
+
   await query(`delete from transactions where id = $1`, [req.params.id]);
+
+  if (before) {
+    await reverseAssetBalance(before.asset_account_id, before.type, before.amount);
+  }
+
   res.json({ success: true });
 }));
 
