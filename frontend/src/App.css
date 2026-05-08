@@ -429,11 +429,53 @@ input, select {
   .filter-grid,
   .form-grid,
   .form-grid.compact-form,
-  .calendar-grid {
     grid-template-columns: 1fr;
   }
     .app-layout {
     grid-template-columns: 1fr;
+  }
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .calendar-header {
+    font-size: 12px;
+  }
+
+  .calendar-cell {
+    min-height: 76px;
+    border: none;
+    border-radius: 12px;
+    padding: 4px 2px;
+    background: transparent;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+  }
+
+  .calendar-cell.empty {
+    border: none;
+  }
+
+  .calendar-cell strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .calendar-cell small {
+    display: none;
+  }
+
+  .calendar-summary {
+    gap: 0;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .calendar-items {
+    display: none;
   }
 
   .side-nav {
