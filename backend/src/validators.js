@@ -6,6 +6,8 @@ const transactionSchema = z.object({
   amount: z.coerce.number().int().nonnegative(),
   category_id: z.string().uuid().nullable().optional(),
   asset_account_id: z.string().uuid().nullable().optional(),
+  from_asset_account_id: z.string().uuid().nullable().optional(),
+  to_asset_account_id: z.string().uuid().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
   payment_method: z.string().max(50).default('현금'),
 });
