@@ -45,6 +45,7 @@ const recurringSchema = z.object({
 
 const fixedExpenseSchema = z.object({
   name: z.string().min(1).max(120),
+  type: z.enum(['income', 'expense', 'transfer']).default('expense'),
   amount: z.coerce.number().int().nonnegative(),
   category_id: z.string().uuid().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
