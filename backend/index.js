@@ -186,19 +186,21 @@ async function ensureCashAsset(client = { query }) {
   return created.rows[0];
 }
 
-const result = await pool.query(
-  `
-  select
-    a.*,
-    (
-      select coalesce(sum(cash_unsettled_amount), 0)
-      from transactions t
-      where t.cash_status = 'unsettled'
-    ) as unsettled_cash
-  from asset_accounts a
-  order by a.balance desc, a.created_at asc
-  `,
-);
+async function getAssets() {
+  const { rows } = await query(
+    `
+    select
+      a.*,
+      (
+        select coalesce(sum(cash_unsettled_amount), 0)
+        from transactions t
+        where t.cash_status = 'unsettled'
+      ) as unsettled_cash
+    from asset_accounts a
+    order by a.balance desc, a.created_at asc
+    `,
+  );
+
   return rows;
 }
 
