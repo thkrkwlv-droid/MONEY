@@ -1289,3 +1289,18 @@ input, select {
     transform: scale(0.86);
   }
 }
+
+.filter-reset-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .filter-reset-row {
+    justify-content: stretch;
+  }
+
+  .filter-reset-row button {
+    width: 100%;
+  }
+}
