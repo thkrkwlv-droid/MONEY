@@ -1684,3 +1684,61 @@ input, select {
     font-size: 9px;
   }
 }
+
+/* 캘린더 hover 미리보기 */
+.calendar-cell {
+  position: relative;
+}
+
+.calendar-hover-preview {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: 240px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.96);
+  color: white;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.18s ease;
+  z-index: 50;
+}
+
+.calendar-cell:hover .calendar-hover-preview {
+  opacity: 1;
+  transform: translateX(-50%) translateY(2px);
+}
+
+.calendar-hover-item {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.calendar-hover-item + .calendar-hover-item {
+  margin-top: 8px;
+}
+
+.calendar-hover-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-hover-more {
+  margin-top: 10px;
+  font-size: 11px;
+  opacity: 0.72;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .calendar-hover-preview {
+    display: none;
+  }
+}
