@@ -76,6 +76,7 @@ function QuickEntryForm({
           >
             <option value="expense">지출</option>
             <option value="income">수입</option>
+            <option value="transfer">자산이동</option>
           </select>
         </label>
 
