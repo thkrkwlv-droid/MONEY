@@ -1160,7 +1160,7 @@ app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
     );
 
     for (const tx of transactionResult.rows) {
-      if (tx.payment_method === '현금' && !tx.asset_account_id) {
+      if (tx.payment_method === '현금') {
         const cashResult = await applyCashTransaction(
           client,
           tx.type,
