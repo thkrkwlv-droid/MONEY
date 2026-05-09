@@ -653,11 +653,17 @@ function App() {
               setFilters={setFilters}
               onEdit={handleEditTransaction}
               onDelete={handleDeleteTransaction}
+              showTransfers={showTransfers}
+              setShowTransfers={setShowTransfers}
             />
           )}
 
           {activeTab === 'calendar' && (
-            <CalendarView month={month} transactions={data.transactions} />
+            <CalendarView
+              month={month}
+              transactions={data.transactions}
+              showTransfers={showTransfers}
+            />
           )}
 
           {activeTab === 'monthly-report' && (
