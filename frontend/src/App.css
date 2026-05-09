@@ -1304,3 +1304,30 @@ input, select {
     width: 100%;
   }
 }
+
+/* 모바일 date input 화면 이탈 방지 */
+@media (max-width: 720px) {
+  input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    font-size: 14px;
+    padding: 10px 10px;
+    text-align: left;
+  }
+
+  .filter-grid input[type="date"],
+  .form-grid input[type="date"],
+  .compact-form input[type="date"] {
+    min-width: 0;
+  }
+
+  .filter-grid label,
+  .form-grid label,
+  .compact-form label {
+    min-width: 0;
+    overflow: hidden;
+  }
+}
