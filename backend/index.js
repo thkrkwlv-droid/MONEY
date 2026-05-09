@@ -359,9 +359,26 @@ async function recalculateAllAssets(client) {
         ],
       );
     } else if (tx.type === 'transfer') {
-  // 자산이동은 별도 로직으로 처리 예정
-  // 현재는 저장 시점에만 반영되므로 재계산에서는 제외
-}
+      if (tx.asset_account_id) {
+        await client.query(
+          `update asset_accounts
+           set balance = balance - $1,
+               updated_at = now()
+           where id = $2`,
+          [tx.amount, tx.asset_account_id],
+        );
+      }
+    
+      if (tx.transfer_to_asset_account_id) {
+        await client.query(
+          `update asset_accounts
+           set balance = balance + $1,
+               updated_at = now()
+           where id = $2`,
+          [tx.amount, tx.transfer_to_asset_account_id],
+        );
+      }
+    }
     else if (tx.asset_account_id) {
       const delta = tx.type === 'income'
         ? Number(tx.amount || 0)
@@ -449,9 +466,12 @@ async function getTransactions(filters = {}) {
         c.name as category_name,
         a.name as asset_account_name,
         a.asset_type as asset_account_type
+        ta.name as transfer_to_asset_account_name,
+        ta.asset_type as transfer_to_asset_account_type
      from transactions t
      left join categories c on c.id = t.category_id
      left join asset_accounts a on a.id = t.asset_account_id
+     left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
      ${whereClause}
      order by t.transaction_date desc, t.created_at desc
      limit 300`,
@@ -696,17 +716,17 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
     
       const result = await client.query(
         `insert into transactions (
-          transaction_date, type, amount, category_id, asset_account_id, note, payment_method, source_type, auto_generated
+          transaction_date, type, amount, category_id, asset_account_id, transfer_to_asset_account_id, note, payment_method, source_type, auto_generated
         )
-        values ($1, 'transfer', $2, null, $3, $4, '자산이동', 'manual', false)
+        values ($1, 'transfer', $2, null, $3, $4, $5, '자산이동', 'manual', false)
         returning *`,
         [
           payload.transaction_date,
           payload.amount,
           payload.from_asset_account_id,
+          payload.to_asset_account_id,
           payload.note,
         ],
-      );
     
       return result.rows[0];
     }
