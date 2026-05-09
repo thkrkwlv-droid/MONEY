@@ -39,7 +39,7 @@ function normalizeDateKey(value) {
   return String(value).slice(0, 10);
 }
 
-function CalendarView({ month, transactions = [] }) {
+function CalendarView({ month, transactions = [], showTransfers = false }) {
   const [selectedDate, setSelectedDate] = useState(null);
 
   const rows = buildCalendarMatrix(month);
@@ -175,7 +175,7 @@ function CalendarView({ month, transactions = [] }) {
               </button>
             </div>
 
-            <div className="calendar-detail-columns">
+            <div className={`calendar-detail-columns ${showTransfers ? 'with-transfer' : ''}`}>
               <div className="calendar-detail-column">
                 <div className="calendar-detail-title positive-text">
                   수입
@@ -221,40 +221,34 @@ function CalendarView({ month, transactions = [] }) {
                   지출
                 </div>
 
-                <div className="calendar-detail-column">
-                  <div className="calendar-detail-title">
-                    자산이동
-                  </div>
-                
-                  {transferItems.length === 0 ? (
-                    <p className="muted">자산이동 내역 없음</p>
-                  ) : (
-                    <div className="calendar-detail-list">
-                      {transferItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className="calendar-detail-row"
-                        >
-                          <div>
-                            <strong>
-                              {item.note || '자산이동'}
-                            </strong>
-                
-                            <p className="muted">
-                              {item.asset_account_name || '출금 자산'}
-                              {' → '}
-                              {item.transfer_to_asset_account_name || '입금 자산'}
-                            </p>
-                          </div>
-                
-                          <strong className="muted">
-                            {formatAmount(item.amount)}원
-                          </strong>
-                        </div>
-                      ))}
+                {showTransfers && (
+                  <div className="calendar-detail-column">
+                    <div className="calendar-detail-title">
+                      자산이동
                     </div>
-                  )}
-                </div>
+                
+                    {transferItems.length === 0 ? (
+                      <p className="muted">자산이동 내역 없음</p>
+                    ) : (
+                      <div className="calendar-detail-list">
+                        {transferItems.map((item) => (
+                          <div key={item.id} className="calendar-detail-row">
+                            <div>
+                              <strong>{item.note || '자산이동'}</strong>
+                              <p className="muted">
+                                {item.asset_account_name || '출금 자산'} → {item.transfer_to_asset_account_name || '입금 자산'}
+                              </p>
+                            </div>
+                
+                            <strong className="muted">
+                              {formatAmount(item.amount)}원
+                            </strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {expenseItems.length === 0 ? (
                   <p className="muted">지출 내역 없음</p>
