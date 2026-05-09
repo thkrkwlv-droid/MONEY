@@ -8,6 +8,7 @@ const transactionSchema = z.object({
   asset_account_id: z.string().uuid().nullable().optional(),
   from_asset_account_id: z.string().uuid().nullable().optional(),
   to_asset_account_id: z.string().uuid().nullable().optional(),
+  transfer_to_asset_account_id: z.string().uuid().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
   payment_method: z.string().max(50).default('현금'),
 });
