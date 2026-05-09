@@ -214,8 +214,8 @@ function App() {
         payment_method: form.payment_method || '체크카드',
       });
 
-      await refreshCurrentMonth(editingTransaction ? '내역을 수정했습니다.' : '내역을 저장했습니다.');
-      setActiveTab('history');
+      setMessage(editingTransaction ? '내역을 수정했습니다.' : '내역을 저장했습니다.');
+      loadBootstrap(month);
     } catch (err) {
       setError(err.message || '저장에 실패했습니다.');
     } finally {
