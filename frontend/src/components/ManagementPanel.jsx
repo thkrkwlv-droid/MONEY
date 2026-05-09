@@ -68,7 +68,16 @@ function ManagementPanel({
     frequency: 'monthly', interval_count: 1, start_date: today(), weekday: 1, day_of_month: 25, is_active: true,
   });
   const [fixedForm, setFixedForm] = useState({
-    id: '', name: '', amountInput: '', category_id: '', note: '', payment_method: '자동이체', day_of_month: 25, start_date: today(), is_active: true,
+    id: '',
+    name: '',
+    type: 'expense',
+    amountInput: '',
+    category_id: '',
+    note: '',
+    payment_method: '자동이체',
+    day_of_month: 25,
+    start_date: today(),
+    is_active: true,
   });
   const [budgetForm, setBudgetForm] = useState({ id: '', month_start: `${month}-01`, category_id: '', amountInput: '' });
   const [assetForm, setAssetForm] = useState({
@@ -91,7 +100,16 @@ function ManagementPanel({
     frequency: 'monthly', interval_count: 1, start_date: today(), weekday: 1, day_of_month: 25, is_active: true,
   });
   const resetFixedForm = () => setFixedForm({
-    id: '', name: '', amountInput: '', category_id: '', note: '', payment_method: '자동이체', day_of_month: 25, start_date: today(), is_active: true,
+    id: '',
+    name: '',
+    type: 'expense',
+    amountInput: '',
+    category_id: '',
+    note: '',
+    payment_method: '자동이체',
+    day_of_month: 25,
+    start_date: today(),
+    is_active: true,
   });
   const resetBudgetForm = () => setBudgetForm({ id: '', month_start: `${month}-01`, category_id: '', amountInput: '' });
   const resetAssetForm = () => setAssetForm({
@@ -215,6 +233,22 @@ function ManagementPanel({
           resetFixedForm();
         }}>
           <label><span>거래명</span><input value={fixedForm.name} onChange={(e) => setFixedForm((prev) => ({ ...prev, name: e.target.value }))} required /></label>
+          <label>
+            <span>자동 거래 유형</span>
+            <select
+              value={fixedForm.type || 'expense'}
+              onChange={(e) =>
+                setFixedForm((prev) => ({
+                  ...prev,
+                  type: e.target.value,
+                }))
+              }
+            >
+              <option value="expense">지출</option>
+              <option value="income">수입</option>
+              <option value="transfer">자산이동</option>
+            </select>
+          </label>
           <label><span>금액</span><input value={fixedForm.amountInput} onChange={(e) => setFixedForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
           <label><span>카테고리</span><select value={fixedForm.category_id} onChange={(e) => setFixedForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">선택</option>{expenseCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <label><span>매월 날짜</span><input type="number" min="1" max="31" value={fixedForm.day_of_month} onChange={(e) => setFixedForm((prev) => ({ ...prev, day_of_month: Number(e.target.value) }))} required /></label>
