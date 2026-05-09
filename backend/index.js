@@ -465,7 +465,7 @@ async function getTransactions(filters = {}) {
         c.color as category_color,
         c.name as category_name,
         a.name as asset_account_name,
-        a.asset_type as asset_account_type
+        a.asset_type as asset_account_type,
         ta.name as transfer_to_asset_account_name,
         ta.asset_type as transfer_to_asset_account_type
      from transactions t
@@ -539,7 +539,6 @@ async function getDashboard(month) {
             coalesce(sum(case when type = 'income' then amount else -amount end), 0) as net_amount
          from transactions
          where transaction_date between $1 and $2
-           and type <> 'transfer'
            and type <> 'transfer'
          group by transaction_date
          order by transaction_date asc`,
@@ -733,8 +732,9 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
           payload.to_asset_account_id,
           payload.note,
         ],
-    
-      return result.rows[0];
+        );
+        
+        return result.rows[0];
     }
 
     if (payload.payment_method === '현금' && !assetAccountId) {
