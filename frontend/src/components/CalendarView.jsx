@@ -40,6 +40,7 @@ function normalizeDateKey(value) {
 }
 
 function CalendarView({ month, transactions = [], showTransfers = false }) {
+  const todayKey = new Date().toISOString().slice(0, 10);
   const [selectedDate, setSelectedDate] = useState(null);
 
   const rows = buildCalendarMatrix(month);
@@ -119,13 +120,16 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                 type="button"
                 className={`calendar-cell ${date ? '' : 'empty'} ${
                   selectedDate === date ? 'selected' : ''
-                }`}
+                } ${date === todayKey ? 'today' : ''}`}
                 onClick={() => date && setSelectedDate(date)}
                 disabled={!date}
               >
                 {date && (
                   <>
-                    <strong>{Number(date.slice(8, 10))}</strong>
+                    <strong>
+                      {Number(date.slice(8, 10))}
+                      {date === todayKey && <span className="today-label">TODAY</span>}
+                    </strong>
 
                     <div className="calendar-summary">
                       {income > 0 && (
