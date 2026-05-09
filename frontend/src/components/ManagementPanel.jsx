@@ -208,46 +208,7 @@ function ManagementPanel({
         </div>
       </Section>
 
-      <Section title="반복 입력" description="매일 · 매주 · 매월 패턴으로 자동 등록됩니다.">
-        <form className="form-grid compact-form" onSubmit={async (e) => {
-          e.preventDefault();
-          await onSaveRecurring({ ...recurringForm, amount: parseAmount(recurringForm.amountInput) });
-          resetRecurringForm();
-        }}>
-          <label><span>이름</span><input value={recurringForm.name} onChange={(e) => setRecurringForm((prev) => ({ ...prev, name: e.target.value }))} required /></label>
-          <label><span>유형</span><select value={recurringForm.type} onChange={(e) => setRecurringForm((prev) => ({ ...prev, type: e.target.value }))}><option value="expense">지출</option><option value="income">수입</option></select></label>
-          <label><span>금액</span><input value={recurringForm.amountInput} onChange={(e) => setRecurringForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
-          <label><span>카테고리</span><select value={recurringForm.category_id} onChange={(e) => setRecurringForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">선택</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-          <label><span>결제수단</span><select value={recurringForm.payment_method} onChange={(e) => setRecurringForm((prev) => ({ ...prev, payment_method: e.target.value }))}>{PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-          <label><span>시작일</span><input type="date" value={recurringForm.start_date} onChange={(e) => setRecurringForm((prev) => ({ ...prev, start_date: e.target.value }))} required /></label>
-          <label><span>주기</span><select value={recurringForm.frequency} onChange={(e) => setRecurringForm((prev) => ({ ...prev, frequency: e.target.value }))}><option value="daily">매일</option><option value="weekly">매주</option><option value="monthly">매월</option></select></label>
-          <label><span>간격</span><input type="number" min="1" value={recurringForm.interval_count} onChange={(e) => setRecurringForm((prev) => ({ ...prev, interval_count: Number(e.target.value) }))} /></label>
-          {recurringForm.frequency === 'weekly' && (
-            <label><span>요일</span><select value={recurringForm.weekday} onChange={(e) => setRecurringForm((prev) => ({ ...prev, weekday: Number(e.target.value) }))}>{WEEKDAY_NAMES.map((name, index) => <option key={name} value={index}>{name}</option>)}</select></label>
-          )}
-          {recurringForm.frequency === 'monthly' && (
-            <label><span>매월 날짜</span><input type="number" min="1" max="31" value={recurringForm.day_of_month} onChange={(e) => setRecurringForm((prev) => ({ ...prev, day_of_month: Number(e.target.value) }))} /></label>
-          )}
-          <label className="field-span-2"><span>메모</span><input value={recurringForm.note} onChange={(e) => setRecurringForm((prev) => ({ ...prev, note: e.target.value }))} /></label>
-          <label className="toggle-row"><input type="checkbox" checked={recurringForm.is_active} onChange={(e) => setRecurringForm((prev) => ({ ...prev, is_active: e.target.checked }))} /><span>활성화</span></label>
-          <div className="actions"><button type="submit" className="primary-button">{recurringForm.id ? '반복 거래 수정' : '반복 거래 추가'}</button>{recurringForm.id && <button type="button" className="secondary-button" onClick={resetRecurringForm}>취소</button>}</div>
-        </form>
-
-        <div className="list-grid small-cards">
-          {recurringTransactions.map((item) => (
-            <div key={item.id} className="mini-card">
-              <strong>{item.name}</strong>
-              <p className="muted">{item.frequency} · {formatAmount(item.amount)}원 · 다음 실행 {item.next_run_date}</p>
-              <div className="actions">
-                <button type="button" className="secondary-button" onClick={() => setRecurringForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
-                <button type="button" className="ghost-button" onClick={() => onDeleteRecurring(item.id)}>삭제</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="고정지출 자동 반영" description="서버 날짜 기준으로 자동 생성되며, 누락된 과거 월도 중복 없이 보정됩니다.">
+      <Section title="자동 거래 관리" description="매월 반복되는 지출, 수입, 자산이동을 관리합니다.">
         <form className="form-grid compact-form" onSubmit={async (e) => {
           e.preventDefault();
           await onSaveFixedExpense({ ...fixedForm, amount: parseAmount(fixedForm.amountInput) });
