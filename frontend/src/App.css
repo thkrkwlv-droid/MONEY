@@ -1623,3 +1623,30 @@ input, select {
     min-height: auto;
   }
 }
+
+/* 캘린더 오늘 날짜 강조 */
+.calendar-cell.today {
+  border: 2px solid var(--primary);
+  background: var(--primary-soft);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.14);
+}
+
+.calendar-cell.today strong {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.today-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  .today-label {
+    font-size: 8px;
+  }
+}
