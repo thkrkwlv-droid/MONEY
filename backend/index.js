@@ -652,16 +652,60 @@ app.get('/api/transactions/autocomplete', asyncHandler(async (req, res) => {
 
 app.post('/api/transactions', asyncHandler(async (req, res) => {
   const payload = transactionSchema.parse({
-    ...req.body,
-    category_id: normalizeUuid(req.body.category_id),
-    asset_account_id: normalizeUuid(req.body.asset_account_id),
-    note: normalizeText(req.body.note),
-  });
+  ...req.body,
+  category_id: normalizeUuid(req.body.category_id),
+  asset_account_id: normalizeUuid(req.body.asset_account_id),
+  from_asset_account_id: normalizeUuid(req.body.from_asset_account_id),
+  to_asset_account_id: normalizeUuid(req.body.to_asset_account_id),
+  note: normalizeText(req.body.note),
+});
 
   const inserted = await withTransaction(async (client) => {
     let assetAccountId = payload.asset_account_id;
     let cashStatus = 'none';
     let cashUnsettledAmount = 0;
+
+    if (payload.type === 'transfer') {
+      if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
+        throw new Error('출금 자산과 입금 자산을 모두 선택해주세요.');
+      }
+    
+      if (payload.from_asset_account_id === payload.to_asset_account_id) {
+        throw new Error('출금 자산과 입금 자산은 다르게 선택해주세요.');
+      }
+    
+      await client.query(
+        `update asset_accounts
+         set balance = balance - $1,
+             updated_at = now()
+         where id = $2`,
+        [payload.amount, payload.from_asset_account_id],
+      );
+    
+      await client.query(
+        `update asset_accounts
+         set balance = balance + $1,
+             updated_at = now()
+         where id = $2`,
+        [payload.amount, payload.to_asset_account_id],
+      );
+    
+      const result = await client.query(
+        `insert into transactions (
+          transaction_date, type, amount, category_id, asset_account_id, note, payment_method, source_type, auto_generated
+        )
+        values ($1, 'transfer', $2, null, $3, $4, '자산이동', 'manual', false)
+        returning *`,
+        [
+          payload.transaction_date,
+          payload.amount,
+          payload.from_asset_account_id,
+          payload.note,
+        ],
+      );
+    
+      return result.rows[0];
+    }
 
     if (payload.payment_method === '현금' && !assetAccountId) {
       const cashResult = await applyCashTransaction(client, payload.type, payload.amount);
