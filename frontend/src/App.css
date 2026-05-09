@@ -1495,3 +1495,39 @@ input, select {
     min-height: auto;
   }
 }
+
+/* 내역관리 카드 내부 줄 수 균일화 */
+.transaction-card .transaction-meta {
+  min-height: 32px;
+}
+
+.transaction-card .transaction-main > div > strong {
+  display: block;
+  min-height: 22px;
+}
+
+.transaction-card .transaction-main > div > p {
+  min-height: 22px;
+}
+
+.transaction-card .transaction-actions {
+  min-height: 44px;
+  align-items: center;
+}
+
+/* 내역관리 자산이동 3컬럼 강제 유지 */
+.transaction-split-grid.with-transfer {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr) minmax(220px, 0.8fr);
+  align-items: start;
+}
+
+.transaction-split-grid.with-transfer .transaction-column {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .transaction-split-grid.with-transfer {
+    grid-template-columns: 1fr;
+  }
+}
