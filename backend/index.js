@@ -195,6 +195,89 @@ async function getAssets() {
   return rows;
 }
 
+async function applyCashTransaction(client, type, amount) {
+  const cashAsset = await ensureCashAsset(client);
+  const cashBalance = Number(cashAsset.balance || 0);
+  const transactionAmount = Number(amount || 0);
+
+  if (type === 'income') {
+    const unsettledResult = await client.query(
+      `select coalesce(sum(cash_unsettled_amount), 0) as total
+       from transactions
+       where payment_method = '현금'
+         and cash_status = 'unsettled'`,
+    );
+
+    const unsettledTotal = Number(unsettledResult.rows[0]?.total || 0);
+    const offsetAmount = Math.min(transactionAmount, unsettledTotal);
+    const remainingIncome = transactionAmount - offsetAmount;
+
+    if (offsetAmount > 0) {
+      await client.query(
+        `update transactions
+         set cash_status = 'settled',
+             cash_unsettled_amount = 0,
+             updated_at = now()
+         where id in (
+           select id
+           from transactions
+           where payment_method = '현금'
+             and cash_status = 'unsettled'
+           order by transaction_date asc, created_at asc
+         )`,
+      );
+    }
+
+    if (remainingIncome > 0) {
+      await client.query(
+        `update asset_accounts
+         set balance = balance + $1,
+             updated_at = now()
+         where id = $2`,
+        [remainingIncome, cashAsset.id],
+      );
+    }
+
+    return {
+      asset_account_id: cashAsset.id,
+      cash_status: offsetAmount > 0 ? 'settled' : 'cashbox',
+      cash_unsettled_amount: 0,
+    };
+  }
+
+  if (cashBalance >= transactionAmount) {
+    await client.query(
+      `update asset_accounts
+       set balance = balance - $1,
+           updated_at = now()
+       where id = $2`,
+      [transactionAmount, cashAsset.id],
+    );
+
+    return {
+      asset_account_id: cashAsset.id,
+      cash_status: 'cashbox',
+      cash_unsettled_amount: 0,
+    };
+  }
+
+  if (cashBalance > 0) {
+    await client.query(
+      `update asset_accounts
+       set balance = 0,
+           updated_at = now()
+       where id = $1`,
+      [cashAsset.id],
+    );
+  }
+
+  return {
+    asset_account_id: cashAsset.id,
+    cash_status: 'unsettled',
+    cash_unsettled_amount: transactionAmount - cashBalance,
+  };
+}
+
 async function applyAssetBalance(assetAccountId, type, amount) {
   if (!assetAccountId) return;
 
@@ -480,24 +563,16 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
   });
 
   const inserted = await withTransaction(async (client) => {
-    const result = await client.query(
-      `insert into transactions (
-        transaction_date, type, amount, category_id, asset_account_id, note, payment_method, source_type, auto_generated
-      )
-      values ($1, $2, $3, $4, $5, $6, $7, 'manual', false)
-      returning *`,
-      [
-        payload.transaction_date,
-        payload.type,
-        payload.amount,
-        payload.category_id,
-        payload.asset_account_id,
-        payload.note,
-        payload.payment_method,
-      ],
-    );
+    let assetAccountId = payload.asset_account_id;
+    let cashStatus = 'none';
+    let cashUnsettledAmount = 0;
 
-    if (payload.asset_account_id) {
+    if (payload.payment_method === '현금' && !assetAccountId) {
+      const cashResult = await applyCashTransaction(client, payload.type, payload.amount);
+      assetAccountId = cashResult.asset_account_id;
+      cashStatus = cashResult.cash_status;
+      cashUnsettledAmount = cashResult.cash_unsettled_amount;
+    } else if (assetAccountId) {
       const delta = payload.type === 'income' ? Number(payload.amount || 0) : -Number(payload.amount || 0);
 
       await client.query(
@@ -505,9 +580,28 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
          set balance = balance + $1,
              updated_at = now()
          where id = $2`,
-        [delta, payload.asset_account_id],
+        [delta, assetAccountId],
       );
     }
+
+    const result = await client.query(
+      `insert into transactions (
+        transaction_date, type, amount, category_id, asset_account_id, cash_status, cash_unsettled_amount, note, payment_method, source_type, auto_generated
+      )
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'manual', false)
+      returning *`,
+      [
+        payload.transaction_date,
+        payload.type,
+        payload.amount,
+        payload.category_id,
+        assetAccountId,
+        cashStatus,
+        cashUnsettledAmount,
+        payload.note,
+        payload.payment_method,
+      ],
+    );
 
     return result.rows[0];
   });
