@@ -59,9 +59,16 @@ function AssetOverview({ assets = [] }) {
               </p>
 
               {Number(asset.monthly_change || 0) !== 0 && (
-                <p className={Number(asset.monthly_change || 0) > 0 ? 'positive-text' : 'danger-text'}>
+                <p
+                  className={
+                    Number(asset.monthly_change || 0) > 0
+                      ? 'positive-text asset-change-text'
+                      : 'danger-text asset-change-text'
+                  }
+                >
+                  {Number(asset.monthly_change || 0) > 0 ? '▲' : '▼'}{' '}
                   {Number(asset.monthly_change || 0) > 0 ? '+' : ''}
-                  {formatAmount(asset.monthly_change)}원 이번 달
+                  {formatAmount(asset.monthly_change)}원
                 </p>
               )}
 
