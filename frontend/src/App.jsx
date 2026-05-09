@@ -90,7 +90,14 @@ function App() {
     assets: [],
   });
   const [form, setForm] = useState(INITIAL_FORM);
-  const [filters, setFilters] = useState({ search: '', type: '', categoryId: '', startDate: '', endDate: '' });
+  const [filters, setFilters] = useState({
+    search: '',
+    type: '',
+    categoryId: '',
+    paymentMethod: '',
+    startDate: '',
+    endDate: '',
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
