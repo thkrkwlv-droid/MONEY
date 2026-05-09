@@ -1139,3 +1139,29 @@ input, select {
 .asset-card:hover {
   transform: translateY(-2px);
 }
+
+.filter-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.search-filter {
+  display: grid;
+  gap: 8px;
+}
+
+.search-filter input {
+  width: 100%;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
