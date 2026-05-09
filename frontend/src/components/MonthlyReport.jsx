@@ -109,6 +109,15 @@ function ReportList({ title, rows, type, modeLabel }) {
                 <strong className={type === 'income' ? 'positive-text' : 'danger-text'}>
                   {type === 'income' ? '+' : '-'}{formatAmount(item.total)}원
                 </strong>
+
+                <div className="report-bar-track">
+                  <div
+                    className={`report-bar-fill ${type === 'income' ? 'income' : 'expense'}`}
+                    style={{
+                      width: `${Math.max(6, percent)}%`,
+                    }}
+                  />
+                </div>
               </div>
             );
           })}
