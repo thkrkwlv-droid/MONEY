@@ -56,8 +56,6 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
     });
   }, [transactions, filters]);
 
-  const pageSize = 7;
-
   const filteredExpenseTransactions = filteredTransactions.filter(
     (transaction) => transaction.type === 'expense'
   );
