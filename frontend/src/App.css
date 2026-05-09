@@ -1667,3 +1667,20 @@ input, select {
     font-size: 9px;
   }
 }
+
+/* 캘린더 자동생성/고정지출 표시 */
+.fixed-calendar-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #ef4444;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .fixed-calendar-mark {
+    font-size: 9px;
+  }
+}
