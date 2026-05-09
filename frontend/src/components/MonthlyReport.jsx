@@ -1,6 +1,19 @@
+import { useMemo, useState } from 'react';
 import { formatAmount, formatMonthKo } from '../utils';
 
-function buildCategoryReport(transactions = [], fixedExpenses = []) {
+const REPORT_MODES = [
+  { id: 'category', label: '카테고리별', description: '수입/지출을 카테고리 기준으로 합산합니다.' },
+  { id: 'payment', label: '결제수단별', description: '카드, 현금, 계좌이체 등 결제수단 기준으로 합산합니다.' },
+  { id: 'asset', label: '자산별', description: '은행/자산 연결 기준으로 합산합니다.' },
+];
+
+function getReportKey(item, mode) {
+  if (mode === 'payment') return item.payment_method || '미분류';
+  if (mode === 'asset') return item.asset_account_name || '미연결';
+  return item.category_name || '미분류';
+}
+
+function buildReport(transactions = [], fixedExpenses = [], mode = 'category') {
   const fixedNames = new Set(
     (fixedExpenses || [])
       .map((item) => String(item.name || item.note || '').trim())
@@ -22,18 +35,19 @@ function buildCategoryReport(transactions = [], fixedExpenses = []) {
 
   transactions.forEach((item) => {
     const type = item.type === 'income' ? 'income' : 'expense';
-    const categoryName = item.category_name || '미분류';
     const amount = Number(item.amount || 0);
-    const key = item.category_id || categoryName;
+    const name = getReportKey(item, mode);
+    const key = `${type}-${name}`;
 
     if (!summary[type][key]) {
       summary[type][key] = {
         key,
-        categoryName,
+        name,
         total: 0,
         count: 0,
         color: item.category_color,
         isFixed:
+          Boolean(item.auto_generated) ||
           fixedCategoryIds.has(item.category_id) ||
           fixedNames.has(String(item.note || '').trim()),
       };
@@ -55,7 +69,7 @@ function buildCategoryReport(transactions = [], fixedExpenses = []) {
   };
 }
 
-function ReportList({ title, rows, type }) {
+function ReportList({ title, rows, type, modeLabel }) {
   const total = rows.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
   return (
@@ -63,7 +77,7 @@ function ReportList({ title, rows, type }) {
       <div className="section-heading compact">
         <div>
           <h3>{title}</h3>
-          <p className="muted">카테고리별 합계를 금액이 큰 순서로 보여줍니다.</p>
+          <p className="muted">{modeLabel} 합계를 금액이 큰 순서로 보여줍니다.</p>
         </div>
       </div>
 
@@ -82,7 +96,7 @@ function ReportList({ title, rows, type }) {
                     style={{ backgroundColor: item.color || (type === 'income' ? '#22c55e' : '#ef4444') }}
                   />
                   <div>
-                    <strong>{item.categoryName}</strong>
+                    <strong>{item.name}</strong>
                     <p className="muted">
                       {item.count}건 · {percent}%
                       {item.isFixed && <span className="fixed-badge">고정지출</span>}
@@ -102,16 +116,40 @@ function ReportList({ title, rows, type }) {
   );
 }
 
-function MonthlyReport({ month, transactions, fixedExpenses }) {
-  const report = buildCategoryReport(transactions, fixedExpenses);
+function MonthlyReport({ month, transactions = [], fixedExpenses = [] }) {
+  const [reportMode, setReportMode] = useState('category');
+
+  const selectedMode = REPORT_MODES.find((mode) => mode.id === reportMode) || REPORT_MODES[0];
+
+  const report = useMemo(
+    () => buildReport(transactions, fixedExpenses, reportMode),
+    [transactions, fixedExpenses, reportMode]
+  );
 
   return (
     <section className="stack gap-lg">
-      <div className="panel toolbar-row">
-        <div>
-          <h2>{formatMonthKo(month)} 월간 리포트</h2>
-          <p className="muted">한 달 동안의 수입과 지출을 카테고리별로 한눈에 확인합니다.</p>
+      <div className="panel stack gap-md">
+        <div className="toolbar-row">
+          <div>
+            <h2>{formatMonthKo(month)} 월간 리포트</h2>
+            <p className="muted">한 달 동안의 수입과 지출을 다양한 기준으로 확인합니다.</p>
+          </div>
         </div>
+
+        <div className="report-mode-row">
+          {REPORT_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              className={`report-mode-button ${reportMode === mode.id ? 'active' : ''}`}
+              onClick={() => setReportMode(mode.id)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="muted">{selectedMode.description}</p>
       </div>
 
       <div className="stats-grid">
@@ -135,8 +173,18 @@ function MonthlyReport({ month, transactions, fixedExpenses }) {
       </div>
 
       <div className="monthly-report-grid">
-        <ReportList title="수입 카테고리별 합계" rows={report.incomeRows} type="income" />
-        <ReportList title="지출 카테고리별 합계" rows={report.expenseRows} type="expense" />
+        <ReportList
+          title={`수입 ${selectedMode.label} 합계`}
+          rows={report.incomeRows}
+          type="income"
+          modeLabel={selectedMode.label}
+        />
+        <ReportList
+          title={`지출 ${selectedMode.label} 합계`}
+          rows={report.expenseRows}
+          type="expense"
+          modeLabel={selectedMode.label}
+        />
       </div>
     </section>
   );
