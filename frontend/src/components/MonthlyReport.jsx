@@ -34,6 +34,8 @@ function buildReport(transactions = [], fixedExpenses = [], mode = 'category') {
   };
 
   transactions.forEach((item) => {
+    if (item.type === 'transfer') return;
+    
     const type = item.type === 'income' ? 'income' : 'expense';
     const amount = Number(item.amount || 0);
     const name = getReportKey(item, mode);
