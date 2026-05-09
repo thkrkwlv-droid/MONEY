@@ -7,8 +7,18 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
       <div className="transaction-main">
         <div>
           <div className="transaction-meta">
-            <span className={`badge ${transaction.type === 'income' ? 'positive' : 'danger'}`}>
-              {transaction.type === 'income' ? '수입' : '지출'}
+            <span className={`badge ${
+              transaction.type === 'income'
+                ? 'positive'
+                : transaction.type === 'transfer'
+                  ? ''
+                  : 'danger'
+            }`}
+              {transaction.type === 'transfer'
+                ? '자산이동'
+                : transaction.type === 'income'
+                  ? '수입'
+                  : '지출'}
             </span>
             <span>{transaction.category_name || '미분류'}</span>
             <span>{transaction.payment_method}</span>
@@ -21,7 +31,12 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
         </div>
 
         <strong className={transaction.type === 'income' ? 'positive-text' : 'danger-text'}>
-          {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}원
+          {transaction.type === 'transfer'
+            ? ''
+            : transaction.type === 'income'
+              ? '+'
+              : '-'}
+          {formatAmount(transaction.amount)}원
         </strong>
       </div>
 
@@ -63,11 +78,16 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
   const filteredIncomeTransactions = filteredTransactions.filter(
     (transaction) => transaction.type === 'income'
   );
+
+  const filteredTransferTransactions = filteredTransactions.filter(
+    (transaction) => transaction.type === 'transfer'
+  );
   
   const expenseTotalPages = Math.max(1, Math.ceil(filteredExpenseTransactions.length / pageSize));
   const incomeTotalPages = Math.max(1, Math.ceil(filteredIncomeTransactions.length / pageSize));
+  const transferTotalPages = Math.max(1, Math.ceil(filteredTransferTransactions.length / pageSize));
   
-  const totalPages = Math.max(expenseTotalPages, incomeTotalPages);
+  const totalPages = Math.max(expenseTotalPages, incomeTotalPages, transferTotalPages);
   const safePage = Math.min(page, totalPages);
   
   const expenseTransactions = filteredExpenseTransactions.slice(
@@ -80,6 +100,11 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
     safePage * pageSize
   );
 
+  const transferTransactions = filteredTransferTransactions.slice(
+    (safePage - 1) * pageSize,
+    safePage * pageSize
+  );
+  
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
@@ -271,6 +296,25 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
                 onDelete={onDelete}
               />
             ))}
+
+            <div className="transaction-column">
+              <h3 className="transaction-column-title">자산이동</h3>
+            
+              {transferTransactions.length === 0 && (
+                <p className="muted">조건에 맞는 자산이동 내역이 없습니다.</p>
+              )}
+            
+              <div className="transaction-list">
+                {transferTransactions.map((transaction) => (
+                  <TransactionCard
+                    key={transaction.id}
+                    transaction={transaction}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
