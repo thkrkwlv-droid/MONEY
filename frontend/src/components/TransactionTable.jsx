@@ -214,6 +214,27 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
         </div>
       </div>
 
+      <div className="filter-reset-row">
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => {
+            setPage(1);
+      
+            setFilters({
+              search: '',
+              type: '',
+              categoryId: '',
+              paymentMethod: '',
+              startDate: '',
+              endDate: '',
+            });
+          }}
+        >
+          필터 초기화
+        </button>
+      </div>
+
       <div className="transaction-split-grid">
         <div className="transaction-column">
           <h3 className="transaction-column-title danger-text">지출</h3>
