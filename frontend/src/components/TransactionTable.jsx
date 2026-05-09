@@ -7,21 +7,25 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
       <div className="transaction-main">
         <div>
           <div className="transaction-meta">
-            <span className={`badge ${
-              transaction.type === 'income'
-                ? 'positive'
-                : transaction.type === 'transfer'
-                  ? ''
-                  : 'danger'
-            }`}
+            <span
+              className={`badge ${
+                transaction.type === 'income'
+                  ? 'positive'
+                  : transaction.type === 'transfer'
+                    ? ''
+                    : 'danger'
+              }`}
+            >
               {transaction.type === 'transfer'
                 ? '자산이동'
                 : transaction.type === 'income'
                   ? '수입'
                   : '지출'}
             </span>
+          
             <span>{transaction.category_name || '미분류'}</span>
             <span>{transaction.payment_method}</span>
+          
             {transaction.type === 'transfer' ? (
               <span>
                 {transaction.asset_account_name || '출금 자산'} → {transaction.transfer_to_asset_account_name || '입금 자산'}
@@ -29,6 +33,7 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
             ) : (
               transaction.asset_account_name && <span>{transaction.asset_account_name}</span>
             )}
+          
             {transaction.auto_generated && <span className="badge">자동 생성</span>}
           </div>
 
