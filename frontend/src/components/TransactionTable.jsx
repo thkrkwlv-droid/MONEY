@@ -1,6 +1,42 @@
 import { useMemo, useState } from 'react';
 import { PAYMENT_METHODS, formatAmount, formatDateKo } from '../utils';
 
+function TransactionCard({ transaction, onEdit, onDelete }) {
+  return (
+    <article className="transaction-card">
+      <div className="transaction-main">
+        <div>
+          <div className="transaction-meta">
+            <span className={`badge ${transaction.type === 'income' ? 'positive' : 'danger'}`}>
+              {transaction.type === 'income' ? '수입' : '지출'}
+            </span>
+            <span>{transaction.category_name || '미분류'}</span>
+            <span>{transaction.payment_method}</span>
+            {transaction.asset_account_name && <span>{transaction.asset_account_name}</span>}
+            {transaction.auto_generated && <span className="badge">자동 생성</span>}
+          </div>
+
+          <strong>{transaction.note || '메모 없음'}</strong>
+          <p className="muted">{formatDateKo(transaction.transaction_date)}</p>
+        </div>
+
+        <strong className={transaction.type === 'income' ? 'positive-text' : 'danger-text'}>
+          {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}원
+        </strong>
+      </div>
+
+      <div className="transaction-actions">
+        <button type="button" className="secondary-button" onClick={() => onEdit(transaction)}>
+          수정
+        </button>
+        <button type="button" className="ghost-button" onClick={() => onDelete(transaction.id)}>
+          삭제
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function TransactionTable({ transactions, categories, filters, setFilters, onEdit, onDelete }) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -8,6 +44,7 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
     return transactions.filter((transaction) => {
       if (filters.type && transaction.type !== filters.type) return false;
       if (filters.categoryId && transaction.category_id !== filters.categoryId) return false;
+      if (filters.paymentMethod && transaction.payment_method !== filters.paymentMethod) return false;
       if (filters.search) {
         const keyword = filters.search.toLowerCase();
         const searchable = `${transaction.note || ''} ${transaction.category_name || ''} ${transaction.payment_method || ''}`.toLowerCase();
@@ -22,6 +59,8 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const pagedTransactions = filteredTransactions.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const expenseTransactions = pagedTransactions.filter((transaction) => transaction.type === 'expense');
+  const incomeTransactions = pagedTransactions.filter((transaction) => transaction.type === 'income');
 
   return (
     <section className="panel stack gap-lg">
@@ -63,6 +102,23 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
           </select>
         </label>
         <label>
+          <span>결제수단</span>
+          <select
+            value={filters.paymentMethod}
+            onChange={(e) => {
+              setPage(1);
+              setFilters((prev) => ({ ...prev, paymentMethod: e.target.value }));
+            }}
+          >
+            <option value="">전체</option>
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method} value={method}>
+                {method}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           <span>시작일</span>
           <input type="date" value={filters.startDate} onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))} />
         </label>
@@ -72,33 +128,44 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
         </label>
       </div>
 
-      <div className="transaction-list">
-        {filteredTransactions.length === 0 && <p className="muted">조건에 맞는 내역이 없습니다.</p>}
-        {pagedTransactions.map((transaction) => (
-          <article key={transaction.id} className="transaction-card">
-            <div className="transaction-main">
-              <div>
-                <div className="transaction-meta">
-                  <span className={`badge ${transaction.type === 'income' ? 'positive' : 'danger'}`}>
-                    {transaction.type === 'income' ? '수입' : '지출'}
-                  </span>
-                  <span>{transaction.category_name || '미분류'}</span>
-                  <span>{transaction.payment_method}</span>
-                  {transaction.auto_generated && <span className="badge">자동 생성</span>}
-                </div>
-                <strong>{transaction.note || '메모 없음'}</strong>
-                <p className="muted">{formatDateKo(transaction.transaction_date)}</p>
-              </div>
-              <strong className={transaction.type === 'income' ? 'positive-text' : 'danger-text'}>
-                {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}원
-              </strong>
-            </div>
-            <div className="transaction-actions">
-              <button type="button" className="secondary-button" onClick={() => onEdit(transaction)}>수정</button>
-              <button type="button" className="ghost-button" onClick={() => onDelete(transaction.id)}>삭제</button>
-            </div>
-          </article>
-        ))}
+      <div className="transaction-split-grid">
+        <div className="transaction-column">
+          <h3 className="transaction-column-title danger-text">지출</h3>
+      
+          {expenseTransactions.length === 0 && (
+            <p className="muted">조건에 맞는 지출 내역이 없습니다.</p>
+          )}
+      
+          <div className="transaction-list">
+            {expenseTransactions.map((transaction) => (
+              <TransactionCard
+                key={transaction.id}
+                transaction={transaction}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        </div>
+      
+        <div className="transaction-column">
+          <h3 className="transaction-column-title positive-text">수입</h3>
+      
+          {incomeTransactions.length === 0 && (
+            <p className="muted">조건에 맞는 수입 내역이 없습니다.</p>
+          )}
+      
+          <div className="transaction-list">
+            {incomeTransactions.map((transaction) => (
+              <TransactionCard
+                key={transaction.id}
+                transaction={transaction}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       {filteredTransactions.length > pageSize && (
