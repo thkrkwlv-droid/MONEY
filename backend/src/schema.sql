@@ -18,6 +18,8 @@ create table if not exists transactions (
   amount numeric(15,2) not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
   asset_account_id uuid references asset_accounts(id) on delete set null,
+  cash_status varchar(30) not null default 'none',
+  cash_unsettled_amount bigint not null default 0,
   note text,
   payment_method varchar(50) not null default '현금',
   source_type varchar(20) not null default 'manual' check (source_type in ('manual', 'recurring', 'fixed_expense', 'restore')),
@@ -169,6 +171,12 @@ where initial_balance = 0;
 
 alter table transactions
 add column if not exists asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table transactions
+add column if not exists cash_status varchar(30) not null default 'none';
+
+alter table transactions
+add column if not exists cash_unsettled_amount bigint not null default 0;
 
 create index if not exists idx_transactions_asset on transactions(asset_account_id);
 
