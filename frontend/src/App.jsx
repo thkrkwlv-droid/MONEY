@@ -564,23 +564,6 @@ function App() {
       </button>
     </div>
 
-    <div className="month-direct-row">
-      {Array.from({ length: 12 }, (_, index) => index + 1).map((monthNumber) => {
-        const activeMonth = Number(month.split('-')[1]);
-
-        return (
-          <button
-            key={monthNumber}
-            type="button"
-            className={`month-chip-button ${activeMonth === monthNumber ? 'active' : ''}`}
-            onClick={() => selectMonth(monthNumber)}
-          >
-            {monthNumber}월
-          </button>
-        );
-      })}
-    </div>
-
     <div className="month-nav-row">
       <button type="button" className="month-arrow-button" onClick={() => moveMonth(-1)}>
         ◀
