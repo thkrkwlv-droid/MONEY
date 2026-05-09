@@ -365,10 +365,6 @@ function TransactionTable({
                 </div>
               )}
             
-              {transferTransactions.length === 0 && (
-                <p className="muted">조건에 맞는 자산이동 내역이 없습니다.</p>
-              )}
-            
               <div className="transaction-list">
                 {transferTransactions.map((transaction) => (
                   <TransactionCard
