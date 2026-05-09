@@ -1822,3 +1822,9 @@ input, select {
   opacity: 0.72;
   margin: 0;
 }
+
+.asset-change-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
