@@ -263,10 +263,30 @@ function ManagementPanel({
           {fixedExpenses.map((item) => (
             <div key={item.id} className="mini-card">
               <strong>{item.name}</strong>
-              <p className="muted">
-                {item.type === 'income' ? '수입' : item.type === 'transfer' ? '자산이동' : '지출'}
-                {' · '}
-                매월 {item.day_of_month}일 · {formatAmount(item.amount)}원 · 다음 실행 {item.next_run_date}
+              <p className="muted auto-transaction-meta">
+                <span
+                  className={`auto-transaction-badge ${
+                    item.type === 'income'
+                      ? 'income'
+                      : item.type === 'transfer'
+                        ? 'transfer'
+                        : 'expense'
+                  }`}
+                >
+                  {item.type === 'income'
+                    ? '수입'
+                    : item.type === 'transfer'
+                      ? '자산이동'
+                      : '지출'}
+                </span>
+              
+                <span>
+                  매월 {item.day_of_month}일 · {formatAmount(item.amount)}원
+                </span>
+              
+                <span>
+                  다음 실행 {item.next_run_date}
+                </span>
               </p>
               <div className="actions">
                 <button type="button" className="secondary-button" onClick={() =>
