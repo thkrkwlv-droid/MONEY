@@ -204,35 +204,47 @@ const result = await pool.query(
 
 async function applyCashTransaction(client, type, amount) {
   const cashAsset = await ensureCashAsset(client);
-  const cashBalance = Number(cashAsset.balance || 0);
   const transactionAmount = Number(amount || 0);
 
   if (type === 'income') {
+    let remainingIncome = transactionAmount;
+
     const unsettledResult = await client.query(
-      `select coalesce(sum(cash_unsettled_amount), 0) as total
+      `select id, cash_unsettled_amount
        from transactions
        where payment_method = '현금'
-         and cash_status = 'unsettled'`,
+         and cash_status = 'unsettled'
+         and cash_unsettled_amount > 0
+       order by transaction_date asc, created_at asc`,
     );
 
-    const unsettledTotal = Number(unsettledResult.rows[0]?.total || 0);
-    const offsetAmount = Math.min(transactionAmount, unsettledTotal);
-    const remainingIncome = transactionAmount - offsetAmount;
+    for (const row of unsettledResult.rows) {
+      if (remainingIncome <= 0) break;
 
-    if (offsetAmount > 0) {
-      await client.query(
-        `update transactions
-         set cash_status = 'settled',
-             cash_unsettled_amount = 0,
-             updated_at = now()
-         where id in (
-           select id
-           from transactions
-           where payment_method = '현금'
-             and cash_status = 'unsettled'
-           order by transaction_date asc, created_at asc
-         )`,
-      );
+      const unsettledAmount = Number(row.cash_unsettled_amount || 0);
+      const offsetAmount = Math.min(remainingIncome, unsettledAmount);
+      const nextUnsettledAmount = unsettledAmount - offsetAmount;
+
+      if (nextUnsettledAmount <= 0) {
+        await client.query(
+          `update transactions
+           set cash_status = 'settled',
+               cash_unsettled_amount = 0,
+               updated_at = now()
+           where id = $1`,
+          [row.id],
+        );
+      } else {
+        await client.query(
+          `update transactions
+           set cash_unsettled_amount = $1,
+               updated_at = now()
+           where id = $2`,
+          [nextUnsettledAmount, row.id],
+        );
+      }
+
+      remainingIncome -= offsetAmount;
     }
 
     if (remainingIncome > 0) {
@@ -247,10 +259,19 @@ async function applyCashTransaction(client, type, amount) {
 
     return {
       asset_account_id: cashAsset.id,
-      cash_status: offsetAmount > 0 ? 'settled' : 'cashbox',
+      cash_status: remainingIncome > 0 ? 'cashbox' : 'settled',
       cash_unsettled_amount: 0,
     };
   }
+
+  const freshCashAsset = await client.query(
+    `select id, balance
+     from asset_accounts
+     where id = $1`,
+    [cashAsset.id],
+  );
+
+  const cashBalance = Number(freshCashAsset.rows[0]?.balance || 0);
 
   if (cashBalance >= transactionAmount) {
     await client.query(
