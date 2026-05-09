@@ -1183,12 +1183,12 @@ app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
             tx.id,
           ],
         );
-      } else if (tx.asset_account_id) {
+      } else if (tx.asset_account_id && tx.payment_method !== '현금') {
         const delta =
           tx.type === 'income'
             ? Number(tx.amount || 0)
             : -Number(tx.amount || 0);
-
+      
         await client.query(
           `
           update asset_accounts
