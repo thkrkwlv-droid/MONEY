@@ -1099,13 +1099,15 @@ app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
   const nextRunDate = getInitialFixedExpenseNextRunDate(payload);
   const result = await query(
     `insert into fixed_expenses (
-      name, amount, category_id, note, payment_method,
+      name, type, amount, category_id, note, payment_method,
       day_of_month, start_date, next_run_date, is_active
     )
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     returning *`,
     [
       payload.name,
+      payload.type,
       payload.amount,
       payload.category_id,
       payload.note,
@@ -1132,19 +1134,21 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
   const result = await query(
     `update fixed_expenses
      set name = $1,
-         amount = $2,
-         category_id = $3,
-         note = $4,
-         payment_method = $5,
-         day_of_month = $6,
-         start_date = $7,
-         next_run_date = $8,
-         is_active = $9,
+         type = $2,
+         amount = $3,
+         category_id = $4,
+         note = $5,
+         payment_method = $6,
+         day_of_month = $7,
+         start_date = $8,
+         next_run_date = $9,
+         is_active = $10,
          updated_at = now()
-     where id = $10
+     where id = $11
      returning *`,
     [
       payload.name,
+      payload.type,
       payload.amount,
       payload.category_id,
       payload.note,
