@@ -1387,3 +1387,13 @@ input, select {
     grid-template-columns: 1fr;
   }
 }
+
+.transfer-route {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge.neutral {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+}
