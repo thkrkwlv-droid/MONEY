@@ -126,7 +126,20 @@ function QuickEntryForm({
           <span>카테고리</span>
           <select
             value={form.category_id}
-            onChange={(e) => setForm((prev) => ({ ...prev, category_id: e.target.value }))}
+            onChange={(e) => {
+              const selectedCategory = categories.find((category) => category.id === e.target.value);
+            
+              setForm((prev) => ({
+                ...prev,
+                category_id: e.target.value,
+                type:
+                  selectedCategory?.type === 'income'
+                    ? 'income'
+                    : selectedCategory?.type === 'expense'
+                      ? 'expense'
+                      : prev.type,
+              }));
+            }}
           >
             <option value="">카테고리 선택</option>
             {categories.map((category) => (
