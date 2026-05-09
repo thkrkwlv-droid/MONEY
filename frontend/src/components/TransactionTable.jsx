@@ -281,7 +281,10 @@ function TransactionTable({
         <button
           type="button"
           className={`secondary-button ${showTransfers ? 'active-soft' : ''}`}
-          onClick={() => setShowTransfers((prev) => !prev)}
+          onClick={() => {
+            setPage(1);
+            setShowTransfers((prev) => !prev);
+          }}
         >
           자산이동 {showTransfers ? '숨기기' : '보기'}
         </button>
