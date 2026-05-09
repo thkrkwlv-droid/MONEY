@@ -22,7 +22,13 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
             </span>
             <span>{transaction.category_name || '미분류'}</span>
             <span>{transaction.payment_method}</span>
-            {transaction.asset_account_name && <span>{transaction.asset_account_name}</span>}
+            {transaction.type === 'transfer' ? (
+              <span>
+                {transaction.asset_account_name || '출금 자산'} → {transaction.transfer_to_asset_account_name || '입금 자산'}
+              </span>
+            ) : (
+              transaction.asset_account_name && <span>{transaction.asset_account_name}</span>
+            )}
             {transaction.auto_generated && <span className="badge">자동 생성</span>}
           </div>
 
@@ -30,7 +36,15 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
           <p className="muted">{formatDateKo(transaction.transaction_date)}</p>
         </div>
 
-        <strong className={transaction.type === 'income' ? 'positive-text' : 'danger-text'}>
+        <strong
+          className={
+            transaction.type === 'income'
+              ? 'positive-text'
+              : transaction.type === 'transfer'
+                ? 'muted'
+                : 'danger-text'
+          }
+        >
           {transaction.type === 'transfer'
             ? ''
             : transaction.type === 'income'
