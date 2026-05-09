@@ -59,8 +59,16 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const pagedTransactions = filteredTransactions.slice((safePage - 1) * pageSize, safePage * pageSize);
-  const expenseTransactions = pagedTransactions.filter((transaction) => transaction.type === 'expense');
-  const incomeTransactions = pagedTransactions.filter((transaction) => transaction.type === 'income');
+  const expenseTransactions = [];
+  const incomeTransactions = [];
+  
+  pagedTransactions.forEach((transaction) => {
+    if (transaction.type === 'expense') {
+      expenseTransactions.push(transaction);
+    } else {
+      incomeTransactions.push(transaction);
+    }
+  });
 
   return (
     <section className="panel stack gap-lg">
@@ -73,59 +81,127 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
         <span className="badge">총 {filteredTransactions.length}건</span>
       </div>
 
-      <div className="filter-grid">
-        <label>
+      <div className="filter-layout">
+        <label className="search-filter">
           <span>키워드 검색</span>
-          <input 
-            value={filters.search} 
+      
+          <input
+            value={filters.search}
             onChange={(e) => {
               setPage(1);
-              setFilters((prev) => ({ ...prev, search: e.target.value }));
-            }} 
-            placeholder="메모, 카테고리, 결제수단" />
-        </label>
-        <label>
-          <span>유형</span>
-          <select value={filters.type} onChange={(e) => setFilters((prev) => ({ ...prev, type: e.target.value }))}>
-            <option value="">전체</option>
-            <option value="expense">지출</option>
-            <option value="income">수입</option>
-          </select>
-        </label>
-        <label>
-          <span>카테고리</span>
-          <select value={filters.categoryId} onChange={(e) => setFilters((prev) => ({ ...prev, categoryId: e.target.value }))}>
-            <option value="">전체</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>{category.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>결제수단</span>
-          <select
-            value={filters.paymentMethod}
-            onChange={(e) => {
-              setPage(1);
-              setFilters((prev) => ({ ...prev, paymentMethod: e.target.value }));
+      
+              setFilters((prev) => ({
+                ...prev,
+                search: e.target.value,
+              }));
             }}
-          >
-            <option value="">전체</option>
-            {PAYMENT_METHODS.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </select>
+            placeholder="메모, 카테고리, 결제수단 검색"
+          />
         </label>
-        <label>
-          <span>시작일</span>
-          <input type="date" value={filters.startDate} onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))} />
-        </label>
-        <label>
-          <span>종료일</span>
-          <input type="date" value={filters.endDate} onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))} />
-        </label>
+      
+        <div className="filter-grid">
+          <label>
+            <span>유형</span>
+      
+            <select
+              value={filters.type}
+              onChange={(e) => {
+                setPage(1);
+      
+                setFilters((prev) => ({
+                  ...prev,
+                  type: e.target.value,
+                }));
+              }}
+            >
+              <option value="">전체</option>
+              <option value="expense">지출</option>
+              <option value="income">수입</option>
+            </select>
+          </label>
+      
+          <label>
+            <span>카테고리</span>
+      
+            <select
+              value={filters.categoryId}
+              onChange={(e) => {
+                setPage(1);
+      
+                setFilters((prev) => ({
+                  ...prev,
+                  categoryId: e.target.value,
+                }));
+              }}
+            >
+              <option value="">전체</option>
+      
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+      
+          <label>
+            <span>결제수단</span>
+      
+            <select
+              value={filters.paymentMethod}
+              onChange={(e) => {
+                setPage(1);
+      
+                setFilters((prev) => ({
+                  ...prev,
+                  paymentMethod: e.target.value,
+                }));
+              }}
+            >
+              <option value="">전체</option>
+      
+              {PAYMENT_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </label>
+      
+          <label>
+            <span>시작일</span>
+      
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => {
+                setPage(1);
+      
+                setFilters((prev) => ({
+                  ...prev,
+                  startDate: e.target.value,
+                }));
+              }}
+            />
+          </label>
+      
+          <label>
+            <span>종료일</span>
+      
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => {
+                setPage(1);
+      
+                setFilters((prev) => ({
+                  ...prev,
+                  endDate: e.target.value,
+                }));
+              }}
+            />
+          </label>
+        </div>
       </div>
 
       <div className="transaction-split-grid">
