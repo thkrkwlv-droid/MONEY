@@ -494,6 +494,37 @@ function App() {
 }
 
   function moveYear(direction) {
+    setMonth((prev) => {
+      const [year, monthNumber] = prev.split('-').map(Number);
+  
+      const next = `${year + direction}-${String(monthNumber).padStart(2, '0')}`;
+  
+      setMonthInput(monthToDigits(next));
+  
+      return next;
+    });
+  }
+  
+  function moveToCurrentMonth() {
+    const next = currentMonth();
+  
+    setMonth(next);
+    setMonthInput(monthToDigits(next));
+  }
+  
+  function selectMonth(monthNumber) {
+    setMonth((prev) => {
+      const [year] = prev.split('-').map(Number);
+  
+      const next = `${year}-${String(monthNumber).padStart(2, '0')}`;
+  
+      setMonthInput(monthToDigits(next));
+  
+      return next;
+    });
+  }
+  
+  function moveYear(direction) {
   setMonth((prev) => {
     const [year, monthNumber] = prev.split('-').map(Number);
     const nextYear = year + direction;
@@ -580,22 +611,80 @@ function selectMonth(monthNumber) {
               ◀
             </button>
         
-            <label className="month-picker">
-              <span>조회 월</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="예: 202606"
-                value={formatMonthInput(monthInput)}
-                onChange={handleMonthInputChange}
-              />
-            </label>
-        
-            <button type="button" className="month-arrow-button" onClick={() => moveMonth(1)}>
-              ▶
-            </button>
-          </div>
-        </div>
+            <div className="month-control-panel">
+              <div className="month-year-actions">
+                <button
+                  type="button"
+                  className="month-mini-button"
+                  onClick={() => moveYear(-1)}
+                >
+                  작년
+                </button>
+            
+                <button
+                  type="button"
+                  className="month-mini-button"
+                  onClick={moveToCurrentMonth}
+                >
+                  현재
+                </button>
+            
+                <button
+                  type="button"
+                  className="month-mini-button"
+                  onClick={() => moveYear(1)}
+                >
+                  내년
+                </button>
+              </div>
+            
+              <div className="month-direct-row">
+                {Array.from({ length: 12 }, (_, index) => index + 1).map((monthNumber) => {
+                  const activeMonth = Number(month.split('-')[1]);
+            
+                  return (
+                    <button
+                      key={monthNumber}
+                      type="button"
+                      className={`month-chip-button ${activeMonth === monthNumber ? 'active' : ''}`}
+                      onClick={() => selectMonth(monthNumber)}
+                    >
+                      {monthNumber}월
+                    </button>
+                  );
+                })}
+              </div>
+            
+              <div className="month-nav-row">
+                <button
+                  type="button"
+                  className="month-arrow-button"
+                  onClick={() => moveMonth(-1)}
+                >
+                  ◀
+                </button>
+            
+                <label className="month-picker">
+                  <span>조회 월</span>
+            
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="예: 202606"
+                    value={formatMonthInput(monthInput)}
+                    onChange={handleMonthInputChange}
+                  />
+                </label>
+            
+                <button
+                  type="button"
+                  className="month-arrow-button"
+                  onClick={() => moveMonth(1)}
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
       </header>
 
       {(message || error) && (
