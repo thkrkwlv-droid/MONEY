@@ -1343,3 +1343,47 @@ input, select {
     flex: 0 0 auto;
   }
 }
+
+.transaction-split-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.transaction-split-grid.with-transfer {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.calendar-detail-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.calendar-detail-columns.with-transfer {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.filter-reset-row {
+  gap: 10px;
+}
+
+.active-soft {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.calendar-detail-row {
+  min-height: 92px;
+}
+
+.calendar-detail-row > strong {
+  align-self: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .transaction-split-grid,
+  .transaction-split-grid.with-transfer,
+  .calendar-detail-columns,
+  .calendar-detail-columns.with-transfer {
+    grid-template-columns: 1fr;
+  }
+}
