@@ -1239,3 +1239,53 @@ input, select {
     margin: 0;
   }
 }
+
+/* 모바일 입력 박스 화면 이탈 방지 */
+@media (max-width: 720px) {
+  input,
+  select {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  label {
+    min-width: 0;
+  }
+
+  .filter-grid,
+  .form-grid,
+  .form-grid.compact-form {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .panel {
+    overflow: hidden;
+  }
+}
+
+/* 모바일 캘린더 세로 간격 압축 */
+@media (max-width: 720px) {
+  .calendar-grid {
+    row-gap: 2px;
+  }
+
+  .calendar-cell {
+    min-height: 62px;
+    padding: 2px 1px;
+  }
+
+  .calendar-cell strong {
+    font-size: 16px;
+  }
+
+  .calendar-summary {
+    min-height: 22px;
+    font-size: 9px;
+    line-height: 1.05;
+  }
+
+  .calendar-summary span {
+    transform: scale(0.86);
+  }
+}
