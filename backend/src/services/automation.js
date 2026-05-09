@@ -75,10 +75,11 @@ async function processFixedExpenses(client, todayIso) {
           transaction_date, type, amount, category_id, note, payment_method,
           source_type, source_id, auto_generated
         )
-        values ($1, 'expense', $2, $3, $4, $5, 'fixed_expense', $6, true)
+        values ($1, $2, $3, $4, $5, $6, 'fixed_expense', $7, true)
         on conflict (source_type, source_id, transaction_date) do nothing`,
         [
           dueDate,
+          item.type || 'expense',
           item.amount,
           item.category_id,
           item.note || item.name,
