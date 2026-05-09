@@ -13,7 +13,7 @@ function AssetOverview({ assets = [] }) {
         </div>
       </div>
 
-      <div className="asset-total-card panel">
+      <div className="asset-total-card panel accent-gradient">
         <span>총 자산</span>
         <strong>{formatAmount(totalAsset)}원</strong>
         <p className="muted">등록된 자산 {sortedAssets.length}개 기준</p>
@@ -27,17 +27,40 @@ function AssetOverview({ assets = [] }) {
       ) : (
         <div className="asset-card-grid">
           {sortedAssets.map((asset) => (
-            <article key={asset.id} className="asset-card panel">
+            <article
+              key={asset.id}
+              className={`asset-card panel ${
+                asset.name === '현금 보관함'
+                  ? 'cash-asset-card'
+                  : ''
+              }`}
+            >
               <div>
                 <span className="asset-type">{asset.asset_type || '기타'}</span>
-                <h3>{asset.name}</h3>
+                <h3>
+                  {asset.name}
+                
+                  {asset.name === '현금 보관함' && (
+                    <span className="cash-badge">
+                      현금
+                    </span>
+                  )}
+                </h3>
               </div>
 
               <strong>{formatAmount(asset.balance)}원</strong>
 
               {asset.name === '현금 보관함' ? (
-                <p className="muted">
-                  미정산 현금: {formatAmount(asset.unsettled_cash || 0)}원
+                <p
+                  className={`muted unsettled-cash ${
+                    Number(asset.unsettled_cash || 0) > 0
+                      ? 'danger-text'
+                      : ''
+                  }`}
+                >
+                  미정산 현금:
+                  {' '}
+                  {formatAmount(asset.unsettled_cash || 0)}원
                 </p>
               ) : (
                 asset.memo && <p className="muted">{asset.memo}</p>
