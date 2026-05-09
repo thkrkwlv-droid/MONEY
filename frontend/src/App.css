@@ -1015,3 +1015,77 @@ input, select {
 .report-mode-button:hover {
   transform: translateY(-1px);
 }
+
+.month-control-panel {
+  display: grid;
+  gap: 10px;
+  min-width: min(620px, 100%);
+}
+
+.month-year-actions,
+.month-direct-row,
+.month-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.month-mini-button,
+.month-chip-button,
+.month-arrow-button {
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.month-chip-button.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.month-arrow-button {
+  min-width: 42px;
+  font-size: 15px;
+}
+
+.month-nav-row .month-picker {
+  min-width: 180px;
+}
+
+@media (max-width: 720px) {
+  .month-control-panel {
+    width: 100%;
+  }
+
+  .month-year-actions,
+  .month-direct-row,
+  .month-nav-row {
+    justify-content: flex-start;
+  }
+
+  .month-direct-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .month-chip-button {
+    padding: 8px 6px;
+  }
+
+  .month-nav-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+  }
+
+  .month-nav-row .month-picker {
+    min-width: 0;
+  }
+}
