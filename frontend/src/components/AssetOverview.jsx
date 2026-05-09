@@ -50,6 +50,13 @@ function AssetOverview({ assets = [] }) {
 
               <strong>{formatAmount(asset.balance)}원</strong>
 
+              {Number(asset.monthly_change || 0) !== 0 && (
+                <p className={Number(asset.monthly_change || 0) > 0 ? 'positive-text' : 'danger-text'}>
+                  {Number(asset.monthly_change || 0) > 0 ? '+' : ''}
+                  {formatAmount(asset.monthly_change)}원 이번 달
+                </p>
+              )}
+
               {asset.name === '현금 보관함' ? (
                 <p
                   className={`muted unsettled-cash ${
