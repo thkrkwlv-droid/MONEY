@@ -2,7 +2,7 @@ const { z } = require('zod');
 
 const transactionSchema = z.object({
   transaction_date: z.string().min(1),
-  type: z.enum(['income', 'expense']).default('expense'),
+  type: z.enum(['income', 'expense', 'transfer']).default('expense'),
   amount: z.coerce.number().int().nonnegative(),
   category_id: z.string().uuid().nullable().optional(),
   asset_account_id: z.string().uuid().nullable().optional(),
