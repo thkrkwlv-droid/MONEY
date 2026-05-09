@@ -66,6 +66,7 @@ create table if not exists recurring_transactions (
 create table if not exists fixed_expenses (
   id uuid primary key default gen_random_uuid(),
   name varchar(120) not null,
+  type varchar(20) not null default 'expense' check (type in ('income', 'expense', 'transfer')),
   amount bigint not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
   note text,
@@ -208,3 +209,13 @@ values
   ('주식 실현손익', 'both', '#f59e0b', true),
   ('수입', 'income', '#22c55e', true)
 on conflict (name) do nothing;
+
+alter table fixed_expenses
+add column if not exists type varchar(20) not null default 'expense';
+
+alter table fixed_expenses
+drop constraint if exists fixed_expenses_type_check;
+
+alter table fixed_expenses
+add constraint fixed_expenses_type_check
+check (type in ('income', 'expense', 'transfer'));
