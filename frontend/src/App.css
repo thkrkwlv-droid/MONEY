@@ -1816,3 +1816,9 @@ input, select {
   font-weight: 800;
   margin: 0;
 }
+
+.asset-ratio {
+  font-size: 12px;
+  opacity: 0.72;
+  margin: 0;
+}
