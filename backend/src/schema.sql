@@ -18,6 +18,7 @@ create table if not exists transactions (
   amount numeric(15,2) not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
   asset_account_id uuid references asset_accounts(id) on delete set null,
+  transfer_to_asset_account_id uuid references asset_accounts(id) on delete set null,
   cash_status varchar(30) not null default 'none',
   cash_unsettled_amount bigint not null default 0,
   note text,
@@ -171,6 +172,9 @@ where initial_balance = 0;
 
 alter table transactions
 add column if not exists asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table transactions
+add column if not exists transfer_to_asset_account_id uuid references asset_accounts(id) on delete set null;
 
 alter table transactions
 add column if not exists cash_status varchar(30) not null default 'none';
