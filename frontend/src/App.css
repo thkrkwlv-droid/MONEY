@@ -963,3 +963,28 @@ input, select {
     min-width: 0;
   }
 }
+
+.transaction-split-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.transaction-column {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.transaction-column-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+@media (max-width: 720px) {
+  .transaction-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
