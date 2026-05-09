@@ -346,19 +346,19 @@ function App() {
     try {
       if (payload.id) await updateFixedExpense(payload.id, payload);
       else await createFixedExpense(payload);
-      await refreshCurrentMonth(payload.id ? '고정지출을 수정했습니다.' : '고정지출을 추가했습니다.');
+      await refreshCurrentMonth(payload.id ? '자동 거래를 수정했습니다.' : '자동 거래를 추가했습니다.');
     } catch (err) {
-      setError(err.message || '고정지출 저장에 실패했습니다.');
+      setError(err.message || '자동 거래 저장에 실패했습니다.');
     }
   }
 
   async function removeFixedExpense(id) {
-    if (!window.confirm('고정지출을 삭제할까요?')) return;
+    if (!window.confirm('자동 거래를 삭제할까요?')) return;
     try {
       await deleteFixedExpense(id);
-      await refreshCurrentMonth('고정지출을 삭제했습니다.');
+      await refreshCurrentMonth('자동 거래를 삭제했습니다.');
     } catch (err) {
-      setError(err.message || '고정지출 삭제에 실패했습니다.');
+      setError(err.message || '자동 거래 삭제에 실패했습니다.');
     }
   }
 
