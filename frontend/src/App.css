@@ -1574,3 +1574,52 @@ input, select {
     min-height: auto;
   }
 }
+
+/* 내역관리 카드 줄 수 균일화 최종 */
+.transaction-split-grid.with-transfer .transaction-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 196px;
+}
+
+.transaction-split-grid.with-transfer .transaction-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  min-height: 96px;
+}
+
+.transaction-split-grid.with-transfer .transaction-meta {
+  min-height: 64px;
+}
+
+.transaction-split-grid.with-transfer .transaction-meta > span {
+  min-height: 24px;
+}
+
+.transaction-split-grid.with-transfer .transaction-main > div > strong {
+  display: block;
+  min-height: 24px;
+}
+
+.transaction-split-grid.with-transfer .transaction-main > div > p {
+  min-height: 22px;
+}
+
+.transaction-split-grid.with-transfer .transaction-actions {
+  margin-top: auto;
+  min-height: 42px;
+}
+
+@media (max-width: 720px) {
+  .transaction-split-grid.with-transfer .transaction-card,
+  .transaction-split-grid.with-transfer .transaction-main,
+  .transaction-split-grid.with-transfer .transaction-meta,
+  .transaction-split-grid.with-transfer .transaction-meta > span,
+  .transaction-split-grid.with-transfer .transaction-main > div > strong,
+  .transaction-split-grid.with-transfer .transaction-main > div > p,
+  .transaction-split-grid.with-transfer .transaction-actions {
+    min-height: auto;
+  }
+}
