@@ -358,7 +358,11 @@ async function recalculateAllAssets(client) {
           tx.id,
         ],
       );
-    } else if (tx.asset_account_id) {
+    } else if (tx.type === 'transfer') {
+  // 자산이동은 별도 로직으로 처리 예정
+  // 현재는 저장 시점에만 반영되므로 재계산에서는 제외
+}
+    else if (tx.asset_account_id) {
       const delta = tx.type === 'income'
         ? Number(tx.amount || 0)
         : -Number(tx.amount || 0);
