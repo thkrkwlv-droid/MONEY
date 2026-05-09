@@ -191,11 +191,38 @@ async function getAssets() {
     `
     select
       a.*,
+    
       (
         select coalesce(sum(cash_unsettled_amount), 0)
         from transactions t
         where t.cash_status = 'unsettled'
-      ) as unsettled_cash
+      ) as unsettled_cash,
+    
+      (
+        select coalesce(
+          sum(
+            case
+              when t.type = 'income' then t.amount
+              when t.type = 'expense' then -t.amount
+              when t.type = 'transfer'
+                and t.transfer_to_asset_account_id = a.id
+                then t.amount
+              when t.type = 'transfer'
+                and t.asset_account_id = a.id
+                then -t.amount
+              else 0
+            end
+          ),
+          0
+        )
+        from transactions t
+        where date_trunc('month', t.transaction_date)
+          = date_trunc('month', current_date)
+          and (
+            t.asset_account_id = a.id
+            or t.transfer_to_asset_account_id = a.id
+          )
+      ) as monthly_change
     from asset_accounts a
     order by a.balance desc, a.created_at asc
     `,
