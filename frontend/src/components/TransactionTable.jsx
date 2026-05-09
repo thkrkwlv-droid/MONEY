@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatAmount, formatDateKo } from '../utils';
+import { PAYMENT_METHODS, formatAmount, formatDateKo } from '../utils';
 
 function TransactionTable({ transactions, categories, filters, setFilters, onEdit, onDelete }) {
   const [page, setPage] = useState(1);
