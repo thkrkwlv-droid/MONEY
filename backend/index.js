@@ -491,7 +491,8 @@ async function getDashboard(month) {
             coalesce(sum(case when type = 'income' then amount else 0 end), 0) as income,
             coalesce(sum(case when type = 'expense' then amount else 0 end), 0) as expense
          from transactions
-         where transaction_date between $1 and $2`,
+         where transaction_date between $1 and $2
+           and type <> 'transfer'`,
         [start, end],
       ),
       query(
@@ -499,7 +500,8 @@ async function getDashboard(month) {
             coalesce(sum(case when type = 'income' then amount else 0 end), 0) as income,
             coalesce(sum(case when type = 'expense' then amount else 0 end), 0) as expense
          from transactions
-         where transaction_date between $1 and $2`,
+         where transaction_date between $1 and $2
+           and type <> 'transfer'`,
         [prevStart, prevEnd],
       ),
       query(
@@ -517,16 +519,18 @@ async function getDashboard(month) {
       ),
       query(
         `select payment_method, sum(amount)::bigint as total
-         from transactions
-         where transaction_date between $1 and $2
-         group by payment_method
+          from transactions
+          where transaction_date between $1 and $2
+            and type <> 'transfer'
+          group by payment_method
          order by total desc`,
         [start, end],
       ),
       query(
         `select coalesce(sum(case when type = 'income' then amount else -amount end), 0) as opening_balance
          from transactions
-         where transaction_date < $1`,
+         where transaction_date < $1
+           and type <> 'transfer'`,
         [start],
       ),
       query(
@@ -535,6 +539,8 @@ async function getDashboard(month) {
             coalesce(sum(case when type = 'income' then amount else -amount end), 0) as net_amount
          from transactions
          where transaction_date between $1 and $2
+           and type <> 'transfer'
+           and type <> 'transfer'
          group by transaction_date
          order by transaction_date asc`,
         [start, end],
