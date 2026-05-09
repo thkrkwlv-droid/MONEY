@@ -201,6 +201,8 @@ function App() {
         amount,
         category_id: categoryId,
         asset_account_id: form.asset_account_id || null,
+        from_asset_account_id: form.from_asset_account_id || null,
+        to_asset_account_id: form.to_asset_account_id || null,
         note: form.note,
         payment_method: form.payment_method || '체크카드',
       };
@@ -219,6 +221,8 @@ function App() {
         amountInput: '',
         category_id: preservedCategory || '',
         asset_account_id: form.asset_account_id || '',
+        from_asset_account_id: '',
+        to_asset_account_id: '',
         note: '',
         payment_method: form.payment_method || '체크카드',
       });
