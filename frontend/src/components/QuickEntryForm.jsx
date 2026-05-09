@@ -223,16 +223,24 @@ function QuickEntryForm({
           {form.type !== 'transfer' && (
             <label>
               <span>결제수단</span>
-              <input
-                value={form.payment_method || ''}
+          
+              <select
+                value={form.payment_method || '체크카드'}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
                     payment_method: e.target.value,
                   }))
                 }
-                placeholder="예: 체크카드, 현금, 자동이체"
-              />
+              >
+                <option value="체크카드">체크카드</option>
+                <option value="신용카드">신용카드</option>
+                <option value="계좌이체">계좌이체</option>
+                <option value="자동이체">자동이체</option>
+                <option value="현금">현금</option>
+                <option value="간편결제">간편결제</option>
+                <option value="기타">기타</option>
+              </select>
             </label>
           )}
           <select
