@@ -124,7 +124,12 @@ function QuickEntryForm({
         </label>
 
         <label>
-          <span>카테고리</span>
+          {form.type !== 'transfer' && (
+            <label>
+              <span>카테고리</span>
+              ...
+            </label>
+          )}
           <select
             value={form.category_id}
             onChange={(e) => {
@@ -167,24 +172,79 @@ function QuickEntryForm({
         </label>
 
         <label>
-          <span>자산/계좌</span>
-          <select
-            value={form.asset_account_id || ''}
-            onChange={(e) => setForm((prev) => ({ ...prev, asset_account_id: e.target.value }))}
-          >
-            <option value="">자산 선택 안 함</option>
-            {[...assets]
-              .sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0))
-              .map((asset) => (
-                <option key={asset.id} value={asset.id}>
-                  {asset.name} · {formatAmount(asset.balance)}원
-                </option>
-              ))}
-          </select>
-        </label>
+          {form.type === 'transfer' ? (
+            <>
+              <label>
+                <span>출금 자산</span>
+                <select
+                  value={form.from_asset_account_id || ''}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      from_asset_account_id: e.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="">선택</option>
+                  {assets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+          
+              <label>
+                <span>입금 자산</span>
+                <select
+                  value={form.to_asset_account_id || ''}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      to_asset_account_id: e.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="">선택</option>
+                  {assets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          ) : (
+            <label>
+              <span>자산/계좌</span>
+              <select
+                value={form.asset_account_id || ''}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    asset_account_id: e.target.value,
+                  }))
+                }
+              >
+                <option value="">선택 안 함</option>
+                {assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         
         <label>
-          <span>결제수단</span>
+          {form.type !== 'transfer' && (
+            <label>
+              <span>결제수단</span>
+              ...
+            </label>
+          )}
           <select
             value={form.payment_method}
             onChange={(e) => setForm((prev) => ({ ...prev, payment_method: e.target.value }))}
