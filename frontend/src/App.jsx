@@ -108,6 +108,7 @@ function App() {
   const [error, setError] = useState('');
   const [autocomplete, setAutocomplete] = useState({ notes: [], paymentMethods: [], recommendedCategory: null });
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [showTransfers, setShowTransfers] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   const defaultCategoryId = useMemo(() => {
