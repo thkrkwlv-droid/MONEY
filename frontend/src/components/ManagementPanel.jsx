@@ -263,9 +263,20 @@ function ManagementPanel({
           {fixedExpenses.map((item) => (
             <div key={item.id} className="mini-card">
               <strong>{item.name}</strong>
-              <p className="muted">매월 {item.day_of_month}일 · {formatAmount(item.amount)}원 · 다음 실행 {item.next_run_date}</p>
+              <p className="muted">
+                {item.type === 'income' ? '수입' : item.type === 'transfer' ? '자산이동' : '지출'}
+                {' · '}
+                매월 {item.day_of_month}일 · {formatAmount(item.amount)}원 · 다음 실행 {item.next_run_date}
+              </p>
               <div className="actions">
-                <button type="button" className="secondary-button" onClick={() => setFixedForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
+                <button type="button" className="secondary-button" onClick={() =>
+                  setFixedForm({
+                    ...item,
+                    type: item.type || 'expense',
+                    amountInput: formatAmount(item.amount),
+                  })
+                }
+                >수정</button>
                 <button type="button" className="ghost-button" onClick={() => onDeleteFixedExpense(item.id)}>삭제</button>
               </div>
             </div>
