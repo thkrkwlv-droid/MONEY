@@ -70,6 +70,8 @@ const INITIAL_FORM = {
   amountInput: '',
   category_id: '',
   asset_account_id: '',
+  from_asset_account_id: '',
+  to_asset_account_id: '',
   note: '',
   payment_method: '체크카드',
 };
