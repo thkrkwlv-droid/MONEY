@@ -38,15 +38,26 @@ export function currentMonth() {
 }
 
 // 날짜를 한국어 형식으로 포맷 (예: 2024년 1월 15일 화요일)
-export function formatDateKo(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  });
+export function formatDateKo(value) {
+  if (!value) return '-';
+
+  try {
+    const normalized = String(value).slice(0, 10);
+
+    const date = new Date(`${normalized}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+      return normalized;
+    }
+
+    return new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+  } catch (error) {
+    return String(value);
+  }
 }
 
 // 짧은 날짜 포맷 (예: 1월 15일)
