@@ -244,6 +244,8 @@ function App() {
       amountInput: String(Number(transaction.amount || 0).toLocaleString('ko-KR')),
       category_id: transaction.category_id || '',
       asset_account_id: transaction.asset_account_id || '',
+      from_asset_account_id: transaction.asset_account_id || '',
+      to_asset_account_id: transaction.transfer_to_asset_account_id || '',
       note: transaction.note || '',
       payment_method: transaction.payment_method || '체크카드',
     });
