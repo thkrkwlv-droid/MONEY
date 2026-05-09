@@ -1126,31 +1126,80 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
 
 app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
   await withTransaction(async (client) => {
+    const cashAsset = await ensureCashAsset(client);
+
     await client.query(
       `update asset_accounts
        set balance = initial_balance,
-           updated_at = now()`,
+           updated_at = now()
+       where name <> '현금 보관함'`,
     );
 
     await client.query(
-      `update asset_accounts a
-       set balance = a.initial_balance + coalesce(t.delta, 0),
+      `update asset_accounts
+       set balance = 0,
            updated_at = now()
-       from (
-         select
-           asset_account_id,
-           sum(
-             case
-               when type = 'income' then amount
-               else -amount
-             end
-           ) as delta
-         from transactions
-         where asset_account_id is not null
-         group by asset_account_id
-       ) t
-       where a.id = t.asset_account_id`,
+       where id = $1`,
+      [cashAsset.id],
     );
+
+    await client.query(
+      `update transactions
+       set cash_status = 'none',
+           cash_unsettled_amount = 0,
+           updated_at = now()
+       where payment_method = '현금'`,
+    );
+
+    const transactionResult = await client.query(
+      `
+      select *
+      from transactions
+      order by transaction_date asc, created_at asc
+      `,
+    );
+
+    for (const tx of transactionResult.rows) {
+      if (tx.payment_method === '현금' && !tx.asset_account_id) {
+        const cashResult = await applyCashTransaction(
+          client,
+          tx.type,
+          tx.amount,
+        );
+
+        await client.query(
+          `
+          update transactions
+          set cash_status = $1,
+              cash_unsettled_amount = $2,
+              asset_account_id = $3,
+              updated_at = now()
+          where id = $4
+          `,
+          [
+            cashResult.cash_status,
+            cashResult.cash_unsettled_amount,
+            cashResult.asset_account_id,
+            tx.id,
+          ],
+        );
+      } else if (tx.asset_account_id) {
+        const delta =
+          tx.type === 'income'
+            ? Number(tx.amount || 0)
+            : -Number(tx.amount || 0);
+
+        await client.query(
+          `
+          update asset_accounts
+          set balance = balance + $1,
+              updated_at = now()
+          where id = $2
+          `,
+          [delta, tx.asset_account_id],
+        );
+      }
+    }
   });
 
   res.json({ success: true });
