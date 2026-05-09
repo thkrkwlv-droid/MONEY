@@ -1171,3 +1171,71 @@ input, select {
 .danger-text {
   white-space: nowrap;
 }
+
+/* 모바일 UI 압축 최적화 */
+@media (max-width: 720px) {
+  .transaction-card {
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .transaction-main {
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .transaction-actions {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .ghost-button,
+  .upload-button {
+    min-height: 36px;
+    padding: 8px 11px;
+    font-size: 13px;
+  }
+
+  .mini-card {
+    padding: 12px;
+  }
+
+  .calendar-detail-sheet {
+    width: min(720px, 94vw);
+    max-height: 82vh;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .calendar-detail-row {
+    min-height: 68px;
+    padding: 11px 12px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+
+  .calendar-detail-columns {
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .calendar-detail-column {
+    gap: 8px;
+  }
+
+  .transaction-meta {
+    gap: 4px;
+    margin-bottom: 5px;
+  }
+
+  .transaction-meta span {
+    font-size: 11px;
+  }
+
+  .transaction-card p,
+  .calendar-detail-row p {
+    margin: 0;
+  }
+}
