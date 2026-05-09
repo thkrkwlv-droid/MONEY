@@ -1531,3 +1531,46 @@ input, select {
     grid-template-columns: 1fr;
   }
 }
+
+/* 내역관리 자산이동 컬럼 최종 고정 */
+@media (min-width: 721px) {
+  .transaction-split-grid.with-transfer {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 0.85fr) !important;
+    gap: 18px;
+    align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .transaction-split-grid.with-transfer {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 내역관리 지출/수입 카드 높이 최종 균일화 */
+.transaction-split-grid.with-transfer .transaction-card {
+  min-height: 188px;
+}
+
+.transaction-split-grid.with-transfer .transaction-meta {
+  min-height: 58px;
+  align-content: flex-start;
+}
+
+.transaction-split-grid.with-transfer .transaction-main {
+  min-height: 82px;
+}
+
+.transaction-split-grid.with-transfer .transaction-actions {
+  min-height: 42px;
+}
+
+@media (max-width: 720px) {
+  .transaction-split-grid.with-transfer .transaction-card,
+  .transaction-split-grid.with-transfer .transaction-meta,
+  .transaction-split-grid.with-transfer .transaction-main,
+  .transaction-split-grid.with-transfer .transaction-actions {
+    min-height: auto;
+  }
+}
