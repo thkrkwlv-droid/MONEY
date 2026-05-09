@@ -35,7 +35,13 @@ function AssetOverview({ assets = [] }) {
 
               <strong>{formatAmount(asset.balance)}원</strong>
 
-              {asset.memo && <p className="muted">{asset.memo}</p>}
+              {asset.name === '현금 보관함' ? (
+                <p className="muted">
+                  미정산 현금: {formatAmount(asset.unsettled_cash || 0)}원
+                </p>
+              ) : (
+                asset.memo && <p className="muted">{asset.memo}</p>
+              )}
             </article>
           ))}
         </div>
