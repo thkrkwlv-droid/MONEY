@@ -74,6 +74,12 @@ function buildReport(transactions = [], fixedExpenses = [], mode = 'category') {
 function ReportList({ title, rows, type, modeLabel }) {
   const total = rows.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
+  const topItem = rows[0] || null;
+
+  const topPercent = topItem && total
+    ? Math.round((Number(topItem.total || 0) / total) * 100)
+    : 0;
+
   return (
     <article className="panel stack gap-md">
       <div className="section-heading compact">
@@ -82,6 +88,22 @@ function ReportList({ title, rows, type, modeLabel }) {
           <p className="muted">{modeLabel} 합계를 금액이 큰 순서로 보여줍니다.</p>
         </div>
       </div>
+
+      {topItem && (
+        <div className={`report-top-summary ${type}`}>
+          <span>
+            {type === 'income' ? '💰 최대 수입' : '💸 최대 지출'}
+          </span>
+      
+          <strong>
+            {topItem.name}
+          </strong>
+      
+          <p>
+            {formatAmount(topItem.total)}원 · {topPercent}%
+          </p>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <p className="muted">이번 달에 등록된 내역이 없습니다.</p>
