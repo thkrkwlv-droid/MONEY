@@ -127,51 +127,33 @@ function QuickEntryForm({
           {form.type !== 'transfer' && (
             <label>
               <span>카테고리</span>
-              ...
+              <select
+                value={form.category_id || ''}
+                onChange={(e) => {
+                  const selectedCategory = categories.find((category) => category.id === e.target.value);
+          
+                  setForm((prev) => ({
+                    ...prev,
+                    category_id: e.target.value,
+                    type:
+                      selectedCategory?.type === 'income'
+                        ? 'income'
+                        : selectedCategory?.type === 'expense'
+                          ? 'expense'
+                          : prev.type,
+                  }));
+                }}
+              >
+                <option value="">카테고리 선택</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </label>
           )}
-          <select
-            value={form.category_id}
-            onChange={(e) => {
-              const selectedCategory = categories.find((category) => category.id === e.target.value);
-            
-              setForm((prev) => ({
-                ...prev,
-                category_id: e.target.value,
-                type:
-                  selectedCategory?.type === 'income'
-                    ? 'income'
-                    : selectedCategory?.type === 'expense'
-                      ? 'expense'
-                      : prev.type,
-              }));
-            }}
-          >
-            <option value="">카테고리 선택</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field-span-2">
-          <span>메모</span>
-          <input
-            list="note-suggestions"
-            placeholder="선택 입력"
-            value={form.note}
-            onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
-          />
-          <datalist id="note-suggestions">
-            {(autocomplete?.notes || []).map((note) => (
-              <option key={note} value={note} />
-            ))}
-          </datalist>
-        </label>
-
-        <label>
+          
           {form.type === 'transfer' ? (
             <>
               <label>
@@ -237,12 +219,20 @@ function QuickEntryForm({
               </select>
             </label>
           )}
-        
-        <label>
+          
           {form.type !== 'transfer' && (
             <label>
               <span>결제수단</span>
-              ...
+              <input
+                value={form.payment_method || ''}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    payment_method: e.target.value,
+                  }))
+                }
+                placeholder="예: 체크카드, 현금, 자동이체"
+              />
             </label>
           )}
           <select
