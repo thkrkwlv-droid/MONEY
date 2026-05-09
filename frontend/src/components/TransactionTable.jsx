@@ -71,7 +71,16 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
   );
 }
 
-function TransactionTable({ transactions, categories, filters, setFilters, onEdit, onDelete }) {
+function TransactionTable({
+  transactions,
+  categories,
+  filters,
+  setFilters,
+  onEdit,
+  onDelete,
+  showTransfers,
+  setShowTransfers,
+}) {
   const [page, setPage] = useState(1);
   const pageSize = 7;
   const filteredTransactions = useMemo(() => {
@@ -261,6 +270,14 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
       <div className="filter-reset-row">
         <button
           type="button"
+          className={`secondary-button ${showTransfers ? 'active-soft' : ''}`}
+          onClick={() => setShowTransfers((prev) => !prev)}
+        >
+          자산이동 {showTransfers ? '숨기기' : '보기'}
+        </button>
+      
+        <button
+          type="button"
           className="secondary-button"
           onClick={() => {
             setPage(1);
@@ -279,7 +296,7 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
         </button>
       </div>
 
-      <div className="transaction-split-grid">
+      <div className={`transaction-split-grid ${showTransfers ? 'with-transfer' : ''}`}>
         <div className="transaction-column">
           <h3 className="transaction-column-title danger-text">지출</h3>
       
@@ -317,7 +334,26 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
             ))}
 
             <div className="transaction-column">
-              <h3 className="transaction-column-title">자산이동</h3>
+              {showTransfers && (
+                <div className="transaction-column">
+                  <h3 className="transaction-column-title">자산이동</h3>
+              
+                  {transferTransactions.length === 0 && (
+                    <p className="muted">조건에 맞는 자산이동 내역이 없습니다.</p>
+                  )}
+              
+                  <div className="transaction-list">
+                    {transferTransactions.map((transaction) => (
+                      <TransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             
               {transferTransactions.length === 0 && (
                 <p className="muted">조건에 맞는 자산이동 내역이 없습니다.</p>
