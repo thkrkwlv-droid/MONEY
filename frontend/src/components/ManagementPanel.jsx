@@ -93,6 +93,14 @@ function ManagementPanel({
 
   const expenseCategories = useMemo(() => categories.filter((item) => item.type !== 'income'), [categories]);
 
+  const incomeCategories = useMemo(() => categories.filter((item) => item.type !== 'expense'), [categories]);
+
+  const fixedCategories = useMemo(() => {
+    if (fixedForm.type === 'income') return incomeCategories;
+    if (fixedForm.type === 'transfer') return [];
+    return expenseCategories;
+  }, [fixedForm.type, incomeCategories, expenseCategories]);
+
   const resetCategoryForm = () => setCategoryForm({ id: '', name: '', type: 'expense', color: '#6366f1' });
   const resetFavoriteForm = () => setFavoriteForm({ id: '', name: '', type: 'expense', amountInput: '', category_id: '', note: '', payment_method: '현금' });
   const resetRecurringForm = () => setRecurringForm({
@@ -241,6 +249,7 @@ function ManagementPanel({
                 setFixedForm((prev) => ({
                   ...prev,
                   type: e.target.value,
+                  category_id: '',
                 }))
               }
             >
@@ -250,7 +259,7 @@ function ManagementPanel({
             </select>
           </label>
           <label><span>금액</span><input value={fixedForm.amountInput} onChange={(e) => setFixedForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
-          <label><span>카테고리</span><select value={fixedForm.category_id} onChange={(e) => setFixedForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">선택</option>{expenseCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+          <label><span>카테고리</span><select value={fixedForm.category_id} onChange={(e) => setFixedForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">선택</option>{fixedCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <label><span>매월 날짜</span><input type="number" min="1" max="31" value={fixedForm.day_of_month} onChange={(e) => setFixedForm((prev) => ({ ...prev, day_of_month: Number(e.target.value) }))} required /></label>
           <label><span>시작일</span><input type="date" value={fixedForm.start_date} onChange={(e) => setFixedForm((prev) => ({ ...prev, start_date: e.target.value }))} required /></label>
           <label><span>결제수단</span><select value={fixedForm.payment_method} onChange={(e) => setFixedForm((prev) => ({ ...prev, payment_method: e.target.value }))}>{PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
