@@ -1476,3 +1476,22 @@ input, select {
     width: min(720px, 94vw);
   }
 }
+
+/* 내역관리 카드 높이 균일화 */
+.transaction-split-grid.with-transfer .transaction-card {
+  min-height: 172px;
+}
+
+.transaction-split-grid.with-transfer .transaction-main {
+  min-height: 72px;
+}
+
+@media (max-width: 720px) {
+  .transaction-split-grid.with-transfer .transaction-card {
+    min-height: auto;
+  }
+
+  .transaction-split-grid.with-transfer .transaction-main {
+    min-height: auto;
+  }
+}
