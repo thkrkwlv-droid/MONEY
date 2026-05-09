@@ -12,7 +12,7 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
                 transaction.type === 'income'
                   ? 'positive'
                   : transaction.type === 'transfer'
-                    ? ''
+                    ? 'neutral'
                     : 'danger'
               }`}
             >
@@ -23,18 +23,26 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
                   : '지출'}
             </span>
           
-            <span>{transaction.category_name || '미분류'}</span>
-            <span>{transaction.payment_method}</span>
-          
             {transaction.type === 'transfer' ? (
-              <span>
-                {transaction.asset_account_name || '출금 자산'} → {transaction.transfer_to_asset_account_name || '입금 자산'}
+              <span className="transfer-route">
+                {transaction.asset_account_name || '출금 자산'}
+                {' → '}
+                {transaction.transfer_to_asset_account_name || '입금 자산'}
               </span>
             ) : (
-              transaction.asset_account_name && <span>{transaction.asset_account_name}</span>
+              <>
+                <span>{transaction.category_name || '미분류'}</span>
+                <span>{transaction.payment_method}</span>
+          
+                {transaction.asset_account_name && (
+                  <span>{transaction.asset_account_name}</span>
+                )}
+              </>
             )}
           
-            {transaction.auto_generated && <span className="badge">자동 생성</span>}
+            {transaction.auto_generated && (
+              <span className="badge">자동 생성</span>
+            )}
           </div>
 
           <strong>{transaction.note || '메모 없음'}</strong>
@@ -46,16 +54,18 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
             transaction.type === 'income'
               ? 'positive-text'
               : transaction.type === 'transfer'
-                ? 'muted'
+                ? ''
                 : 'danger-text'
           }
         >
-          {transaction.type === 'transfer'
-            ? ''
-            : transaction.type === 'income'
-              ? '+'
+          {transaction.type === 'income'
+            ? '+'
+            : transaction.type === 'transfer'
+              ? ''
               : '-'}
           {formatAmount(transaction.amount)}원
+        
+          {transaction.type === 'transfer' && ' 이동'}
         </strong>
       </div>
 
