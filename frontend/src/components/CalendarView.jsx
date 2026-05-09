@@ -114,6 +114,8 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                 0
               );
 
+            const transferCount = items.filter((item) => item.type === 'transfer').length;
+
             return (
               <button
                 key={date || `blank-${rowIndex}-${dayIndex}`}
@@ -141,6 +143,12 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                       {expense > 0 && (
                         <span className="danger-text">
                           -{formatAmount(expense)}
+                        </span>
+                      )}
+
+                      {transferCount > 0 && (
+                        <span className="transfer-calendar-mark">
+                          ↔ {transferCount}
                         </span>
                       )}
                     </div>
