@@ -14,7 +14,7 @@ create table if not exists categories (
 create table if not exists transactions (
   id uuid primary key default gen_random_uuid(),
   transaction_date date not null,
-  type varchar(10) not null check (type in ('income', 'expense')),
+  type varchar(10) not null check (type in ('income', 'expense', 'transfer')),
   amount numeric(15,2) not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
   asset_account_id uuid references asset_accounts(id) on delete set null,
@@ -179,6 +179,13 @@ alter table transactions
 add column if not exists cash_unsettled_amount bigint not null default 0;
 
 create index if not exists idx_transactions_asset on transactions(asset_account_id);
+
+alter table transactions
+drop constraint if exists transactions_type_check;
+
+alter table transactions
+add constraint transactions_type_check
+check (type in ('income', 'expense', 'transfer'));
 
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
