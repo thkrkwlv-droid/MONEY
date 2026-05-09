@@ -706,21 +706,14 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
-  
-    const before = beforeResult.rows[0];
+  const payload = transactionSchema.parse({
+    ...req.body,
+    category_id: normalizeUuid(req.body.category_id),
+    asset_account_id: normalizeUuid(req.body.asset_account_id),
+    note: normalizeText(req.body.note),
+  });
 
-    if (before?.asset_account_id) {
-      const reverseDelta = before.type === 'income' ? -Number(before.amount || 0) : Number(before.amount || 0);
-
-      await client.query(
-        `update asset_accounts
-         set balance = balance + $1,
-             updated_at = now()
-         where id = $2`,
-        [reverseDelta, before.asset_account_id],
-      );
-    }
-
+  const updated = await withTransaction(async (client) => {
     const result = await client.query(
       `update transactions
        set transaction_date = $1,
@@ -746,7 +739,7 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
     );
 
     await recalculateAllAssets(client);
-  
+
     return result.rows[0];
   });
 
