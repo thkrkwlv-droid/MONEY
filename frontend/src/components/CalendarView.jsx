@@ -177,10 +177,8 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
 
             <div className={`calendar-detail-columns ${showTransfers ? 'with-transfer' : ''}`}>
               <div className="calendar-detail-column">
-                <div className="calendar-detail-title positive-text">
-                  수입
-                </div>
-
+                <div className="calendar-detail-title positive-text">수입</div>
+            
                 {incomeItems.length === 0 ? (
                   <p className="muted">수입 내역 없음</p>
                 ) : (
@@ -188,25 +186,16 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                     {incomeItems.map((item) => (
                       <div
                         key={item.id}
-                        className={`calendar-detail-row ${
-                          item.auto_generated ? 'fixed-highlight' : ''
-                        }`}
+                        className={`calendar-detail-row ${item.auto_generated ? 'fixed-highlight' : ''}`}
                       >
                         <div>
-                          <strong>
-                            {item.note ||
-                              item.category_name ||
-                              '미분류'}
-                          </strong>
-
+                          <strong>{item.note || item.category_name || '미분류'}</strong>
                           <p className="muted">
                             {item.category_name || '미분류'}
-                            {item.asset_account_name
-                              ? ` · ${item.asset_account_name}`
-                              : ''}
+                            {item.asset_account_name ? ` · ${item.asset_account_name}` : ''}
                           </p>
                         </div>
-
+            
                         <strong className="positive-text">
                           +{formatAmount(item.amount)}원
                         </strong>
@@ -215,39 +204,63 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                   </div>
                 )}
               </div>
-
+            
               <div className="calendar-detail-column">
-                <div className="calendar-detail-title danger-text">
-                  지출
-                </div>
-
-                {showTransfers && (
-                  <div className="calendar-detail-column">
-                    <div className="calendar-detail-title">
-                      자산이동
-                    </div>
-                
-                    {transferItems.length === 0 ? (
-                      <p className="muted">자산이동 내역 없음</p>
-                    ) : (
-                      <div className="calendar-detail-list">
-                        {transferItems.map((item) => (
-                          <div key={item.id} className="calendar-detail-row">
-                            <div>
-                              <strong>{item.note || '자산이동'}</strong>
-                              <p className="muted">
-                                {item.asset_account_name || '출금 자산'} → {item.transfer_to_asset_account_name || '입금 자산'}
-                              </p>
-                            </div>
-                
-                            <strong className="muted">
-                              {formatAmount(item.amount)}원
-                            </strong>
-                          </div>
-                        ))}
+                <div className="calendar-detail-title danger-text">지출</div>
+            
+                {expenseItems.length === 0 ? (
+                  <p className="muted">지출 내역 없음</p>
+                ) : (
+                  <div className="calendar-detail-list">
+                    {expenseItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`calendar-detail-row ${item.auto_generated ? 'fixed-highlight' : ''}`}
+                      >
+                        <div>
+                          <strong>{item.note || item.category_name || '미분류'}</strong>
+                          <p className="muted">
+                            {item.category_name || '미분류'}
+                            {item.asset_account_name ? ` · ${item.asset_account_name}` : ''}
+                          </p>
+                        </div>
+            
+                        <strong className="danger-text">
+                          -{formatAmount(item.amount)}원
+                        </strong>
                       </div>
-                    )}
+                    ))}
                   </div>
+                )}
+              </div>
+            
+              {showTransfers && (
+                <div className="calendar-detail-column">
+                  <div className="calendar-detail-title">자산이동</div>
+            
+                  {transferItems.length === 0 ? (
+                    <p className="muted">자산이동 내역 없음</p>
+                  ) : (
+                    <div className="calendar-detail-list">
+                      {transferItems.map((item) => (
+                        <div key={item.id} className="calendar-detail-row">
+                          <div>
+                            <strong>{item.note || '자산이동'}</strong>
+                            <p className="muted">
+                              {item.asset_account_name || '출금 자산'} → {item.transfer_to_asset_account_name || '입금 자산'}
+                            </p>
+                          </div>
+            
+                          <strong className="muted">
+                            {formatAmount(item.amount)}원
+                          </strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
                 )}
 
                 {expenseItems.length === 0 ? (
