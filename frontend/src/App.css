@@ -1397,3 +1397,82 @@ input, select {
   background: rgba(99, 102, 241, 0.12);
   color: #4f46e5;
 }
+
+/* 자산이동 보기 ON 상태 레이아웃 안정화 */
+.transaction-split-grid.with-transfer {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 0.8fr);
+  align-items: start;
+}
+
+.transaction-card .transaction-main {
+  align-items: flex-start;
+}
+
+.transaction-card .transaction-main > div {
+  min-width: 0;
+}
+
+.transaction-card .transaction-main > strong {
+  flex-shrink: 0;
+  margin-left: 10px;
+  text-align: right;
+}
+
+.transaction-card .transaction-meta {
+  min-width: 0;
+}
+
+.transaction-card .transaction-meta span {
+  max-width: 100%;
+}
+
+.transfer-route {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 캘린더 상세창 3컬럼 안정화 */
+.calendar-detail-columns.with-transfer {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 0.85fr);
+  align-items: start;
+}
+
+.calendar-detail-sheet:has(.calendar-detail-columns.with-transfer) {
+  width: min(980px, 94vw);
+}
+
+.calendar-detail-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.calendar-detail-row > div {
+  min-width: 0;
+}
+
+.calendar-detail-row > div strong,
+.calendar-detail-row > div p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-detail-row > strong {
+  flex-shrink: 0;
+  margin-left: 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .transaction-split-grid.with-transfer,
+  .calendar-detail-columns.with-transfer {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-detail-sheet:has(.calendar-detail-columns.with-transfer) {
+    width: min(720px, 94vw);
+  }
+}
