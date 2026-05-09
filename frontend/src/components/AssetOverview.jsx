@@ -50,6 +50,14 @@ function AssetOverview({ assets = [] }) {
 
               <strong>{formatAmount(asset.balance)}원</strong>
 
+              <p className="asset-ratio">
+                전체 자산의{' '}
+                {totalAsset > 0
+                  ? Math.round((Number(asset.balance || 0) / totalAsset) * 100)
+                  : 0}
+                %
+              </p>
+
               {Number(asset.monthly_change || 0) !== 0 && (
                 <p className={Number(asset.monthly_change || 0) > 0 ? 'positive-text' : 'danger-text'}>
                   {Number(asset.monthly_change || 0) > 0 ? '+' : ''}
