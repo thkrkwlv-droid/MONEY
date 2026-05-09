@@ -39,7 +39,7 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
 
 function TransactionTable({ transactions, categories, filters, setFilters, onEdit, onDelete }) {
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 7;
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
       if (filters.type && transaction.type !== filters.type) return false;
@@ -56,19 +56,31 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
     });
   }, [transactions, filters]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const pagedTransactions = filteredTransactions.slice((safePage - 1) * pageSize, safePage * pageSize);
-  const expenseTransactions = [];
-  const incomeTransactions = [];
+  const pageSize = 7;
+
+  const filteredExpenseTransactions = filteredTransactions.filter(
+    (transaction) => transaction.type === 'expense'
+  );
   
-  pagedTransactions.forEach((transaction) => {
-    if (transaction.type === 'expense') {
-      expenseTransactions.push(transaction);
-    } else {
-      incomeTransactions.push(transaction);
-    }
-  });
+  const filteredIncomeTransactions = filteredTransactions.filter(
+    (transaction) => transaction.type === 'income'
+  );
+  
+  const expenseTotalPages = Math.max(1, Math.ceil(filteredExpenseTransactions.length / pageSize));
+  const incomeTotalPages = Math.max(1, Math.ceil(filteredIncomeTransactions.length / pageSize));
+  
+  const totalPages = Math.max(expenseTotalPages, incomeTotalPages);
+  const safePage = Math.min(page, totalPages);
+  
+  const expenseTransactions = filteredExpenseTransactions.slice(
+    (safePage - 1) * pageSize,
+    safePage * pageSize
+  );
+  
+  const incomeTransactions = filteredIncomeTransactions.slice(
+    (safePage - 1) * pageSize,
+    safePage * pageSize
+  );
 
   return (
     <section className="panel stack gap-lg">
@@ -244,7 +256,7 @@ function TransactionTable({ transactions, categories, filters, setFilters, onEdi
         </div>
       </div>
 
-      {filteredTransactions.length > pageSize && (
+      {totalPages > 1 && (
         <div className="pagination-row">
           <button
             type="button"
