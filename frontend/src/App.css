@@ -1258,10 +1258,6 @@ input, select {
     width: 100%;
     overflow: hidden;
   }
-
-  .panel {
-    overflow: hidden;
-  }
 }
 
 /* 모바일 캘린더 세로 간격 압축 */
@@ -1329,5 +1325,21 @@ input, select {
   .compact-form label {
     min-width: 0;
     overflow: hidden;
+  }
+}
+
+@media (max-width: 720px) {
+  .side-nav {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .side-nav.panel {
+    overflow-x: auto;
+  }
+
+  .side-nav .tab-button {
+    flex: 0 0 auto;
   }
 }
