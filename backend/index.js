@@ -165,6 +165,27 @@ async function getBudgets(month) {
   return rows;
 }
 
+async function ensureCashAsset(client = { query }) {
+  const existing = await client.query(
+    `select id, balance
+     from asset_accounts
+     where name = '현금 보관함'
+     limit 1`,
+  );
+
+  if (existing.rows[0]) {
+    return existing.rows[0];
+  }
+
+  const created = await client.query(
+    `insert into asset_accounts (name, asset_type, balance, initial_balance, memo)
+     values ('현금 보관함', '현금', 0, 0, '현금 수입/지출 자동 관리용')
+     returning id, balance`,
+  );
+
+  return created.rows[0];
+}
+
 async function getAssets() {
   const { rows } = await query(
     `select *
