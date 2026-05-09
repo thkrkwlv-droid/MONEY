@@ -68,6 +68,10 @@ function CalendarView({ month, transactions = [] }) {
     (item) => item.type === 'expense'
   );
 
+  const transferItems = selectedItems.filter(
+    (item) => item.type === 'transfer'
+  );
+
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
@@ -215,6 +219,41 @@ function CalendarView({ month, transactions = [] }) {
               <div className="calendar-detail-column">
                 <div className="calendar-detail-title danger-text">
                   지출
+                </div>
+
+                <div className="calendar-detail-column">
+                  <div className="calendar-detail-title">
+                    자산이동
+                  </div>
+                
+                  {transferItems.length === 0 ? (
+                    <p className="muted">자산이동 내역 없음</p>
+                  ) : (
+                    <div className="calendar-detail-list">
+                      {transferItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="calendar-detail-row"
+                        >
+                          <div>
+                            <strong>
+                              {item.note || '자산이동'}
+                            </strong>
+                
+                            <p className="muted">
+                              {item.asset_account_name || '출금 자산'}
+                              {' → '}
+                              {item.transfer_to_asset_account_name || '입금 자산'}
+                            </p>
+                          </div>
+                
+                          <strong className="muted">
+                            {formatAmount(item.amount)}원
+                          </strong>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {expenseItems.length === 0 ? (
