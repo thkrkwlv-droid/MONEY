@@ -784,33 +784,73 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
     asset_account_id: normalizeUuid(req.body.asset_account_id),
+    from_asset_account_id: normalizeUuid(req.body.from_asset_account_id),
+    to_asset_account_id: normalizeUuid(req.body.to_asset_account_id),
     note: normalizeText(req.body.note),
   });
 
   const updated = await withTransaction(async (client) => {
-    const result = await client.query(
-      `update transactions
-       set transaction_date = $1,
-           type = $2,
-           amount = $3,
-           category_id = $4,
-           asset_account_id = $5,
-           note = $6,
-           payment_method = $7,
-           updated_at = now()
-       where id = $8
-       returning *`,
-      [
-        payload.transaction_date,
-        payload.type,
-        payload.amount,
-        payload.category_id,
-        payload.asset_account_id,
-        payload.note,
-        payload.payment_method,
-        req.params.id,
-      ],
-    );
+    let result;
+
+    if (payload.type === 'transfer') {
+      if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
+        throw new Error('출금 자산과 입금 자산을 모두 선택해주세요.');
+      }
+
+      if (payload.from_asset_account_id === payload.to_asset_account_id) {
+        throw new Error('출금 자산과 입금 자산은 다르게 선택해주세요.');
+      }
+
+      result = await client.query(
+        `update transactions
+         set transaction_date = $1,
+             type = 'transfer',
+             amount = $2,
+             category_id = null,
+             asset_account_id = $3,
+             transfer_to_asset_account_id = $4,
+             note = $5,
+             payment_method = '자산이동',
+             cash_status = 'none',
+             cash_unsettled_amount = 0,
+             updated_at = now()
+         where id = $6
+         returning *`,
+        [
+          payload.transaction_date,
+          payload.amount,
+          payload.from_asset_account_id,
+          payload.to_asset_account_id,
+          payload.note,
+          req.params.id,
+        ],
+      );
+    } else {
+      result = await client.query(
+        `update transactions
+         set transaction_date = $1,
+             type = $2,
+             amount = $3,
+             category_id = $4,
+             asset_account_id = $5,
+             transfer_to_asset_account_id = null,
+             note = $6,
+             payment_method = $7,
+             updated_at = now()
+         where id = $8
+         returning *`,
+        [
+          payload.transaction_date,
+          payload.type,
+          payload.amount,
+          payload.category_id,
+          payload.asset_account_id,
+          payload.note,
+          payload.payment_method,
+          req.params.id,
+        ],
+      );
+    }
 
     await recalculateAllAssets(client);
 
