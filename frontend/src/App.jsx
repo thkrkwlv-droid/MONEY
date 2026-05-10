@@ -432,7 +432,7 @@ function App() {
     }
   }
 
-  async function importTransactionsExcel(transactionsToImport) {
+  async function importTransactionsExcel(transactionsToImport, summary = null) {
     if (!window.confirm(`${transactionsToImport.length}개의 거래내역을 등록할까요?`)) return;
 
     try {
@@ -440,7 +440,11 @@ function App() {
         await createTransaction(transaction);
       }
 
-      await refreshCurrentMonth(`${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`);
+      const message = summary
+        ? `엑셀 업로드 완료: 총 ${summary.totalRows}행 중 ${summary.importedRows}건 등록, ${summary.excludedRows}건 제외했습니다.`
+        : `${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`;
+
+      await refreshCurrentMonth(message);
     } catch (err) {
       setError(err.message || '거래내역 엑셀 등록에 실패했습니다.');
     }
