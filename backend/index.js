@@ -61,6 +61,10 @@ function normalizeText(value) {
     return null;
   }
 
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
+}
+
 function normalizeTransactionNoteText(value) {
   return String(value || '')
     .replace(/\r?\n/g, ' ')
@@ -1738,6 +1742,94 @@ app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
   });
 }));
 
+app.get('/api/assets/snapshots', asyncHandler(async (req, res) => {
+  const limit = Math.min(Number(req.query.limit || 90), 365);
+
+  const { rows } = await query(
+    `select *
+     from asset_snapshots
+     order by snapshot_date desc
+     limit $1`,
+    [limit],
+  );
+
+  res.json(rows);
+}));
+
+app.post('/api/assets/snapshots/today', asyncHandler(async (_req, res) => {
+  const assets = await getAssets();
+
+  const summary = assets.reduce(
+    (acc, asset) => {
+      const balance = Number(asset.balance || 0);
+
+      acc.total_asset_amount += balance;
+
+      if (asset.asset_type === '현금') {
+        acc.cash_amount += balance;
+      } else if (asset.asset_type === '입출금') {
+        acc.bank_amount += balance;
+      } else if (asset.asset_type === '예금' || asset.asset_type === '적금') {
+        acc.saving_amount += balance;
+      } else if (asset.asset_type === '투자') {
+        acc.investment_amount += balance;
+      } else if (asset.asset_type === '카드') {
+        acc.card_amount += balance;
+      } else {
+        acc.etc_amount += balance;
+      }
+
+      return acc;
+    },
+    {
+      total_asset_amount: 0,
+      cash_amount: 0,
+      bank_amount: 0,
+      saving_amount: 0,
+      investment_amount: 0,
+      card_amount: 0,
+      etc_amount: 0,
+    },
+  );
+
+  const result = await query(
+    `insert into asset_snapshots (
+      snapshot_date,
+      total_asset_amount,
+      cash_amount,
+      bank_amount,
+      saving_amount,
+      investment_amount,
+      card_amount,
+      etc_amount
+    ) values (
+      current_date,
+      $1, $2, $3, $4, $5, $6, $7
+    )
+    on conflict (snapshot_date)
+    do update set
+      total_asset_amount = excluded.total_asset_amount,
+      cash_amount = excluded.cash_amount,
+      bank_amount = excluded.bank_amount,
+      saving_amount = excluded.saving_amount,
+      investment_amount = excluded.investment_amount,
+      card_amount = excluded.card_amount,
+      etc_amount = excluded.etc_amount
+    returning *`,
+    [
+      summary.total_asset_amount,
+      summary.cash_amount,
+      summary.bank_amount,
+      summary.saving_amount,
+      summary.investment_amount,
+      summary.card_amount,
+      summary.etc_amount,
+    ],
+  );
+
+  res.status(201).json(result.rows[0]);
+}));
+
 app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
   await withTransaction(async (client) => {
   await recalculateAllAssets(client);
@@ -1840,7 +1932,7 @@ app.post('/api/settings/unlock', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/system/backup', asyncHandler(async (_req, res) => {
-  const [categories, transactions, favorites, recurringTransactions, fixedExpenses, budgets, assets, assetSnapshots, transactionHistories, settings] = await Promise.all([
+  const [categories, transactions, favorites, recurringTransactions, fixedExpenses, budgets, assets, assetSnapshots, transactionHistories, uploadLogs, settings] = await Promise.all([
     query(`select * from categories order by created_at asc`),
     query(`select * from transactions order by transaction_date asc, created_at asc`),
     query(`select * from favorites order by created_at asc`),
@@ -1850,6 +1942,7 @@ app.get('/api/system/backup', asyncHandler(async (_req, res) => {
     query(`select * from asset_accounts order by display_order asc, created_at asc`),
     query(`select * from asset_snapshots order by snapshot_date asc`),
     query(`select * from transaction_histories order by created_at asc`),
+    query(`select * from upload_logs order by created_at asc`),
     query(`select * from app_settings where id = true`),
   ]);
 
@@ -1864,6 +1957,7 @@ app.get('/api/system/backup', asyncHandler(async (_req, res) => {
     asset_accounts: assets.rows,
     asset_snapshots: assetSnapshots.rows,
     transaction_histories: transactionHistories.rows,
+    upload_logs: uploadLogs.rows,
     app_settings: settings.rows,
   });
 }));
@@ -1873,6 +1967,7 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
 
   await withTransaction(async (client) => {
     await client.query('delete from transaction_histories');
+    await client.query('delete from upload_logs');
     await client.query('delete from asset_snapshots');
     await client.query('delete from transactions');
     await client.query('delete from favorites');
@@ -2079,6 +2174,37 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
         [row.id, row.month_start, row.category_id, row.amount, row.created_at, row.updated_at],
       );
     }
+
+    for (const row of payload.upload_logs || []) {
+  await client.query(
+    `insert into upload_logs (
+      id,
+      upload_type,
+      file_name,
+      total_rows,
+      imported_rows,
+      excluded_rows,
+      transfer_rows,
+      status,
+      error_message,
+      created_at
+    ) values (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, coalesce($10, now())
+    )`,
+    [
+      row.id,
+      row.upload_type || 'transaction_excel',
+      row.file_name || null,
+      row.total_rows || 0,
+      row.imported_rows || 0,
+      row.excluded_rows || 0,
+      row.transfer_rows || 0,
+      row.status || 'success',
+      row.error_message || null,
+      row.created_at,
+    ],
+  );
+}
 
     for (const row of payload.transaction_histories || []) {
       await client.query(
