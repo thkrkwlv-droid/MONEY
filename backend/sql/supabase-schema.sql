@@ -14,10 +14,13 @@ create table if not exists categories (
 create table if not exists transactions (
   id uuid primary key default gen_random_uuid(),
   transaction_date date not null,
-  type varchar(10) not null check (type in ('income', 'expense')),
+  type varchar(10) not null check (type in ('income', 'expense', 'transfer')),
   amount numeric(15,2) not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
   asset_account_id uuid references asset_accounts(id) on delete set null,
+  transfer_to_asset_account_id uuid references asset_accounts(id) on delete set null,
+  cash_status varchar(30) not null default 'none',
+  cash_unsettled_amount bigint not null default 0,
   note text,
   payment_method varchar(50) not null default '현금',
   source_type varchar(20) not null default 'manual' check (source_type in ('manual', 'recurring', 'fixed_expense', 'restore')),
@@ -63,8 +66,11 @@ create table if not exists recurring_transactions (
 create table if not exists fixed_expenses (
   id uuid primary key default gen_random_uuid(),
   name varchar(120) not null,
+  type varchar(20) not null default 'expense' check (type in ('income', 'expense', 'transfer')),
   amount bigint not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
+  from_asset_account_id uuid references asset_accounts(id) on delete set null,
+  to_asset_account_id uuid references asset_accounts(id) on delete set null,
   note text,
   payment_method varchar(50) not null default '자동이체',
   day_of_month integer not null check (day_of_month between 1 and 31),
@@ -91,6 +97,7 @@ create table if not exists asset_accounts (
   name varchar(120) not null,
   asset_type varchar(50) not null default '입출금',
   balance bigint not null default 0,
+  initial_balance bigint not null default 0,
   display_order integer not null default 0,
   memo text,
   created_at timestamptz not null default now(),
@@ -105,6 +112,7 @@ create table if not exists app_settings (
   pin_hash text,
   currency varchar(10) not null default 'KRW',
   ledger_name varchar(80) not null default '가계부',
+  target_asset_amount bigint not null default 0,
   updated_at timestamptz not null default now()
 );
 
@@ -159,6 +167,34 @@ add column if not exists theme_mode varchar(30) not null default 'light';
 alter table app_settings
 add column if not exists ledger_name varchar(80) not null default '가계부';
 
+alter table asset_accounts
+add column if not exists initial_balance bigint not null default 0;
+
+update asset_accounts
+set initial_balance = balance
+where initial_balance = 0;
+
+alter table transactions
+add column if not exists asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table transactions
+add column if not exists transfer_to_asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table transactions
+add column if not exists cash_status varchar(30) not null default 'none';
+
+alter table transactions
+add column if not exists cash_unsettled_amount bigint not null default 0;
+
+create index if not exists idx_transactions_asset on transactions(asset_account_id);
+
+alter table transactions
+drop constraint if exists transactions_type_check;
+
+alter table transactions
+add constraint transactions_type_check
+check (type in ('income', 'expense', 'transfer'));
+
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
 
@@ -176,3 +212,22 @@ values
   ('주식 실현손익', 'both', '#f59e0b', true),
   ('수입', 'income', '#22c55e', true)
 on conflict (name) do nothing;
+
+alter table fixed_expenses
+add column if not exists type varchar(20) not null default 'expense';
+
+alter table fixed_expenses
+drop constraint if exists fixed_expenses_type_check;
+
+alter table fixed_expenses
+add constraint fixed_expenses_type_check
+check (type in ('income', 'expense', 'transfer'));
+
+alter table fixed_expenses
+add column if not exists from_asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table fixed_expenses
+add column if not exists to_asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table app_settings
+add column if not exists target_asset_amount bigint not null default 0;
