@@ -404,7 +404,9 @@ function ManagementPanel({
                 </span>
               
                 <span>
-                  매월 {item.day_of_month}일 · {formatAmount(item.amount)}원
+                  {item.type === 'transfer'
+                    ? `${item.from_asset_name || '출금자산'} → ${item.to_asset_name || '입금자산'}`
+                    : `매월 ${item.day_of_month}일 · ${formatAmount(item.amount)}원`}
                 </span>
               
                 <span>
