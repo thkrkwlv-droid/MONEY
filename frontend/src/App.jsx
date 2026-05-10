@@ -521,7 +521,9 @@ function App() {
   
       try {
         const result = await cleanupCache();
-        setMessage(`정리 완료: 자산 스냅샷 ${result.deleted?.asset_snapshots || 0}건을 삭제했습니다.`);
+        setMessage(
+          `정리 완료: 자산 스냅샷 ${result.deleted?.asset_snapshots || 0}건, 거래 히스토리 ${result.deleted?.transaction_histories || 0}건을 삭제했습니다.`
+        );
       } catch (err) {
         setError(err.message || '오래된 캐시 데이터 정리에 실패했습니다.');
       }
