@@ -1860,3 +1860,21 @@ input, select {
   background: rgba(99, 102, 241, 0.12);
   color: #4f46e5;
 }
+
+/* hover 미리보기는 날짜칸 공간을 차지하지 않게 강제 */
+.calendar-cell .calendar-hover-preview {
+  position: absolute !important;
+  display: block;
+  opacity: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.calendar-cell:not(:hover) .calendar-hover-preview {
+  visibility: hidden;
+}
+
+.calendar-cell:hover .calendar-hover-preview {
+  visibility: visible;
+  opacity: 1;
+}
