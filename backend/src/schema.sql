@@ -97,6 +97,15 @@ check (
   and transfer_rows >= 0
 );
 
+alter table upload_logs
+drop constraint if exists upload_logs_total_check;
+
+alter table upload_logs
+add constraint upload_logs_total_check
+check (
+  imported_rows + excluded_rows <= total_rows
+);
+
 create index if not exists idx_upload_logs_created_at on upload_logs(created_at desc);
 
 create table if not exists favorites (
