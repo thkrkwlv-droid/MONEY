@@ -5,7 +5,6 @@ const { config } = require('./config');
 const pool = new Pool({
   connectionString: config.databaseUrl,
   ssl: { rejectUnauthorized: false },
-
   max: 25,                   // 이전 15 → 25
   idleTimeoutMillis: 30000,  // 30초 동안 사용 안 하면 반환
   connectionTimeoutMillis: 10000, // 연결 시도 10초 후 타임아웃
