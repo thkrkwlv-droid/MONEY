@@ -19,7 +19,9 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
       .slice(0, 30)
       .reverse()
       .map((snapshot) => ({
-        date: String(snapshot.snapshot_date || '').slice(0, 10).slice(5) || '-',
+        date: String(snapshot.snapshot_date || '')
+          .slice(0, 10)
+          .slice(5) || '-',
         total: Number(snapshot.total_asset_amount || 0),
       }))
   ), [assetSnapshots]);
