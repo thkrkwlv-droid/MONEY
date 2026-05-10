@@ -187,17 +187,19 @@ create table if not exists app_settings (
 
 create table if not exists asset_snapshots (
   id uuid primary key default gen_random_uuid(),
-  asset_account_id uuid references asset_accounts(id) on delete cascade,
-  snapshot_date date not null,
-  balance bigint not null default 0,
+  snapshot_date date not null unique,
+  total_asset_amount bigint not null default 0,
+  cash_amount bigint not null default 0,
+  bank_amount bigint not null default 0,
+  saving_amount bigint not null default 0,
+  investment_amount bigint not null default 0,
+  card_amount bigint not null default 0,
+  etc_amount bigint not null default 0,
   created_at timestamptz not null default now()
 );
 
 create index if not exists idx_asset_snapshots_snapshot_date
   on asset_snapshots(snapshot_date desc);
-
-create index if not exists idx_asset_snapshots_asset_account_id
-  on asset_snapshots(asset_account_id);
 
 create index if not exists idx_transactions_date on transactions(transaction_date desc);
 create index if not exists idx_transaction_histories_transaction_id on transaction_histories(transaction_id);
