@@ -93,7 +93,12 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11 }}
+                  interval="preserveStartEnd"
+                  minTickGap={24}
+                />
                   <YAxis
                     width={70}
                     tickFormatter={(value) => {
@@ -115,7 +120,8 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
                   dataKey="total"
                   strokeWidth={2}
                   fillOpacity={0.25}
-                />
+                  isAnimationActive={false}
+                /> 
               </AreaChart>
             </ResponsiveContainer>
           </div>
