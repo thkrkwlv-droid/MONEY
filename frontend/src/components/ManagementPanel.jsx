@@ -851,12 +851,12 @@ function ManagementPanel({
         <div className="asset-maintenance-card">
           <div>
             <strong>자산 금액 재계산</strong>
-
+      
             <p className="muted">
               기초자산 금액을 기준으로 자산이 연결된 모든 거래를 다시 반영합니다.
             </p>
           </div>
-
+      
           <button
             type="button"
             className="secondary-button"
@@ -865,16 +865,16 @@ function ManagementPanel({
             자산 재계산
           </button>
         </div>
-
+      
         <div className="asset-maintenance-card">
           <div>
             <strong>오늘 자산 기록 저장</strong>
-
+      
             <p className="muted">
               현재 총 자산 상태를 자산 히스토리 그래프용 기록으로 저장합니다.
             </p>
           </div>
-
+      
           <button
             type="button"
             className="secondary-button"
@@ -883,25 +883,16 @@ function ManagementPanel({
             오늘 자산 기록 저장
           </button>
         </div>
-
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={onRecalculateAssets}
-          >
-            자산 재계산
-          </button>
-        </div>
-
+      
         <div className="asset-maintenance-card">
           <div>
             <strong>오래된 캐시 데이터 정리</strong>
-
+      
             <p className="muted">
               24개월보다 오래된 자산 그래프 캐시와 12개월보다 오래된 거래 수정 히스토리만 삭제합니다. 거래내역, 자산 금액, 카테고리, 설정은 삭제되지 않습니다.
             </p>
           </div>
-
+      
           <button
             type="button"
             className="secondary-button"
@@ -910,31 +901,50 @@ function ManagementPanel({
             캐시 정리
           </button>
         </div>
-
+      
         <div className="list-grid small-cards">
-          {[...(assets || [])].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0)).map((item) => (
-            <div key={item.id} className="mini-card">
-              <strong>{item.name}</strong>
-              <p className="muted">{item.asset_type} · {formatAmount(item.balance)}원</p>
-              {item.memo && <p className="muted">{item.memo}</p>}
-
-              <div className="actions">
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => setAssetForm({
-                    ...item,
-                    balanceInput: formatAmount(item.balance),
-                    display_order: item.display_order || 0,
-                    memo: item.memo || '',
-                  })}
-                >
-                  수정
-                </button>
-                <button type="button" className="ghost-button" onClick={() => onDeleteAsset(item.id)}>삭제</button>
+          {[...(assets || [])]
+            .sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0))
+            .map((item) => (
+              <div key={item.id} className="mini-card">
+                <strong>{item.name}</strong>
+      
+                <p className="muted">
+                  {item.asset_type} · {formatAmount(item.balance)}원
+                </p>
+      
+                {item.memo && (
+                  <p className="muted">
+                    {item.memo}
+                  </p>
+                )}
+      
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() =>
+                      setAssetForm({
+                        ...item,
+                        balanceInput: formatAmount(item.balance),
+                        display_order: item.display_order || 0,
+                        memo: item.memo || '',
+                      })
+                    }
+                  >
+                    수정
+                  </button>
+      
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => onDeleteAsset(item.id)}
+                  >
+                    삭제
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </Section>
       
