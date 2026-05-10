@@ -1598,15 +1598,26 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
     for (const row of payload.fixed_expenses || []) {
       await client.query(
         `insert into fixed_expenses (
-          id, name, amount, category_id, note, payment_method,
+          id, name, type, amount, category_id,
+          from_asset_account_id, to_asset_account_id,
+          note, payment_method,
           day_of_month, start_date, next_run_date, last_generated_on,
           is_active, created_at, updated_at
-        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, coalesce($12, now()), coalesce($13, now()))`,
+        ) values (
+          $1, $2, $3, $4, $5,
+          $6, $7,
+          $8, $9,
+          $10, $11, $12, $13,
+          $14, coalesce($15, now()), coalesce($16, now())
+        )`,
         [
           row.id,
           row.name,
+          row.type || 'expense',
           row.amount,
           row.category_id,
+          row.from_asset_account_id || null,
+          row.to_asset_account_id || null,
           row.note,
           row.payment_method,
           row.day_of_month,
@@ -1628,12 +1639,34 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
       );
     }
 
-    const settings = (payload.app_settings || [])[0] || { id: true, dark_mode: false, pin_enabled: false, pin_hash: null, currency: 'KRW' };
+    const settings = (payload.app_settings || [])[0] || {
+      id: true,
+      dark_mode: false,
+      theme_mode: 'light',
+      pin_enabled: false,
+      pin_hash: null,
+      currency: 'KRW',
+      ledger_name: '가계부',
+      target_asset_amount: 0,
+    };
+    
     await client.query(`delete from app_settings`);
+    
     await client.query(
-      `insert into app_settings (id, dark_mode, pin_enabled, pin_hash, currency, updated_at)
-       values (true, $1, $2, $3, $4, now())`,
-      [Boolean(settings.dark_mode), Boolean(settings.pin_enabled), settings.pin_hash || null, settings.currency || 'KRW'],
+      `insert into app_settings (
+        id, dark_mode, theme_mode, pin_enabled, pin_hash,
+        currency, ledger_name, target_asset_amount, updated_at
+      )
+      values (true, $1, $2, $3, $4, $5, $6, $7, now())`,
+      [
+        Boolean(settings.dark_mode),
+        settings.theme_mode || (settings.dark_mode ? 'dark' : 'light'),
+        Boolean(settings.pin_enabled),
+        settings.pin_hash || null,
+        settings.currency || 'KRW',
+        settings.ledger_name || '가계부',
+        Number(settings.target_asset_amount || 0),
+      ],
     );
   });
 
