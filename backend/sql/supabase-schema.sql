@@ -64,7 +64,7 @@ create index if not exists idx_transaction_histories_transaction_id
 create table if not exists upload_logs (
   id uuid primary key default gen_random_uuid(),
   upload_type varchar(30) not null default 'transaction_excel',
-  file_name text,
+  file_name varchar(255),
   total_rows integer not null default 0,
   imported_rows integer not null default 0,
   excluded_rows integer not null default 0,
@@ -350,4 +350,7 @@ add column if not exists card_amount bigint not null default 0;
 
 alter table asset_snapshots
 add column if not exists etc_amount bigint not null default 0;
+
+alter table upload_logs
+alter column file_name type varchar(255);
 
