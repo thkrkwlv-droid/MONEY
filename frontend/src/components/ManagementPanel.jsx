@@ -46,6 +46,9 @@ function ManagementPanel({
   fixedExpenses,
   budgets,
   assets,
+  assetSnapshots,
+  transactionHistories,
+  onCreateTodayAssetSnapshot,
   settings,
   onSaveCategory,
   onDeleteCategory,
@@ -595,6 +598,51 @@ function ManagementPanel({
             {assetForm.id && <button type="button" className="secondary-button" onClick={resetAssetForm}>취소</button>}
           </div>
         </form>
+
+        <div className="asset-maintenance-card wide-card">
+          <div>
+            <strong>거래 수정/삭제 히스토리</strong>
+            <p className="muted">
+              최근 거래 수정 및 삭제 기록을 확인합니다. 원본 거래내역을 복구하거나 변경하지는 않습니다.
+            </p>
+          </div>
+
+          <div className="history-list">
+            {(transactionHistories || []).length > 0 ? (
+              transactionHistories.map((history) => {
+                const beforeData = history.before_data || {};
+                const afterData = history.after_data || null;
+
+                return (
+                  <div key={history.id} className="history-card">
+                    <div className="history-card-header">
+                      <strong>{history.action === 'delete' ? '삭제' : '수정'}</strong>
+                      <span className="muted">
+                        {new Date(history.created_at).toLocaleString('ko-KR')}
+                      </span>
+                    </div>
+
+                    <p>
+                      <b>수정 전:</b>{' '}
+                      {beforeData.transaction_date || '-'} / {beforeData.note || '메모 없음'} /{' '}
+                      {Number(beforeData.amount || 0).toLocaleString()}원
+                    </p>
+
+                    {afterData && (
+                      <p>
+                        <b>수정 후:</b>{' '}
+                        {afterData.transaction_date || '-'} / {afterData.note || '메모 없음'} /{' '}
+                        {Number(afterData.amount || 0).toLocaleString()}원
+                      </p>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <p className="muted">아직 거래 수정/삭제 히스토리가 없습니다.</p>
+            )}
+          </div>
+        </div>
 
         <div className="asset-maintenance-card">
           <div>
