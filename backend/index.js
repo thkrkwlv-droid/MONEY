@@ -772,6 +772,65 @@ app.get('/api/transactions/autocomplete', asyncHandler(async (req, res) => {
   res.json(suggestions);
 }));
 
+app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
+  const transactions = Array.isArray(req.body?.transactions)
+    ? req.body.transactions
+    : [];
+
+  if (transactions.length === 0) {
+    return res.status(400).json({ error: '등록할 거래내역이 없습니다.' });
+  }
+
+  if (transactions.length > 500) {
+    return res.status(400).json({ error: '한 번에 최대 500건까지만 등록할 수 있습니다.' });
+  }
+
+  const inserted = await withTransaction(async (client) => {
+    const resultRows = [];
+
+    for (const item of transactions) {
+      const result = await client.query(
+        `insert into transactions (
+          transaction_date,
+          type,
+          amount,
+          category_id,
+          asset_account_id,
+          transfer_to_asset_account_id,
+          note,
+          payment_method,
+          auto_generated
+        ) values (
+          $1, $2, $3, $4, $5, $6, $7, $8, false
+        )
+        returning *`,
+        [
+          item.transaction_date,
+          item.type || 'expense',
+          item.amount,
+          item.category_id || null,
+          item.asset_account_id || item.from_asset_account_id || null,
+          item.to_asset_account_id || null,
+          item.note || '',
+          item.payment_method || '',
+        ],
+      );
+
+      resultRows.push(result.rows[0]);
+    }
+
+    await recalculateAllAssets(client);
+
+    return resultRows;
+  });
+
+  res.status(201).json({
+    success: true,
+    count: inserted.length,
+    transactions: inserted,
+  });
+}));
+
 app.post('/api/transactions', asyncHandler(async (req, res) => {
   const payload = transactionSchema.parse({
   ...req.body,
