@@ -1662,7 +1662,7 @@ app.get('/api/upload-logs', asyncHandler(async (_req, res) => {
     `select *
      from upload_logs
      order by created_at desc
-     limit 50`,
+     limit 30`,
   );
 
   res.json(rows);
