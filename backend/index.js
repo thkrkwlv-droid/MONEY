@@ -1657,13 +1657,18 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
   });
 }));
 
-app.get('/api/upload-logs', asyncHandler(async (_req, res) => {
-  const { rows } = await query(
-    `select *
-     from upload_logs
-     order by created_at desc
-     limit 30`,
-  );
+const limit = Math.min(
+  Math.max(Number(req.query.limit || 30), 1),
+  100,
+);
+
+const { rows } = await query(
+  `select *
+   from upload_logs
+   order by created_at desc
+   limit $1`,
+  [limit],
+);
 
   res.json(rows);
 }));
