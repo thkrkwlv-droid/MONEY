@@ -442,10 +442,20 @@ function TransactionTable({
       }
 
       setUploadPreview(null);
+    } catch (err) {
+      setExcelImportStatus('');
+      throw err;
+    } finally {
+      setIsImportingExcel(false);
+      resetTransactionExcelInput();
+
+      setTimeout(() => {
+        setExcelImportStatus('');
+      }, 2000);
+    }
   }
 
-
-    async function handleTransactionExcelFile(event) {
+  async function handleTransactionExcelFile(event) {
       if (isImportingExcel) return;
   
       const file = event.target.files?.[0];
@@ -638,57 +648,8 @@ function TransactionTable({
 
     setExcelImportStatus(`${transactionsToImport.length}건 등록 준비 완료`);
     setIsImportingExcel(false);
-
-      const transferCount = transactionsToImport.filter((transaction) => transaction.type === 'transfer').length;
-
-      await onImportTransactionsExcel(transactionsToImport, {
-        totalRows: targetRowCount,
-        importedRows: transactionsToImport.length,
-        excludedRows: excludedCount,
-        transferRows: transferCount,
-      });
-
-      setExcelImportStatus('업로드가 완료되었습니다.');
-
-      setPage(1);
-      setFilters({
-        search: '',
-        type: '',
-        categoryId: '',
-        paymentMethod: '',
-        startDate: '',
-        endDate: '',
-      });
-
-      if (transactionsToImport.some((transaction) => transaction.type === 'transfer')) {
-        setShowTransfers(true);
-      }
-      const latestTransactionDate = transactionsToImport
-        .map((transaction) => transaction.transaction_date)
-        .sort()
-        .at(-1);
-
-      if (latestTransactionDate && onMoveToMonth) {
-        const latestMonth = latestTransactionDate.slice(0, 7);
-        onMoveToMonth(latestMonth);
-        setExcelImportStatus(`${latestMonth} 월로 이동했습니다.`);
-      }
-    } catch (err) {
-      setExcelImportStatus('');
-      throw err;
-    } finally {
-      setIsImportingExcel(false);
-      if (transactionExcelInputRef.current) {
-        transactionExcelInputRef.current.value = '';
-        transactionExcelInputRef.current.blur();
-      }
-
-      setTimeout(() => {
-        setExcelImportStatus('');
-      }, 2000);
-    }
   }
-
+  
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
