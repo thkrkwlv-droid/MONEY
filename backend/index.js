@@ -2218,3 +2218,27 @@ app.get('/api/test-pool', asyncHandler(async (_req, res) => {
     waiting: pool.waitingCount // 풀을 기다리는 요청 수
   });
 }));
+
+const cors = require('cors');
+
+// 모든 도메인에서 테스트 가능
+app.use(cors({
+  origin: '*'
+}));
+
+const { pool } = require('./db');
+
+app.get('/api/test-pool', async (_req, res) => {
+  try {
+    res.json({
+      ok: true,
+      pool: {
+        total: pool.totalCount,   // 총 생성된 DB 연결 수
+        idle: pool.idleCount,     // 유휴 상태 연결 수
+        waiting: pool.waitingCount // 연결 대기 요청 수
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
