@@ -1404,6 +1404,20 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
   });
 }));
 
+app.get('/api/transaction-histories', asyncHandler(async (req, res) => {
+  const limit = Math.min(Number(req.query.limit || 50), 200);
+
+  const { rows } = await query(
+    `select *
+     from transaction_histories
+     order by created_at desc
+     limit $1`,
+    [limit],
+  );
+
+  res.json(rows);
+}));
+
 app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
   const snapshotResult = await query(
     `delete from asset_snapshots
