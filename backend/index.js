@@ -879,6 +879,45 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
     });
   }
 
+  const duplicateCheckRows = [];
+
+  for (const item of transactions) {
+    const duplicateResult = await query(
+      `select id
+       from transactions
+       where transaction_date = $1
+         and type = $2
+         and amount = $3
+         and coalesce(category_id, '') = coalesce($4, '')
+         and coalesce(asset_account_id, '') = coalesce($5, '')
+         and coalesce(transfer_to_asset_account_id, '') = coalesce($6, '')
+         and coalesce(note, '') = coalesce($7, '')
+         and coalesce(payment_method, '') = coalesce($8, '')
+       limit 1`,
+      [
+        item.transaction_date,
+        item.type,
+        Number(item.amount),
+        item.category_id || null,
+        item.asset_account_id || item.from_asset_account_id || null,
+        item.to_asset_account_id || null,
+        item.note || '',
+        item.payment_method || '',
+      ],
+    );
+
+    if (duplicateResult.rows[0]) {
+      duplicateCheckRows.push(item.transaction_date);
+    }
+  }
+
+  if (duplicateCheckRows.length > 0) {
+    return res.status(400).json({
+      error: '이미 등록된 거래가 포함되어 있습니다.',
+      details: duplicateCheckRows,
+    });
+  }
+
   const inserted = await withTransaction(async (client) => {
     const resultRows = [];
 
