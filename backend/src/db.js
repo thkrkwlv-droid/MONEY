@@ -44,3 +44,13 @@ module.exports = {
   query,
   withTransaction,
 };
+
+// DB 풀 상태 확인
+function logPoolStatus() {
+  console.log('==============================');
+  console.log('DB 풀 상태:');
+  console.log('총 연결 수:', pool.totalCount);
+  console.log('유휴 연결 수:', pool.idleCount);
+  console.log('대기 중 요청 수:', pool.waitingCount);
+  console.log('==============================');
+}
