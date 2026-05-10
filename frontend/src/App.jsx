@@ -161,7 +161,7 @@ function App() {
     loadBootstrap(month);
     refreshAssetSnapshots();
     refreshTransactionHistories();
-    refreshUploadLogs();
+    refreshUploadLogs(10);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);
 
