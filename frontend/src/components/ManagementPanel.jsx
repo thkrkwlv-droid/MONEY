@@ -108,6 +108,11 @@ function ManagementPanel({
   );
   
   const [pin, setPin] = useState('');
+  const [showAllHistories, setShowAllHistories] = useState(false);
+
+  const visibleTransactionHistories = showAllHistories
+    ? transactionHistories || []
+    : (transactionHistories || []).slice(0, 10);
 
   const expenseCategories = useMemo(() => categories.filter((item) => item.type !== 'income'), [categories]);
 
@@ -607,9 +612,19 @@ function ManagementPanel({
             </p>
           </div>
 
+          {(transactionHistories || []).length > 10 && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setShowAllHistories((prev) => !prev)}
+            >
+              {showAllHistories ? '최근 10개만 보기' : `전체 보기 (${transactionHistories.length}건)`}
+            </button>
+          )}
+          
           <div className="history-list">
             {(transactionHistories || []).length > 0 ? (
-              transactionHistories.map((history) => {
+              visibleTransactionHistories.map((history) => {
                 const beforeData = history.before_data || {};
                 const afterData = history.after_data || null;
 
