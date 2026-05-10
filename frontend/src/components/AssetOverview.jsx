@@ -1,6 +1,15 @@
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { formatAmount } from '../utils';
 
-function AssetOverview({ assets = [], settings = {} }) {
+function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
   const sortedAssets = [...assets].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
   const totalAsset = sortedAssets.reduce((sum, item) => sum + Number(item.balance || 0), 0);
 
