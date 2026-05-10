@@ -12,6 +12,14 @@ import { formatAmount } from '../utils';
 function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
   const sortedAssets = [...assets].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
   const totalAsset = sortedAssets.reduce((sum, item) => sum + Number(item.balance || 0), 0);
+  
+  const chartData = [...assetSnapshots]
+    .slice(0, 30)
+    .reverse()
+    .map((snapshot) => ({
+      date: snapshot.snapshot_date?.slice(5) || '-',
+      total: Number(snapshot.total_asset_amount || 0),
+    }));
 
   const targetAssetAmount = Number(settings?.target_asset_amount || 0);
   const targetProgress = targetAssetAmount > 0
@@ -32,6 +40,38 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
         <strong>{formatAmount(totalAsset)}원</strong>
         <p className="muted">등록된 자산 {sortedAssets.length}개 기준</p>
       </div>
+
+      {chartData.length > 0 && (
+        <div className="panel asset-chart-card">
+          <div className="section-heading compact">
+            <div>
+              <h3>자산 히스토리</h3>
+              <p className="muted">최근 30개 자산 기록 기준 총자산 흐름입니다.</p>
+            </div>
+          </div>
+      
+          <div className="asset-chart-wrap">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis
+                  tickFormatter={(value) => `${Math.round(Number(value) / 10000)}만`}
+                />
+                <Tooltip
+                  formatter={(value) => [`${formatAmount(value)}원`, '총 자산']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  strokeWidth={2}
+                  fillOpacity={0.25}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {targetAssetAmount > 0 && (
         <div className="asset-target-card panel">
