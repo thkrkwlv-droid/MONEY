@@ -1468,13 +1468,14 @@ app.post('/api/settings/unlock', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/system/backup', asyncHandler(async (_req, res) => {
-  const [categories, transactions, favorites, recurringTransactions, fixedExpenses, budgets, settings] = await Promise.all([
+  const [categories, transactions, favorites, recurringTransactions, fixedExpenses, budgets, assets, settings] = await Promise.all([
     query(`select * from categories order by created_at asc`),
     query(`select * from transactions order by transaction_date asc, created_at asc`),
     query(`select * from favorites order by created_at asc`),
     query(`select * from recurring_transactions order by created_at asc`),
     query(`select * from fixed_expenses order by created_at asc`),
     query(`select * from budgets order by month_start asc`),
+    query(`select * from asset_accounts order by display_order asc, created_at asc`),
     query(`select * from app_settings where id = true`),
   ]);
 
@@ -1486,6 +1487,7 @@ app.get('/api/system/backup', asyncHandler(async (_req, res) => {
     recurring_transactions: recurringTransactions.rows,
     fixed_expenses: fixedExpenses.rows,
     budgets: budgets.rows,
+    asset_accounts: assets.rows,
     app_settings: settings.rows,
   });
 }));
@@ -1500,6 +1502,30 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
     await client.query('delete from fixed_expenses');
     await client.query('delete from budgets');
     await client.query('delete from categories');
+    await client.query('delete from asset_accounts');
+
+    for (const row of payload.asset_accounts || []) {
+      await client.query(
+        `insert into asset_accounts (
+          id, name, asset_type, balance, initial_balance,
+          display_order, memo, created_at, updated_at
+        ) values (
+          $1, $2, $3, $4, $5,
+          $6, $7, coalesce($8, now()), coalesce($9, now())
+        )`,
+        [
+          row.id,
+          row.name,
+          row.asset_type || '입출금',
+          row.balance || 0,
+          row.initial_balance ?? row.balance ?? 0,
+          row.display_order || 0,
+          row.memo || null,
+          row.created_at,
+          row.updated_at,
+        ],
+      );
+    }
 
     for (const row of payload.categories || []) {
       await client.query(
