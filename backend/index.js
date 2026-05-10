@@ -1685,13 +1685,17 @@ app.post('/api/upload-logs', asyncHandler(async (req, res) => {
     returning *`,
     [
       req.body.upload_type || 'transaction_excel',
-      req.body.file_name || null,
+      req.body.file_name
+        ? String(req.body.file_name).slice(0, 255)
+        : null,
       Number(req.body.total_rows || 0),
       Number(req.body.imported_rows || 0),
       Number(req.body.excluded_rows || 0),
       Number(req.body.transfer_rows || 0),
-      req.body.status || 'success',
-      req.body.error_message || null,
+      req.body.status === 'fail' ? 'fail' : 'success',
+      req.body.error_message
+        ? String(req.body.error_message).slice(0, 1000)
+        : null,
     ],
   );
 
