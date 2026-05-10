@@ -1,6 +1,24 @@
 import { useMemo, useState } from 'react';
 import { PAYMENT_METHODS, formatAmount, formatDateKo } from '../utils';
 
+function escapeCsvValue(value) {
+  const text = String(value ?? '');
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function downloadCsv(filename, rows) {
+  const csv = rows.map((row) => row.map(escapeCsvValue).join(',')).join('\n');
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
 function TransactionCard({ transaction, onEdit, onDelete }) {
   return (
     <article className="transaction-card">
@@ -132,6 +150,29 @@ function TransactionTable({
     safePage * pageSize
   );
 
+    function handleExportCsv() {
+      const rows = [
+        ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '자동생성'],
+        ...filteredTransactions.map((transaction) => [
+          transaction.transaction_date,
+          transaction.type === 'income'
+            ? '수입'
+            : transaction.type === 'transfer'
+              ? '자산이동'
+              : '지출',
+          transaction.amount,
+          transaction.category_name || '',
+          transaction.payment_method || '',
+          transaction.asset_account_name || '',
+          transaction.transfer_to_asset_account_name || '',
+          transaction.note || '',
+          transaction.auto_generated ? 'Y' : 'N',
+        ]),
+      ];
+  
+      downloadCsv(`money-transactions-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    }
+
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
@@ -141,7 +182,18 @@ function TransactionTable({
           <p className="muted">메모 포함 검색, 날짜/카테고리/수입·지출 필터를 지원합니다.</p>
         </div>
 
-        <span className="badge">총 {filteredTransactions.length}건</span>
+        <div className="inline-actions">
+          <span className="badge">총 {filteredTransactions.length}건</span>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleExportCsv}
+            disabled={filteredTransactions.length === 0}
+          >
+            CSV 내보내기
+          </button>
+        </div>
       </div>
 
       <div className="filter-layout">
