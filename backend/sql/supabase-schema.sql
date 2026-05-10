@@ -137,6 +137,12 @@ create table if not exists budgets (
   unique (month_start, category_id)
 );
 
+create index if not exists idx_budgets_month_start
+  on budgets(month_start);
+
+create index if not exists idx_budgets_category_id
+  on budgets(category_id);
+
 create table if not exists asset_accounts (
   id uuid primary key default gen_random_uuid(),
   name varchar(120) not null,
