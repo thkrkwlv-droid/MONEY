@@ -201,9 +201,10 @@ function ReportList({ title, rows, type, modeLabel }) {
 }
 
 function MonthlyReport({
+  month,
   transactions = [],
   previousTransactions = [],
-  fixedExpenses = [] }) {
+  fixedExpenses = [], }) {
   const [reportMode, setReportMode] = useState('category');
 
   const selectedMode = REPORT_MODES.find((mode) => mode.id === reportMode) || REPORT_MODES[0];
