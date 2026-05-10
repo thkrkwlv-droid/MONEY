@@ -115,6 +115,7 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
 function TransactionTable({
   transactions,
   categories,
+  assets,
   filters,
   setFilters,
   onEdit,
@@ -236,6 +237,10 @@ function TransactionTable({
       (categories || []).map((category) => [String(category.name || '').trim(), category.id])
     );
 
+    const assetMap = new Map(
+      (assets || []).map((asset) => [String(asset.name || '').trim(), asset.id])
+    );
+
     const transactionsToImport = dataRows
       .map((row) => {
         const typeText = String(row.유형 || '').replace('예시:', '').trim();
@@ -246,11 +251,17 @@ function TransactionTable({
               ? 'transfer'
               : 'expense';
 
+        const assetName = String(row.자산 || '').trim();
+        const toAssetName = String(row.입금자산 || '').trim();
+
         return {
           transaction_date: String(row.날짜 || '').replace('예시:', '').trim(),
           type,
           amount: Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim()),
           category_id: type === 'transfer' ? null : categoryMap.get(String(row.카테고리 || '').trim()) || null,
+          asset_account_id: assetMap.get(assetName) || null,
+          from_asset_account_id: assetMap.get(assetName) || null,
+          to_asset_account_id: type === 'transfer' ? assetMap.get(toAssetName) || null : null,
           note: String(row.메모 || '').trim(),
           payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
         };
