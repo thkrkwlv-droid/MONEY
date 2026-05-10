@@ -2005,3 +2005,12 @@ input, select {
   background: rgba(99, 102, 241, 0.95);
   transition: width 0.2s ease;
 }
+
+.asset-chart-card {
+  overflow: hidden;
+}
+
+.asset-chart-wrap {
+  width: 100%;
+  min-height: 220px;
+}
