@@ -57,6 +57,7 @@ function ManagementPanel({
   onRecalculateAssets,
   onChangeTheme,
   onSaveLedgerName,
+  onSaveTargetAsset,
   onSavePin,
   onExportBackup,
   onImportBackup,
@@ -91,6 +92,11 @@ function ManagementPanel({
   });
   const [pinEnabled, setPinEnabled] = useState(Boolean(settings?.pin_enabled));
   const [ledgerName, setLedgerName] = useState(settings?.ledger_name || '가계부');
+
+  const [targetAssetAmount, setTargetAssetAmount] = useState(
+    formatAmount(settings?.target_asset_amount || 0)
+  );
+  
   const [pin, setPin] = useState('');
 
   const expenseCategories = useMemo(() => categories.filter((item) => item.type !== 'income'), [categories]);
@@ -569,6 +575,41 @@ function ManagementPanel({
               이름 저장
             </button>
           </div>
+
+          <div className="mini-card stack gap-sm">
+            <strong>목표 자산</strong>
+          
+            <p className="muted">
+              목표 자산 금액을 설정하고 진행률을 확인합니다.
+            </p>
+          
+            <input
+              value={targetAssetAmount}
+              onChange={(e) =>
+                setTargetAssetAmount(
+                  e.target.value.replace(/[^0-9]/g, '')
+                    ? formatAmount(
+                        Number(e.target.value.replace(/[^0-9]/g, ''))
+                      )
+                    : ''
+                )
+              }
+              placeholder="예: 10,000,000"
+            />
+          
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() =>
+                onSaveTargetAsset(
+                  parseAmount(targetAssetAmount)
+                )
+              }
+            >
+              목표 저장
+            </button>
+          </div>
+                    
           <div className="mini-card stack gap-sm">
             <strong>테마 모드</strong>
             <p className="muted">원하는 색감의 화면 테마를 선택합니다.</p>
