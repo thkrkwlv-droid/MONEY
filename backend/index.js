@@ -61,6 +61,23 @@ function normalizeText(value) {
     return null;
   }
 
+function normalizeTransactionNoteText(value) {
+  return String(value || '')
+    .replace(/\r?\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizePaymentMethodText(value, type) {
+  if (type === 'transfer') return '';
+
+  const text = String(value || '')
+    .replace(/\s+/g, '')
+    .trim();
+
+  return text || '현금';
+}
+
   const text = String(value).trim();
   return text.length > 0 ? text : null;
 }
@@ -887,8 +904,8 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
       item.category_id || '',
       item.asset_account_id || item.from_asset_account_id || '',
       item.to_asset_account_id || '',
-      String(item.note || '').trim(),
-      String(item.payment_method || '').trim(),
+      normalizeTransactionNoteText(item.note),
+      normalizePaymentMethodText(item.payment_method, item.type),
     ].join('|');
   }
 
@@ -941,8 +958,8 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
         item.category_id || null,
         item.asset_account_id || item.from_asset_account_id || null,
         item.to_asset_account_id || null,
-        item.note || '',
-        item.payment_method || '',
+        normalizeTransactionNoteText(item.note),
+        normalizePaymentMethodText(item.payment_method, item.type),
       ],
     );
 
