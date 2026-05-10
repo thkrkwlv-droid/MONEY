@@ -99,3 +99,4 @@ export const unlockPin = (pin) => post('/api/settings/unlock', { pin });
 export const exportBackup = () => get('/api/system/backup');
 export const importBackup = (data) => post('/api/system/restore', data);
 export const runAutomation = () => post('/api/system/run-automation', {});
+export const cleanupCache = () => post('/api/system/cleanup-cache', {});
