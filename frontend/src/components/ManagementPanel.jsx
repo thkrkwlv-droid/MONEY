@@ -8,6 +8,20 @@ function normalizeAssetName(name) {
   return String(name || '').trim().replace(/\s+/g, '').toLowerCase();
 }
 
+function normalizeAssetType(type) {
+  const value = String(type || '').trim();
+
+  if (ASSET_TYPES.includes(value)) {
+    return value;
+  }
+
+  return '기타';
+}
+
+function isValidAssetAmount(value) {
+  return Number.isFinite(Number(value)) && Number(value) >= 0;
+}
+
 const THEME_OPTIONS = [
   { value: 'light', label: '라이트' },
   { value: 'dark', label: '다크' },
@@ -192,14 +206,25 @@ function ManagementPanel({
       const duplicatedInExcel = new Set();
       const seenInExcel = new Set();
       
+      const invalidAmountRows = [];
+
       const assetsToImport = rows
-        .map((row) => ({
-          name: String(row.자산명 || row.name || '').trim(),
-          asset_type: String(row.유형 || row.asset_type || '기타').trim(),
-          balance: parseAmount(row.현재금액 ?? row.balance ?? 0),
-          initial_balance: parseAmount(row.현재금액 ?? row.balance ?? 0),
-          memo: String(row.메모 || row.memo || '').trim(),
-        }))
+        .map((row, index) => {
+          const rawAmount = row.현재금액 ?? row.balance ?? 0;
+          const parsedAmount = parseAmount(rawAmount);
+
+          if (!isValidAssetAmount(parsedAmount)) {
+            invalidAmountRows.push(index + 2);
+          }
+
+          return {
+            name: String(row.자산명 || row.name || '').trim(),
+            asset_type: normalizeAssetType(row.유형 || row.asset_type || '기타'),
+            balance: isValidAssetAmount(parsedAmount) ? parsedAmount : 0,
+            initial_balance: isValidAssetAmount(parsedAmount) ? parsedAmount : 0,
+            memo: String(row.메모 || row.memo || '').trim(),
+          };
+        })
         .filter((row) => row.name)
         .filter((row) => {
           const normalizedName = normalizeAssetName(row.name);
@@ -220,6 +245,10 @@ function ManagementPanel({
       if (duplicatedInExcel.size > 0) {
         alert(`엑셀 파일 안에 중복된 자산명이 있어 제외했습니다.\n\n${[...duplicatedInExcel].join(', ')}`);
       }
+
+      if (invalidAmountRows.length > 0) {
+        alert(`금액이 올바르지 않은 행은 0원으로 처리했습니다.\n\n행 번호: ${invalidAmountRows.join(', ')}`);
+      }      
       
       if (assetsToImport.length === 0) {
         alert('등록할 수 있는 신규 자산이 없습니다.\n\n이미 등록된 자산명이거나 엑셀에 유효한 자산명이 없습니다.');
