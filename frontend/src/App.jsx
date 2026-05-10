@@ -7,6 +7,7 @@ import {
   createFixedExpense,
   createRecurring,
   createTransaction,
+  createTransactionsBulk,
   deleteBudget,
   createAsset,
   updateAsset,
@@ -440,11 +441,10 @@ function App() {
     if (!window.confirm(confirmMessage)) return;
     
     try {
-      for (const transaction of transactionsToImport) {
-        await createTransaction(transaction);
-      }
+      await createTransactionsBulk(transactionsToImport);
 
       const message = summary
+        
         ? `엑셀 업로드 완료: 총 ${summary.totalRows}행 중 ${summary.importedRows}건 등록, ${summary.excludedRows}건 제외했습니다.`
         : `${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`;
 
