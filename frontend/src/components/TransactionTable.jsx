@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { PAYMENT_METHODS, formatAmount, formatDateKo } from '../utils';
 
 function escapeCsvValue(value) {
@@ -17,6 +18,14 @@ function downloadCsv(filename, rows) {
   link.click();
 
   URL.revokeObjectURL(url);
+}
+
+function downloadExcel(filename, rows) {
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, '거래내역');
+  XLSX.writeFile(workbook, filename);
 }
 
 function TransactionCard({ transaction, onEdit, onDelete }) {
@@ -173,6 +182,27 @@ function TransactionTable({
       downloadCsv(`money-transactions-${new Date().toISOString().slice(0, 10)}.csv`, rows);
     }
 
+  function handleExportExcel() {
+    const rows = filteredTransactions.map((transaction) => ({
+      날짜: transaction.transaction_date,
+      유형:
+        transaction.type === 'income'
+          ? '수입'
+          : transaction.type === 'transfer'
+            ? '자산이동'
+            : '지출',
+      금액: Number(transaction.amount || 0),
+      카테고리: transaction.category_name || '',
+      결제수단: transaction.payment_method || '',
+      자산: transaction.asset_account_name || '',
+      입금자산: transaction.transfer_to_asset_account_name || '',
+      메모: transaction.note || '',
+      자동생성: transaction.auto_generated ? 'Y' : 'N',
+    }));
+
+    downloadExcel(`money-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`, rows);
+  }
+
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
@@ -192,6 +222,15 @@ function TransactionTable({
             disabled={filteredTransactions.length === 0}
           >
             CSV 내보내기
+          </button>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleExportExcel}
+            disabled={filteredTransactions.length === 0}
+          >
+            엑셀 내보내기
           </button>
         </div>
       </div>
