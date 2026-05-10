@@ -868,24 +868,6 @@ function ManagementPanel({
       
         <div className="asset-maintenance-card">
           <div>
-            <strong>오늘 자산 기록 저장</strong>
-      
-            <p className="muted">
-              현재 총 자산 상태를 자산 히스토리 그래프용 기록으로 저장합니다.
-            </p>
-          </div>
-      
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={onCreateTodayAssetSnapshot}
-          >
-            오늘 자산 기록 저장
-          </button>
-        </div>
-      
-        <div className="asset-maintenance-card">
-          <div>
             <strong>오래된 캐시 데이터 정리</strong>
       
             <p className="muted">
