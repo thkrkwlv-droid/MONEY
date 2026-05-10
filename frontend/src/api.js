@@ -2,12 +2,57 @@
 const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const BASE_URL = rawBaseUrl.startsWith('http') ? rawBaseUrl : `https://${rawBaseUrl}`;
 
-async function request(method, path, body, signal) {
+const DEFAULT_TIMEOUT_MS = 15000;
+const LONG_TIMEOUT_MS = 60000;
+
+async function request(method, path, body, signal, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const controller = signal ? null : new AbortController();
+
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
+
   const options = {
     method,
     headers: { 'Content-Type': 'application/json' },
-    signal,
+    signal: signal || controller.signal,
   };
+
+  if (body !== undefined) {
+    options.body = JSON.stringify(body);
+  }
+
+  let response;
+
+  try {
+    response = await fetch(`${BASE_URL}${path}`, options);
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
+    }
+
+    throw error;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({
+      message: response.statusText,
+    }));
+
+    const err = new Error(error.message || '요청 실패');
+
+    err.status = response.status;
+    err.details = error.details;
+
+    throw err;
+  }
+
+  return response.json();
+}
   if (body !== undefined) {
     options.body = JSON.stringify(body);
   }
