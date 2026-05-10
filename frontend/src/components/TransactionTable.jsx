@@ -416,21 +416,25 @@ function TransactionTable({
         const type = normalizeTransactionType(row.유형);
         const transactionDate = normalizeExcelDate(row.날짜);
         const amount = normalizeExcelAmount(row.금액);
-        const categoryName = normalizeLookupName(row.카테고리);
-        const assetName = normalizeLookupName(row.자산);
-        const toAssetName = normalizeLookupName(row.입금자산);
-        
-        const categoryId = type === 'transfer' ? null : categoryMap.get(categoryName) || null;
-        const assetId = assetMap.get(assetName) || null;
-        const toAssetId = type === 'transfer' ? assetMap.get(toAssetName) || null : null;
+        const lookupValues = {
+          categoryName: normalizeLookupName(row.카테고리),
+          assetName: normalizeLookupName(row.자산),
+          toAssetName: normalizeLookupName(row.입금자산),
+        };
+
+        const matchedIds = {
+          categoryId: type === 'transfer' ? null : categoryMap.get(lookupValues.categoryName) || null,
+          assetId: assetMap.get(lookupValues.assetName) || null,
+          toAssetId: type === 'transfer' ? assetMap.get(lookupValues.toAssetName) || null : null,
+        };
 
         const rowErrors = [];
 
         if (!isValidDateText(transactionDate)) rowErrors.push('날짜');
         if (!Number.isFinite(amount) || amount <= 0) rowErrors.push('금액');
-        if (type !== 'transfer' && categoryName && !categoryId) rowErrors.push('카테고리');
-        if (assetName && !assetId) rowErrors.push('자산');
-        if (type === 'transfer' && (!assetId || !toAssetId)) rowErrors.push('자산이동 자산');
+        if (type !== 'transfer' && lookupValues.categoryName && !matchedIds.categoryId) rowErrors.push('카테고리');
+        if (lookupValues.assetName && !matchedIds.assetId) rowErrors.push('자산');
+        if (type === 'transfer' && (!matchedIds.assetId || !matchedIds.toAssetId)) rowErrors.push('자산이동 자산');
 
         if (rowErrors.length > 0) {
           uploadSummary.invalidRows.push(`${excelRowNumber}행(${rowErrors.join(', ')})`);
@@ -443,10 +447,10 @@ function TransactionTable({
           transaction_date: transactionDate,
           type,
           amount,
-          category_id: categoryId,
-          asset_account_id: assetId,
-          from_asset_account_id: assetId,
-          to_asset_account_id: toAssetId,
+          category_id: matchedIds.categoryId,
+          asset_account_id: matchedIds.assetId,
+          from_asset_account_id: matchedIds.assetId,
+          to_asset_account_id: matchedIds.toAssetId,
           note: String(row.메모 || '').trim(),
           payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
           allow_duplicate: allowDuplicate,
