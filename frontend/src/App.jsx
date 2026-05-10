@@ -121,6 +121,7 @@ function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [assetSnapshots, setAssetSnapshots] = useState([]);
   const [transactionHistories, setTransactionHistories] = useState([]);
+  const [uploadLogs, setUploadLogs] = useState([]);
 
   const defaultCategoryId = useMemo(() => {
     return (
@@ -160,6 +161,7 @@ function App() {
     loadBootstrap(month);
     refreshAssetSnapshots();
     refreshTransactionHistories();
+    refreshUploadLogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);
 
@@ -176,6 +178,15 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [form.note]);
+
+    async function refreshUploadLogs() {
+    try {
+      const rows = await fetchUploadLogs();
+      setUploadLogs(rows);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
     async function refreshTransactionHistories() {
     try {
@@ -451,6 +462,19 @@ function App() {
     try {
       await createTransactionsBulk(transactionsToImport);
 
+      if (summary) {
+        await createUploadLog({
+          upload_type: 'transaction_excel',
+          total_rows: summary.totalRows,
+          imported_rows: summary.importedRows,
+          excluded_rows: summary.excludedRows,
+          transfer_rows: summary.transferRows || 0,
+          status: 'success',
+        });
+
+        await refreshUploadLogs();
+      }
+
       try {
         await createTodayAssetSnapshot();
       } catch (snapshotError) {
@@ -470,6 +494,24 @@ function App() {
       const detailMessage = Array.isArray(err.details)
         ? `\n${err.details.join('\n')}`
         : '';
+
+      if (summary) {
+        try {
+          await createUploadLog({
+            upload_type: 'transaction_excel',
+            total_rows: summary.totalRows,
+            imported_rows: 0,
+            excluded_rows: summary.totalRows,
+            transfer_rows: summary.transferRows || 0,
+            status: 'fail',
+            error_message: `${err.message || '거래내역 엑셀 등록 실패'}${detailMessage}`,
+          });
+
+          await refreshUploadLogs();
+        } catch (logError) {
+          console.error(logError);
+        }
+      }
 
       setError(`${err.message || '거래내역 엑셀 등록에 실패했습니다.'}${detailMessage}`);
     }
@@ -815,6 +857,7 @@ function App() {
               assets={data.assets}
               assetSnapshots={assetSnapshots}
               transactionHistories={transactionHistories}
+              uploadLogs={uploadLogs}
               onCreateTodayAssetSnapshot={handleCreateTodayAssetSnapshot}
               settings={data.settings}
               onSaveCategory={saveCategory}
