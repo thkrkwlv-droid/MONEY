@@ -435,8 +435,14 @@ function App() {
 
   async function importTransactionsExcel(transactionsToImport, summary = null) {
     const confirmMessage = summary
-      ? `거래내역 엑셀 업로드를 진행할까요?\n\n총 행 수: ${summary.totalRows}행\n등록 예정: ${summary.importedRows}건\n제외 예정: ${summary.excludedRows}건`
+      ? `거래내역 엑셀 업로드를 진행할까요?
+
+업로드 대상: ${summary.totalRows}행
+등록 예정: ${summary.importedRows}건
+제외 예정: ${summary.excludedRows}건${summary.transferRows ? `
+자산이동: ${summary.transferRows}건` : ''}`
       : `${transactionsToImport.length}개의 거래내역을 등록할까요?`;
+
 
     if (!window.confirm(confirmMessage)) return;
     
