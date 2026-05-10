@@ -636,8 +636,6 @@ function ManagementPanel({
 
         <div className="asset-maintenance-card wide-card">
           <div>
-        <div className="asset-maintenance-card wide-card">
-          <div>
             <strong>엑셀 업로드 로그</strong>
             <p className="muted">
               최근 거래 엑셀 업로드 결과를 확인합니다.
