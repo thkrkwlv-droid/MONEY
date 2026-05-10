@@ -71,23 +71,55 @@ function buildReport(transactions = [], fixedExpenses = [], mode = 'category') {
   };
 }
 
-function buildSpendingInsights(expenseRows = []) {
-  if (!expenseRows.length) {
-    return [];
-  }
+function buildSpendingInsights(expenseRows = [], previousExpenseRows = []) {
+  const insights = [];
 
-  const topExpense = expenseRows[0];
+  if (expenseRows.length > 0) {
+    const topExpense = expenseRows[0];
 
-  return [
-    {
+    insights.push({
       title: '가장 큰 지출',
       text: `${topExpense.name}에 ${formatAmount(topExpense.total)}원을 사용했어요.`,
-    },
-    {
-      title: '지출 비중',
-      text: `이번 달 지출 중 ${topExpense.name} 비중이 가장 높아요.`,
-    },
-  ];
+    });
+  }
+
+  const previousMap = new Map(
+    previousExpenseRows.map((item) => [item.name, Number(item.total || 0)])
+  );
+
+  const changes = expenseRows
+    .map((item) => {
+      const current = Number(item.total || 0);
+      const previous = previousMap.get(item.name) || 0;
+
+      if (!previous || current === previous) return null;
+
+      const rate = Math.round(((current - previous) / previous) * 100);
+
+      return {
+        name: item.name,
+        current,
+        previous,
+        rate,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => Math.abs(b.rate) - Math.abs(a.rate));
+
+  const biggestChange = changes[0];
+
+  if (biggestChange) {
+    insights.push({
+      title: '지난달 대비 변화',
+      text: `${biggestChange.name} 지출이 지난달보다 ${
+        biggestChange.rate > 0 ? '↑' : '↓'
+      } ${Math.abs(biggestChange.rate)}% ${
+        biggestChange.rate > 0 ? '증가' : '감소'
+      }했어요.`,
+    });
+  }
+
+  return insights;
 }
 
 function ReportList({ title, rows, type, modeLabel }) {
@@ -181,10 +213,15 @@ function MonthlyReport({
     [transactions, fixedExpenses, reportMode]
   );
 
-  const insights = useMemo(
-  () => buildSpendingInsights(report.expenseRows),
-  [report.expenseRows]
-);
+  const previousReport = useMemo(
+    () => buildReport(previousTransactions, fixedExpenses, reportMode),
+    [previousTransactions, fixedExpenses, reportMode]
+  );
+    
+    const insights = useMemo(
+      () => buildSpendingInsights(report.expenseRows, previousReport.expenseRows),
+      [report.expenseRows, previousReport.expenseRows]
+    );
 
   return (
     <section className="stack gap-lg">
