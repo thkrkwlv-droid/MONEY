@@ -484,10 +484,13 @@ function TransactionTable({
     try {
       setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
 
+      const transferCount = transactionsToImport.filter((transaction) => transaction.type === 'transfer').length;
+
       await onImportTransactionsExcel(transactionsToImport, {
         totalRows: dataRows.length,
         importedRows: transactionsToImport.length,
         excludedRows: excludedCount,
+        transferRows: transferCount,
       });
 
       setPage(1);
