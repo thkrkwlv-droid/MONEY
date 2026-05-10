@@ -2089,3 +2089,43 @@ input, select {
     width: 100%;
   }
 }
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.app-shell,
+.content-area,
+.panel,
+.chart-wrap {
+  max-width: 100%;
+}
+
+.chart-wrap,
+.asset-chart-wrap {
+  touch-action: pan-y;
+}
+
+.panel,
+.stat-card,
+.asset-card,
+.mini-card,
+.history-card {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .side-nav {
+    display: flex;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
