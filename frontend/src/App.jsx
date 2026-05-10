@@ -22,6 +22,7 @@ import {
   fetchBootstrap,
   importBackup,
   runAutomation,
+  cleanupCache,
   unlockPin,
   updateBudget,
   updateCategory,
@@ -491,6 +492,17 @@ function App() {
       setError(err.message || '백업 복원에 실패했습니다.');
     }
   }
+
+    async function handleCleanupCache() {
+      if (!window.confirm('24개월보다 오래된 자산 그래프 캐시만 정리합니다. 거래내역과 자산 금액은 삭제되지 않습니다. 계속할까요?')) return;
+  
+      try {
+        const result = await cleanupCache();
+        setMessage(`정리 완료: 자산 스냅샷 ${result.deleted?.asset_snapshots || 0}건을 삭제했습니다.`);
+      } catch (err) {
+        setError(err.message || '오래된 캐시 데이터 정리에 실패했습니다.');
+      }
+    }
 
   async function handleRunAutomation() {
     setIsSyncing(true);
