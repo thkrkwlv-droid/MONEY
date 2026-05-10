@@ -318,3 +318,27 @@ add column if not exists to_asset_account_id uuid references asset_accounts(id) 
 
 alter table app_settings
 add column if not exists target_asset_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists total_asset_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists cash_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists bank_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists saving_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists investment_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists card_amount bigint not null default 0;
+
+alter table asset_snapshots
+add column if not exists etc_amount bigint not null default 0;
+
+create unique index if not exists idx_asset_snapshots_snapshot_date_unique
+  on asset_snapshots(snapshot_date);
