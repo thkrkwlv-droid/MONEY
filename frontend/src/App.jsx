@@ -855,7 +855,11 @@ function App() {
           )}
 
           {activeTab === 'assets' && (
-            <AssetOverview assets={data.assets} settings={data.settings} />
+            <AssetOverview
+              assets={data.assets}
+              settings={data.settings}
+              assetSnapshots={assetSnapshots}
+            />
           )}
           
           {activeTab === 'manage' && (
