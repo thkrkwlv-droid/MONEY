@@ -73,6 +73,8 @@ function ManagementPanel({
     type: 'expense',
     amountInput: '',
     category_id: '',
+    from_asset_account_id: '',
+    to_asset_account_id: '',
     note: '',
     payment_method: '자동이체',
     day_of_month: 25,
@@ -113,6 +115,8 @@ function ManagementPanel({
     type: 'expense',
     amountInput: '',
     category_id: '',
+    from_asset_account_id: '',
+    to_asset_account_id: '',
     note: '',
     payment_method: '자동이체',
     day_of_month: 25,
@@ -259,10 +263,93 @@ function ManagementPanel({
             </select>
           </label>
           <label><span>금액</span><input value={fixedForm.amountInput} onChange={(e) => setFixedForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
-          <label><span>카테고리</span><select value={fixedForm.category_id} onChange={(e) => setFixedForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">선택</option>{fixedCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+          {fixedForm.type === 'transfer' ? (
+            <>
+              <label>
+                <span>출금 자산</span>
+                <select
+                  value={fixedForm.from_asset_account_id || ''}
+                  onChange={(e) =>
+                    setFixedForm((prev) => ({
+                      ...prev,
+                      from_asset_account_id: e.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="">선택</option>
+                  {assets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+          
+              <label>
+                <span>입금 자산</span>
+                <select
+                  value={fixedForm.to_asset_account_id || ''}
+                  onChange={(e) =>
+                    setFixedForm((prev) => ({
+                      ...prev,
+                      to_asset_account_id: e.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="">선택</option>
+                  {assets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          ) : (
+            <label>
+              <span>카테고리</span>
+              <select
+                value={fixedForm.category_id}
+                onChange={(e) =>
+                  setFixedForm((prev) => ({
+                    ...prev,
+                    category_id: e.target.value,
+                  }))
+                }
+              >
+                <option value="">선택</option>
+                {fixedCategories.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label><span>매월 날짜</span><input type="number" min="1" max="31" value={fixedForm.day_of_month} onChange={(e) => setFixedForm((prev) => ({ ...prev, day_of_month: Number(e.target.value) }))} required /></label>
           <label><span>시작일</span><input type="date" value={fixedForm.start_date} onChange={(e) => setFixedForm((prev) => ({ ...prev, start_date: e.target.value }))} required /></label>
-          <label><span>결제수단</span><select value={fixedForm.payment_method} onChange={(e) => setFixedForm((prev) => ({ ...prev, payment_method: e.target.value }))}>{PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+          {fixedForm.type !== 'transfer' && (
+            <label>
+              <span>결제수단</span>
+              <select
+                value={fixedForm.payment_method}
+                onChange={(e) =>
+                  setFixedForm((prev) => ({
+                    ...prev,
+                    payment_method: e.target.value,
+                  }))
+                }
+              >
+                {PAYMENT_METHODS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="field-span-2"><span>메모</span><input value={fixedForm.note} onChange={(e) => setFixedForm((prev) => ({ ...prev, note: e.target.value }))} placeholder="예: 월세" /></label>
           <label className="toggle-row"><input type="checkbox" checked={fixedForm.is_active} onChange={(e) => setFixedForm((prev) => ({ ...prev, is_active: e.target.checked }))} /><span>활성화</span></label>
           <div className="actions"><button type="submit" className="primary-button">{fixedForm.id ? '자동 거래 수정' : '자동 거래 추가'}</button>{fixedForm.id && <button type="button" className="secondary-button" onClick={resetFixedForm}>취소</button>}</div>
