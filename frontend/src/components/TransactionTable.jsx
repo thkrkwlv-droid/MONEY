@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PAYMENT_METHODS, formatAmount, formatDateKo } from '../utils';
 
@@ -263,6 +263,13 @@ function TransactionTable({
   const [page, setPage] = useState(1);
   const [isImportingExcel, setIsImportingExcel] = useState(false);
   const [excelImportStatus, setExcelImportStatus] = useState('');
+  const transactionExcelInputRef = useRef(null);
+  function resetTransactionExcelInput() {
+    if (transactionExcelInputRef.current) {
+      transactionExcelInputRef.current.value = '';
+      transactionExcelInputRef.current.blur();
+    }
+  }
   const pageSize = 7;
 
   const filteredTransactions = useMemo(() => {
@@ -391,7 +398,7 @@ function TransactionTable({
         alert(`거래 업로드 양식이 올바르지 않습니다.\n\n누락된 컬럼: ${missingColumns.join(', ')}`);
         setIsImportingExcel(false);
         setExcelImportStatus('');
-        event.target.value = '';
+        resetTransactionExcelInput();
         return;
       }
 
@@ -409,14 +416,14 @@ function TransactionTable({
         alert('한 번에 최대 500건까지만 업로드할 수 있습니다.');
         setIsImportingExcel(false);
         setExcelImportStatus('');
-        event.target.value = '';
+        resetTransactionExcelInput();
         return;
       }
     } catch (err) {
       alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
       setIsImportingExcel(false);
       setExcelImportStatus('');
-      event.target.value = '';
+      resetTransactionExcelInput();
       return;
     }
 
@@ -532,7 +539,7 @@ function TransactionTable({
       alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
       setIsImportingExcel(false);
       setExcelImportStatus('');
-      event.target.value = '';
+      resetTransactionExcelInput();
       return;
     }
 
@@ -581,7 +588,10 @@ function TransactionTable({
       throw err;
     } finally {
       setIsImportingExcel(false);
-      event.target.value = '';
+      if (transactionExcelInputRef.current) {
+        transactionExcelInputRef.current.value = '';
+        transactionExcelInputRef.current.blur();
+      }
 
       setTimeout(() => {
         setExcelImportStatus('');
@@ -628,6 +638,7 @@ function TransactionTable({
           <label className={`secondary-button file-button ${isImportingExcel ? 'disabled' : ''}`}>
             {isImportingExcel ? '업로드 처리 중...' : '거래 엑셀 업로드'}
             <input
+              ref={transactionExcelInputRef}
               type="file"
               accept=".xlsx,.xls"
               onChange={handleTransactionExcelFile}
