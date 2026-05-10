@@ -1543,7 +1543,7 @@ app.post('/api/settings/unlock', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/system/backup', asyncHandler(async (_req, res) => {
-  const [categories, transactions, favorites, recurringTransactions, fixedExpenses, budgets, assets, settings] = await Promise.all([
+  const [categories, transactions, favorites, recurringTransactions, fixedExpenses, budgets, assets, assetSnapshots, transactionHistories, settings] = await Promise.all([
     query(`select * from categories order by created_at asc`),
     query(`select * from transactions order by transaction_date asc, created_at asc`),
     query(`select * from favorites order by created_at asc`),
@@ -1551,6 +1551,8 @@ app.get('/api/system/backup', asyncHandler(async (_req, res) => {
     query(`select * from fixed_expenses order by created_at asc`),
     query(`select * from budgets order by month_start asc`),
     query(`select * from asset_accounts order by display_order asc, created_at asc`),
+    query(`select * from asset_snapshots order by snapshot_date asc`),
+    query(`select * from transaction_histories order by created_at asc`),
     query(`select * from app_settings where id = true`),
   ]);
 
@@ -1563,6 +1565,8 @@ app.get('/api/system/backup', asyncHandler(async (_req, res) => {
     fixed_expenses: fixedExpenses.rows,
     budgets: budgets.rows,
     asset_accounts: assets.rows,
+    asset_snapshots: assetSnapshots.rows,
+    transaction_histories: transactionHistories.rows,
     app_settings: settings.rows,
   });
 }));
@@ -1571,6 +1575,8 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
   const payload = req.body;
 
   await withTransaction(async (client) => {
+    await client.query('delete from transaction_histories');
+    await client.query('delete from asset_snapshots');
     await client.query('delete from transactions');
     await client.query('delete from favorites');
     await client.query('delete from recurring_transactions');
@@ -1578,6 +1584,43 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
     await client.query('delete from budgets');
     await client.query('delete from categories');
     await client.query('delete from asset_accounts');
+
+    for (const row of payload.asset_snapshots || []) {
+      await client.query(
+        `insert into asset_snapshots (
+          id, snapshot_date, total_asset_amount,
+          cash_amount, bank_amount, saving_amount,
+          investment_amount, card_amount, etc_amount,
+          created_at
+        ) values (
+          $1, $2, $3,
+          $4, $5, $6,
+          $7, $8, $9,
+          coalesce($10, now())
+        )
+        on conflict (snapshot_date)
+        do update set
+          total_asset_amount = excluded.total_asset_amount,
+          cash_amount = excluded.cash_amount,
+          bank_amount = excluded.bank_amount,
+          saving_amount = excluded.saving_amount,
+          investment_amount = excluded.investment_amount,
+          card_amount = excluded.card_amount,
+          etc_amount = excluded.etc_amount`,
+        [
+          row.id,
+          row.snapshot_date,
+          row.total_asset_amount || 0,
+          row.cash_amount || 0,
+          row.bank_amount || 0,
+          row.saving_amount || 0,
+          row.investment_amount || 0,
+          row.card_amount || 0,
+          row.etc_amount || 0,
+          row.created_at,
+        ],
+      );
+    }
 
     for (const row of payload.asset_accounts || []) {
       await client.query(
@@ -1737,6 +1780,24 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
         `insert into budgets (id, month_start, category_id, amount, created_at, updated_at)
          values ($1, $2, $3, $4, coalesce($5, now()), coalesce($6, now()))`,
         [row.id, row.month_start, row.category_id, row.amount, row.created_at, row.updated_at],
+      );
+    }
+
+    for (const row of payload.transaction_histories || []) {
+      await client.query(
+        `insert into transaction_histories (
+          id, transaction_id, action, before_data, after_data, created_at
+        ) values (
+          $1, $2, $3, $4::jsonb, $5::jsonb, coalesce($6, now())
+        )`,
+        [
+          row.id,
+          row.transaction_id || null,
+          row.action,
+          JSON.stringify(row.before_data || {}),
+          row.after_data ? JSON.stringify(row.after_data) : null,
+          row.created_at,
+        ],
       );
     }
 
