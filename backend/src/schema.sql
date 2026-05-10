@@ -31,6 +31,21 @@ create table if not exists transactions (
   unique (source_type, source_id, transaction_date)
 );
 
+create index if not exists idx_transactions_date
+  on transactions(transaction_date desc);
+
+create index if not exists idx_transactions_type
+  on transactions(type);
+
+create index if not exists idx_transactions_category
+  on transactions(category_id);
+
+create index if not exists idx_transactions_asset
+  on transactions(asset_account_id);
+
+create index if not exists idx_transactions_transfer_asset
+  on transactions(transfer_to_asset_account_id);
+
 create table if not exists transaction_histories (
   id uuid primary key default gen_random_uuid(),
   transaction_id uuid,
