@@ -394,6 +394,20 @@ function App() {
     }
   }
 
+    async function importAssetsExcel(assetsToImport) {
+      if (!window.confirm(`${assetsToImport.length}개의 기초자산을 등록할까요?`)) return;
+  
+      try {
+        for (const asset of assetsToImport) {
+          await createAsset(asset);
+        }
+  
+        await refreshCurrentMonth(`${assetsToImport.length}개의 기초자산을 엑셀로 등록했습니다.`);
+      } catch (err) {
+        setError(err.message || '기초자산 엑셀 등록에 실패했습니다.');
+      }
+    }
+
   async function removeAsset(id) {
     if (!window.confirm('기초자산을 삭제할까요?')) return;
     try {
@@ -712,6 +726,7 @@ function App() {
               onDeleteBudget={removeBudget}
               onSaveAsset={saveAsset}
               onDeleteAsset={removeAsset}
+              onImportAssetsExcel={importAssetsExcel}
               onRecalculateAssets={handleRecalculateAssets}
               onChangeTheme={handleChangeTheme}
               onSaveLedgerName={handleSaveLedgerName}
