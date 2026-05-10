@@ -200,6 +200,7 @@ function TransactionTable({
   onImportTransactionsExcel,
 }) {
   const [page, setPage] = useState(1);
+  const [isImportingExcel, setIsImportingExcel] = useState(false);
   const pageSize = 7;
 
   const filteredTransactions = useMemo(() => {
@@ -299,9 +300,13 @@ function TransactionTable({
   }
 
     async function handleTransactionExcelFile(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+      if (isImportingExcel) return;
+  
+      const file = event.target.files?.[0];
+      if (!file) return;
+  
+      setIsImportingExcel(true);
+      
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -404,19 +409,23 @@ function TransactionTable({
       
     if (transactionsToImport.length === 0) {
       alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
+      setIsImportingExcel(false);
       event.target.value = '';
       return;
     }
 
     const excludedCount = invalidRows.length + duplicatedRows.length;
 
-    await onImportTransactionsExcel(transactionsToImport, {
-      totalRows: dataRows.length,
-      importedRows: transactionsToImport.length,
-      excludedRows: excludedCount,
-    });
-
-    event.target.value = '';
+    try {
+      await onImportTransactionsExcel(transactionsToImport, {
+        totalRows: dataRows.length,
+        importedRows: transactionsToImport.length,
+        excludedRows: excludedCount,
+      });
+    } finally {
+      setIsImportingExcel(false);
+      event.target.value = '';
+    }
   }
 
   return (
@@ -455,12 +464,13 @@ function TransactionTable({
           >
             거래 양식 다운로드
           </button>
-          <label className="secondary-button file-button">
-            거래 엑셀 업로드
+          <label className={`secondary-button file-button ${isImportingExcel ? 'disabled' : ''}`}>
+            {isImportingExcel ? '업로드 처리 중...' : '거래 엑셀 업로드'}
             <input
               type="file"
               accept=".xlsx,.xls"
               onChange={handleTransactionExcelFile}
+              disabled={isImportingExcel}
               hidden
             />
           </label>
