@@ -23,6 +23,7 @@ import {
   importBackup,
   runAutomation,
   cleanupCache,
+  fetchTransactionHistories,
   fetchAssetSnapshots,
   createTodayAssetSnapshot,
   unlockPin,
@@ -116,6 +117,7 @@ function App() {
   const [showTransfers, setShowTransfers] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [assetSnapshots, setAssetSnapshots] = useState([]);
+  const [transactionHistories, setTransactionHistories] = useState([]);
 
   const defaultCategoryId = useMemo(() => {
     return (
@@ -154,6 +156,7 @@ function App() {
   useEffect(() => {
     loadBootstrap(month);
     refreshAssetSnapshots();
+    refreshTransactionHistories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);
 
@@ -170,6 +173,15 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [form.note]);
+
+    async function refreshTransactionHistories() {
+    try {
+      const rows = await fetchTransactionHistories();
+      setTransactionHistories(rows);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
     async function refreshAssetSnapshots() {
     try {
@@ -289,6 +301,7 @@ function App() {
     try {
       await deleteTransaction(id);
       await refreshCurrentMonth('내역을 삭제했습니다.');
+      await refreshTransactionHistories();
     } catch (err) {
       setError(err.message || '삭제에 실패했습니다.');
     }
@@ -751,6 +764,7 @@ function App() {
               budgets={data.budgets}
               assets={data.assets}
               assetSnapshots={assetSnapshots}
+              transactionHistories={transactionHistories}
               onCreateTodayAssetSnapshot={handleCreateTodayAssetSnapshot}
               settings={data.settings}
               onSaveCategory={saveCategory}
