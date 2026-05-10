@@ -80,7 +80,10 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
 
           <div className="list-grid small-cards">
             {budgetAlerts.map((budget) => (
-              <div key={budget.id || budget.category_id || 'total'} className="mini-card">
+              <div
+                key={budget.id || budget.category_id || 'total'}
+                className={`mini-card budget-alert-card ${budget.isExceeded ? 'danger' : 'warning'}`}
+              >
                 <strong>
                   {budget.isExceeded ? '예산 초과' : '예산 임박'} · {budget.category_name || '전체'}
                 </strong>
