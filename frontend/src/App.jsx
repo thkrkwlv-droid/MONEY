@@ -762,6 +762,10 @@ function App() {
               showTransfers={showTransfers}
               setShowTransfers={setShowTransfers}
               onImportTransactionsExcel={importTransactionsExcel}
+              onMoveToMonth={(nextMonth) => {
+                setMonth(nextMonth);
+                setMonthInput(monthToDigits(nextMonth));
+              }}
             />
           )}
 
