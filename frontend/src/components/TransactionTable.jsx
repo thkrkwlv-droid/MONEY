@@ -223,6 +223,7 @@ function TransactionTable({
   showTransfers,
   setShowTransfers,
   onImportTransactionsExcel,
+  onMoveToMonth,
 }) {
   const [page, setPage] = useState(1);
   const [isImportingExcel, setIsImportingExcel] = useState(false);
@@ -505,6 +506,14 @@ function TransactionTable({
 
       if (transactionsToImport.some((transaction) => transaction.type === 'transfer')) {
         setShowTransfers(true);
+      }
+      const latestTransactionDate = transactionsToImport
+        .map((transaction) => transaction.transaction_date)
+        .sort()
+        .at(-1);
+
+      if (latestTransactionDate && onMoveToMonth) {
+        onMoveToMonth(latestTransactionDate.slice(0, 7));
       }
     } finally {
       setIsImportingExcel(false);
