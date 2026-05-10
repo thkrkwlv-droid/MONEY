@@ -25,6 +25,8 @@ import {
   runAutomation,
   cleanupCache,
   fetchTransactionHistories,
+  fetchUploadLogs,
+  createUploadLog,
   fetchAssetSnapshots,
   createTodayAssetSnapshot,
   unlockPin,
