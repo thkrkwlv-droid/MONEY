@@ -164,8 +164,8 @@ function makeTransactionDuplicateKey(transaction) {
     transaction.category_id || '',
     transaction.asset_account_id || '',
     transaction.to_asset_account_id || '',
-    String(transaction.note || '').trim(),
-    String(transaction.payment_method || '').trim(),
+    normalizeTransactionNote(transaction.note),
+    normalizePaymentMethod(transaction.payment_method, transaction.type),
   ].join('|');
 }
 
