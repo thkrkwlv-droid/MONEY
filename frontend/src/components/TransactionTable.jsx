@@ -121,6 +121,7 @@ function TransactionTable({
   onDelete,
   showTransfers,
   setShowTransfers,
+  onImportTransactionsExcel,
 }) {
   const [page, setPage] = useState(1);
   const pageSize = 7;
@@ -220,6 +221,52 @@ function TransactionTable({
     downloadExcel(`money-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`, rows);
   }
 
+    async function handleTransactionExcelFile(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    const dataRows = rows.slice(1); // 2행 예시는 제외, 3행부터 실제 데이터
+
+    const categoryMap = new Map(
+      (categories || []).map((category) => [String(category.name || '').trim(), category.id])
+    );
+
+    const transactionsToImport = dataRows
+      .map((row) => {
+        const typeText = String(row.유형 || '').replace('예시:', '').trim();
+        const type =
+          typeText === '수입'
+            ? 'income'
+            : typeText === '자산이동'
+              ? 'transfer'
+              : 'expense';
+
+        return {
+          transaction_date: String(row.날짜 || '').replace('예시:', '').trim(),
+          type,
+          amount: Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim()),
+          category_id: type === 'transfer' ? null : categoryMap.get(String(row.카테고리 || '').trim()) || null,
+          note: String(row.메모 || '').trim(),
+          payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
+        };
+      })
+      .filter((row) => row.transaction_date && row.amount > 0);
+
+    if (transactionsToImport.length === 0) {
+      alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
+      event.target.value = '';
+      return;
+    }
+
+    await onImportTransactionsExcel(transactionsToImport);
+    event.target.value = '';
+  }
+
   return (
     <section className="panel stack gap-lg">
       <div className="section-heading">
@@ -256,6 +303,15 @@ function TransactionTable({
           >
             거래 양식 다운로드
           </button>
+          <label className="secondary-button file-button">
+            거래 엑셀 업로드
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleTransactionExcelFile}
+              hidden
+            />
+          </label>
         </div>
       </div>
 
