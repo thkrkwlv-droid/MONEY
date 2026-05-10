@@ -1962,3 +1962,14 @@ input, select {
   display: block;
   margin-bottom: 6px;
 }
+
+.excel-import-status {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+}
