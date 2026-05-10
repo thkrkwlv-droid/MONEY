@@ -90,6 +90,8 @@ export const recalculateAssets = () => post('/api/assets/recalculate');
 export const fetchSettings = () => get('/api/settings');
 export const updateTheme = (themeMode) => put('/api/settings/theme', { theme_mode: themeMode });
 export const updateLedgerName = (ledgerName) => put('/api/settings/ledger-name', { ledger_name: ledgerName });
+export const updateTargetAsset = (targetAssetAmount) =>
+  put('/api/settings/target-asset', { target_asset_amount: targetAssetAmount });
 export const updatePin = (enabled, pin) => put('/api/settings/pin', { enabled, pin });
 export const unlockPin = (pin) => post('/api/settings/unlock', { pin });
 
