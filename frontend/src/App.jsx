@@ -610,6 +610,9 @@ function App() {
     try {
       await importBackup(payload);
       await refreshCurrentMonth('백업 복원을 완료했습니다.');
+      await refreshTransactionHistories();
+      await refreshUploadLogs();
+      await refreshAssetSnapshots();
     } catch (err) {
       setError(err.message || '백업 복원에 실패했습니다.');
     }
