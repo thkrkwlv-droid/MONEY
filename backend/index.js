@@ -1,3 +1,6 @@
+// index.js 상단 (이미 선언된 경우 생략 가능)
+const cors = require('cors');
+app.use(cors({ origin: '*' }));
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -2210,9 +2213,7 @@ async function start() {
 
 start();
 
-// ===== DB 풀 상태 확인용 테스트 API =====
-app.use(cors({ origin: '*' })); // 이미 상단에서 선언되어 있으면 삭제 가능
-
+// index.js 맨 아래
 app.get('/api/test-pool', asyncHandler(async (_req, res) => {
   res.json({
     ok: true,
