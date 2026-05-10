@@ -879,6 +879,42 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
     });
   }
 
+  function makeServerTransactionDuplicateKey(item) {
+    return [
+      item.transaction_date,
+      item.type,
+      Number(item.amount || 0),
+      item.category_id || '',
+      item.asset_account_id || item.from_asset_account_id || '',
+      item.to_asset_account_id || '',
+      String(item.note || '').trim(),
+      String(item.payment_method || '').trim(),
+    ].join('|');
+  }
+
+  const seenBulkKeys = new Set();
+  const duplicateInRequestRows = [];
+
+  transactions.forEach((item, index) => {
+    if (item.allow_duplicate === true) return;
+
+    const key = makeServerTransactionDuplicateKey(item);
+
+    if (seenBulkKeys.has(key)) {
+      duplicateInRequestRows.push(`${index + 1}번째 거래`);
+      return;
+    }
+
+    seenBulkKeys.add(key);
+  });
+
+  if (duplicateInRequestRows.length > 0) {
+    return res.status(400).json({
+      error: '업로드 요청 안에 중복 거래가 포함되어 있습니다.',
+      details: duplicateInRequestRows,
+    });
+  }
+
   const duplicateCheckRows = [];
 
   for (const item of transactions) {
