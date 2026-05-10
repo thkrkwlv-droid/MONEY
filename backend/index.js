@@ -888,9 +888,9 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
        where transaction_date = $1
          and type = $2
          and amount = $3
-         and coalesce(category_id, '') = coalesce($4, '')
-         and coalesce(asset_account_id, '') = coalesce($5, '')
-         and coalesce(transfer_to_asset_account_id, '') = coalesce($6, '')
+         and coalesce(category_id::text, '') = coalesce($4::text, '')
+         and coalesce(asset_account_id::text, '') = coalesce($5::text, '')
+         and coalesce(transfer_to_asset_account_id::text, '') = coalesce($6::text, '')
          and coalesce(note, '') = coalesce($7, '')
          and coalesce(payment_method, '') = coalesce($8, '')
        limit 1`,
