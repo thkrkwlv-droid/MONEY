@@ -101,6 +101,12 @@ function normalizeTransactionType(value) {
   return 'expense';
 }
 
+function isExampleExcelRow(row) {
+  return Object.values(row || {}).some((value) =>
+    String(value || '').trim().startsWith('예시:')
+  );
+}
+
 function isEmptyExcelRow(row) {
   return ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '중복허용']
     .every((key) => String(row?.[key] ?? '').trim() === '');
@@ -114,6 +120,24 @@ function normalizeLookupName(value) {
     .toLowerCase();
 }
 
+function getTransactionUploadRowErrors({
+  type,
+  transactionDate,
+  amount,
+  lookupValues,
+  matchedIds,
+}) {
+  const rowErrors = [];
+
+  if (!isValidDateText(transactionDate)) rowErrors.push('날짜');
+  if (!Number.isFinite(amount) || amount <= 0) rowErrors.push('금액');
+  if (type !== 'transfer' && lookupValues.categoryName && !matchedIds.categoryId) rowErrors.push('카테고리');
+  if (lookupValues.assetName && !matchedIds.assetId) rowErrors.push('자산');
+  if (type === 'transfer' && (!matchedIds.assetId || !matchedIds.toAssetId)) rowErrors.push('자산이동 자산');
+
+  return rowErrors;
+}
+
 function makeTransactionDuplicateKey(transaction) {
   return [
     transaction.transaction_date,
@@ -125,6 +149,17 @@ function makeTransactionDuplicateKey(transaction) {
     String(transaction.note || '').trim(),
     String(transaction.payment_method || '').trim(),
   ].join('|');
+}
+
+function isDuplicateTransactionUploadRow({
+  allowDuplicate,
+  duplicateKey,
+  existingTransactionKeys,
+  seenExcelKeys,
+}) {
+  if (allowDuplicate) return false;
+
+  return existingTransactionKeys.has(duplicateKey) || seenExcelKeys.has(duplicateKey);
 }
 
 function downloadTransactionTemplate() {
@@ -361,8 +396,12 @@ function TransactionTable({
       }
 
       dataRows = rows
-        .slice(1)
-        .filter((row) => !isEmptyExcelRow(row)); // 2행 예시는 제외, 빈 행 제외
+        .map((row, index) => ({
+          raw: row,
+          excelRowNumber: index + 2,
+        }))
+        .filter((item) => !isExampleExcelRow(item.raw))
+        .filter((item) => !isEmptyExcelRow(item.raw)); // 예시 행/빈 행 제외
 
       setExcelImportStatus(`${dataRows.length}건 검증 중...`);
 
@@ -411,8 +450,9 @@ function TransactionTable({
       duplicatedRows: [],
     };
     const transactionsToImport = dataRows
-      .map((row, index) => {
-        const excelRowNumber = index + 3;
+      .map((item, index) => {
+        const row = item.raw;
+        const excelRowNumber = item.excelRowNumber || index + 2;
         const type = normalizeTransactionType(row.유형);
         const transactionDate = normalizeExcelDate(row.날짜);
         const amount = normalizeExcelAmount(row.금액);
@@ -429,14 +469,14 @@ function TransactionTable({
         };
 
         // 행 단위 검증: 날짜, 금액, 카테고리, 자산 연결 상태를 확인합니다.
-        const rowErrors = [];
-
-        if (!isValidDateText(transactionDate)) rowErrors.push('날짜');
-        if (!Number.isFinite(amount) || amount <= 0) rowErrors.push('금액');
-        if (type !== 'transfer' && lookupValues.categoryName && !matchedIds.categoryId) rowErrors.push('카테고리');
-        if (lookupValues.assetName && !matchedIds.assetId) rowErrors.push('자산');
-        if (type === 'transfer' && (!matchedIds.assetId || !matchedIds.toAssetId)) rowErrors.push('자산이동 자산');
-
+        const rowErrors = getTransactionUploadRowErrors({
+          type,
+          transactionDate,
+          amount,
+          lookupValues,
+          matchedIds,
+        });
+        
         if (rowErrors.length > 0) {
           uploadSummary.invalidRows.push(`${excelRowNumber}행(${rowErrors.join(', ')})`);
           return null;
@@ -461,8 +501,12 @@ function TransactionTable({
         const duplicateKey = makeTransactionDuplicateKey(nextTransaction);
 
         if (
-          !allowDuplicate &&
-          (existingTransactionKeys.has(duplicateKey) || seenExcelKeys.has(duplicateKey))
+          isDuplicateTransactionUploadRow({
+            allowDuplicate,
+            duplicateKey,
+            existingTransactionKeys,
+            seenExcelKeys,
+          })
         ) {
           uploadSummary.duplicatedRows.push(`${excelRowNumber}행`);
           return null;
@@ -493,14 +537,15 @@ function TransactionTable({
     }
 
     const excludedCount = uploadSummary.invalidRows.length + uploadSummary.duplicatedRows.length;
-
+    const targetRowCount = dataRows.length;
+    
     try {
       setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
 
       const transferCount = transactionsToImport.filter((transaction) => transaction.type === 'transfer').length;
 
       await onImportTransactionsExcel(transactionsToImport, {
-        totalRows: dataRows.length,
+        totalRows: targetRowCount,
         importedRows: transactionsToImport.length,
         excludedRows: excludedCount,
         transferRows: transferCount,
