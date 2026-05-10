@@ -282,6 +282,10 @@ function TransactionTable({
   const [isImportingExcel, setIsImportingExcel] = useState(false);
   const [excelImportStatus, setExcelImportStatus] = useState('');
   const [uploadPreview, setUploadPreview] = useState(null);
+  const [autoCreateUploadItems, setAutoCreateUploadItems] = useState({
+    categories: false,
+    assets: false,
+  });  
   const transactionExcelInputRef = useRef(null);
   function clearUploadPreview() {
     setUploadPreview(null);
@@ -748,7 +752,37 @@ function TransactionTable({
             <div className="excel-import-status">
               {excelImportStatus}
             </div>
-          )}          
+          )}
+          
+          <div className="excel-upload-options">
+            <label>
+              <input
+                type="checkbox"
+                checked={autoCreateUploadItems.categories}
+                onChange={(event) =>
+                  setAutoCreateUploadItems((prev) => ({
+                    ...prev,
+                    categories: event.target.checked,
+                  }))
+                }
+              />
+              없는 카테고리 자동 생성
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={autoCreateUploadItems.assets}
+                onChange={(event) =>
+                  setAutoCreateUploadItems((prev) => ({
+                    ...prev,
+                    assets: event.target.checked,
+                  }))
+                }
+              />
+              없는 자산 자동 생성
+            </label>
+          </div>
         </div>
       </div>
 
