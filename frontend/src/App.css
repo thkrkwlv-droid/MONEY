@@ -1973,3 +1973,18 @@ input, select {
   color: var(--text-color);
   white-space: nowrap;
 }
+
+.upload-preview-panel {
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.upload-preview-warning {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.upload-preview-warning strong {
+  display: block;
+  margin-bottom: 4px;
+}
