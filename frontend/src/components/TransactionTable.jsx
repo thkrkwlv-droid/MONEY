@@ -399,7 +399,7 @@ function TransactionTable({
   async function handleConfirmUploadPreview() {
     if (!uploadPreview?.transactionsToImport?.length) return;
 
-    const { transactionsToImport, summary } = uploadPreview;
+    const { fileName, transactionsToImport, summary } = uploadPreview;
 
     try {
       setIsImportingExcel(true);
@@ -407,6 +407,7 @@ function TransactionTable({
       setExcelImportProgress(80);
 
       await onImportTransactionsExcel(transactionsToImport, {
+        fileName,
         totalRows: summary.totalRows,
         importedRows: summary.importedRows,
         excludedRows: summary.excludedRows,
@@ -644,6 +645,7 @@ function TransactionTable({
     const transferCount = transactionsToImport.filter((transaction) => transaction.type === 'transfer').length;
 
     setUploadPreview({
+      fileName: file.name,
       transactionsToImport,
       summary: {
         totalRows: targetRowCount,
