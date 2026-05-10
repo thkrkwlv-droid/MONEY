@@ -2074,3 +2074,18 @@ input, select {
     font-size: 16px;
   }
 }
+
+@media (max-width: 768px) {
+  button,
+  .primary-button,
+  .secondary-button,
+  .ghost-button,
+  .tab-button {
+    min-height: 44px;
+  }
+
+  .mini-card button,
+  .history-card button {
+    width: 100%;
+  }
+}
