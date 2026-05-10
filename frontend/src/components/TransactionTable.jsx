@@ -498,6 +498,8 @@ function TransactionTable({
         transferRows: transferCount,
       });
 
+      setExcelImportStatus('업로드가 완료되었습니다.');
+
       setPage(1);
       setFilters({
         search: '',
@@ -521,6 +523,9 @@ function TransactionTable({
         onMoveToMonth(latestMonth);
         setExcelImportStatus(`${latestMonth} 월로 이동했습니다.`);
       }
+    } catch (err) {
+      setExcelImportStatus('');
+      throw err;
     } finally {
       setIsImportingExcel(false);
       event.target.value = '';
