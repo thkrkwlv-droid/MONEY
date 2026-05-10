@@ -1093,16 +1093,18 @@ app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
   const payload = fixedExpenseSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
+    from_asset_account_id: normalizeUuid(req.body.from_asset_account_id),
+    to_asset_account_id: normalizeUuid(req.body.to_asset_account_id),
     note: normalizeText(req.body.note),
   });
 
   const nextRunDate = getInitialFixedExpenseNextRunDate(payload);
   const result = await query(
     `insert into fixed_expenses (
-      name, type, amount, category_id, note, payment_method,
+      name, type, amount, category_id, from_asset_account_id, to_asset_account_id, note, payment_method,
       day_of_month, start_date, next_run_date, is_active
     )
-values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     returning *`,
     [
@@ -1110,6 +1112,8 @@ values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       payload.type,
       payload.amount,
       payload.category_id,
+      payload.from_asset_account_id,
+      payload.to_asset_account_id,
       payload.note,
       payload.payment_method,
       payload.day_of_month,
@@ -1127,6 +1131,8 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
   const payload = fixedExpenseSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
+    from_asset_account_id: normalizeUuid(req.body.from_asset_account_id),
+    to_asset_account_id: normalizeUuid(req.body.to_asset_account_id),
     note: normalizeText(req.body.note),
   });
 
@@ -1137,20 +1143,24 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
          type = $2,
          amount = $3,
          category_id = $4,
-         note = $5,
-         payment_method = $6,
-         day_of_month = $7,
-         start_date = $8,
-         next_run_date = $9,
-         is_active = $10,
+         from_asset_account_id = $5,
+         to_asset_account_id = $6,
+         note = $7,
+         payment_method = $8,
+         day_of_month = $9,
+         start_date = $10,
+         next_run_date = $11,
+         is_active = $12,
          updated_at = now()
-     where id = $11
+     where id = $13
      returning *`,
     [
       payload.name,
       payload.type,
       payload.amount,
       payload.category_id,
+      payload.from_asset_account_id,
+      payload.to_asset_account_id,
       payload.note,
       payload.payment_method,
       payload.day_of_month,
