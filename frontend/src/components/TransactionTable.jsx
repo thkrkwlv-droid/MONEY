@@ -92,6 +92,11 @@ function normalizeTransactionType(value) {
   return 'expense';
 }
 
+function isEmptyExcelRow(row) {
+  return ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '중복허용']
+    .every((key) => String(row?.[key] ?? '').trim() === '');
+}
+
 function normalizeLookupName(value) {
   return String(value || '')
     .replace('예시:', '')
@@ -342,7 +347,7 @@ function TransactionTable({
         return;
       }
 
-      dataRows = rows.slice(1); // 2행 예시는 제외, 3행부터 실제 데이터
+      dataRows = rows.slice(1).filter((row) => !isEmptyExcelRow(row)); // 2행 예시는 제외, 빈 행 제외
     } catch (err) {
       alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
       setIsImportingExcel(false);
