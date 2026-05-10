@@ -519,8 +519,11 @@ function TransactionTable({
       }
     } finally {
       setIsImportingExcel(false);
-      setExcelImportStatus('');
       event.target.value = '';
+
+      setTimeout(() => {
+        setExcelImportStatus('');
+      }, 2000);
     }
   }
 
