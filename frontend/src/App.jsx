@@ -433,8 +433,12 @@ function App() {
   }
 
   async function importTransactionsExcel(transactionsToImport, summary = null) {
-    if (!window.confirm(`${transactionsToImport.length}개의 거래내역을 등록할까요?`)) return;
+    const confirmMessage = summary
+      ? `거래내역 엑셀 업로드를 진행할까요?\n\n총 행 수: ${summary.totalRows}행\n등록 예정: ${summary.importedRows}건\n제외 예정: ${summary.excludedRows}건`
+      : `${transactionsToImport.length}개의 거래내역을 등록할까요?`;
 
+    if (!window.confirm(confirmMessage)) return;
+    
     try {
       for (const transaction of transactionsToImport) {
         await createTransaction(transaction);
