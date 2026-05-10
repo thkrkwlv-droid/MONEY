@@ -25,9 +25,29 @@ function StatCard({ title, value, tone = 'neutral', subtitle }) {
   );
 }
 
+function getBudgetAlerts(budgets = []) {
+  return budgets
+    .filter((budget) => Number(budget.amount || 0) > 0)
+    .map((budget) => {
+      const amount = Number(budget.amount || 0);
+      const spent = Number(budget.spent || 0);
+      const percent = amount > 0 ? Math.round((spent / amount) * 100) : 0;
+
+      return {
+        ...budget,
+        percent,
+        isWarning: percent >= 80 && percent < 100,
+        isExceeded: percent >= 100,
+      };
+    })
+    .filter((budget) => budget.isWarning || budget.isExceeded);
+}
+
 function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomation, isSyncing }) {
   const incomeRate = calcChangeRate(dashboard?.income || 0, dashboard?.previousIncome || 0);
   const expenseRate = calcChangeRate(dashboard?.expense || 0, dashboard?.previousExpense || 0);
+  const budgetAlerts = getBudgetAlerts(budgets);
+  
   const comparisonData = [
     { label: '지난달', income: dashboard?.previousIncome || 0, expense: dashboard?.previousExpense || 0 },
     { label: '이번달', income: dashboard?.income || 0, expense: dashboard?.expense || 0 },
@@ -48,6 +68,31 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
           </button>
         </div>
       </div>
+
+      {budgetAlerts.length > 0 && (
+        <div className="panel stack gap-sm">
+          <div className="section-heading compact">
+            <div>
+              <h3>예산 알림</h3>
+              <p className="muted">예산의 80% 이상 사용한 항목을 확인하세요.</p>
+            </div>
+          </div>
+
+          <div className="list-grid small-cards">
+            {budgetAlerts.map((budget) => (
+              <div key={budget.id || budget.category_id || 'total'} className="mini-card">
+                <strong>
+                  {budget.isExceeded ? '예산 초과' : '예산 임박'} · {budget.category_name || '전체'}
+                </strong>
+                <p className="muted">
+                  {Number(budget.spent || 0).toLocaleString()}원 / {Number(budget.amount || 0).toLocaleString()}원
+                  {' '}({budget.percent}%)
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="stats-grid">
         <StatCard
