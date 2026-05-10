@@ -648,6 +648,7 @@ function TransactionTable({
       fileName: file.name,
       transactionsToImport,
       summary: {
+        fileName: file.name,
         totalRows: targetRowCount,
         importedRows: transactionsToImport.length,
         excludedRows: excludedCount,
