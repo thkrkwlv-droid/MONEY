@@ -601,7 +601,7 @@ function App() {
       link.download = `expense-backup-${month}.json`;
       link.click();
       URL.revokeObjectURL(url);
-      setMessage('백업 파일을 다운로드했습니다.');
+      setMessage('백업 파일을 다운로드했습니다. 거래내역, 자산, 설정, 히스토리, 업로드 로그가 포함됩니다.');
     } catch (err) {
       setError(err.message || '백업 다운로드에 실패했습니다.');
     }
@@ -611,7 +611,7 @@ function App() {
     if (!window.confirm('복원하면 현재 데이터가 백업 파일 내용으로 교체됩니다. 계속할까요?')) return;
     try {
       await importBackup(payload);
-      await refreshCurrentMonth('백업 복원을 완료했습니다.');
+      await refreshCurrentMonth('백업 복원을 완료했습니다. 거래내역, 자산, 설정, 히스토리, 업로드 로그를 다시 불러왔습니다.');
       await refreshTransactionHistories();
       await refreshUploadLogs();
       await refreshAssetSnapshots();
