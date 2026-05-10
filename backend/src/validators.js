@@ -48,6 +48,8 @@ const fixedExpenseSchema = z.object({
   type: z.enum(['income', 'expense', 'transfer']).default('expense'),
   amount: z.coerce.number().int().nonnegative(),
   category_id: z.string().uuid().nullable().optional(),
+  from_asset_account_id: z.string().uuid().nullable().optional(),
+  to_asset_account_id: z.string().uuid().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
   payment_method: z.string().max(50).default('자동이체'),
   day_of_month: z.coerce.number().int().min(1).max(31),
