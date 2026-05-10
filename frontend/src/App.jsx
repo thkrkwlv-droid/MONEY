@@ -432,6 +432,20 @@ function App() {
     }
   }
 
+  async function importTransactionsExcel(transactionsToImport) {
+    if (!window.confirm(`${transactionsToImport.length}개의 거래내역을 등록할까요?`)) return;
+
+    try {
+      for (const transaction of transactionsToImport) {
+        await createTransaction(transaction);
+      }
+
+      await refreshCurrentMonth(`${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`);
+    } catch (err) {
+      setError(err.message || '거래내역 엑셀 등록에 실패했습니다.');
+    }
+  }
+
     async function importAssetsExcel(assetsToImport) {
       if (!window.confirm(`${assetsToImport.length}개의 기초자산을 등록할까요?`)) return;
   
@@ -731,6 +745,7 @@ function App() {
               onDelete={handleDeleteTransaction}
               showTransfers={showTransfers}
               setShowTransfers={setShowTransfers}
+              onImportTransactionsExcel={importTransactionsExcel}
             />
           )}
 
