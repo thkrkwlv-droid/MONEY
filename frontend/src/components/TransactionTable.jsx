@@ -355,6 +355,7 @@ function TransactionTable({
       if (missingColumns.length > 0) {
         alert(`거래 업로드 양식이 올바르지 않습니다.\n\n누락된 컬럼: ${missingColumns.join(', ')}`);
         setIsImportingExcel(false);
+        setExcelImportStatus('');
         event.target.value = '';
         return;
       }
@@ -368,12 +369,14 @@ function TransactionTable({
       if (dataRows.length > 500) {
         alert('한 번에 최대 500건까지만 업로드할 수 있습니다.');
         setIsImportingExcel(false);
+        setExcelImportStatus('');
         event.target.value = '';
         return;
       }
     } catch (err) {
       alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
       setIsImportingExcel(false);
+      setExcelImportStatus('');
       event.target.value = '';
       return;
     }
@@ -476,6 +479,7 @@ function TransactionTable({
     if (transactionsToImport.length === 0) {
       alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
       setIsImportingExcel(false);
+      setExcelImportStatus('');
       event.target.value = '';
       return;
     }
