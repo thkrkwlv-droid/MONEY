@@ -69,6 +69,8 @@ create table if not exists fixed_expenses (
   type varchar(20) not null default 'expense' check (type in ('income', 'expense', 'transfer')),
   amount bigint not null check (amount >= 0),
   category_id uuid references categories(id) on delete set null,
+  from_asset_account_id uuid references asset_accounts(id) on delete set null,
+  to_asset_account_id uuid references asset_accounts(id) on delete set null,
   note text,
   payment_method varchar(50) not null default '자동이체',
   day_of_month integer not null check (day_of_month between 1 and 31),
@@ -219,3 +221,9 @@ drop constraint if exists fixed_expenses_type_check;
 alter table fixed_expenses
 add constraint fixed_expenses_type_check
 check (type in ('income', 'expense', 'transfer'));
+
+alter table fixed_expenses
+add column if not exists from_asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table fixed_expenses
+add column if not exists to_asset_account_id uuid references asset_accounts(id) on delete set null;
