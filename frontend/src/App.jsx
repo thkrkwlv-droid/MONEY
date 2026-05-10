@@ -781,6 +781,7 @@ function App() {
             <button
               key={tab.id}
               type="button"
+              data-tab={tab.id}
               className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
             >
