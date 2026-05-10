@@ -513,7 +513,9 @@ function TransactionTable({
         .at(-1);
 
       if (latestTransactionDate && onMoveToMonth) {
-        onMoveToMonth(latestTransactionDate.slice(0, 7));
+        const latestMonth = latestTransactionDate.slice(0, 7);
+        onMoveToMonth(latestMonth);
+        setExcelImportStatus(`${latestMonth} 월로 이동했습니다.`);
       }
     } finally {
       setIsImportingExcel(false);
