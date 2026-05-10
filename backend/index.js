@@ -85,7 +85,14 @@ async function getUncategorizedCategoryId(client) {
 
 async function getSettings() {
   const { rows } = await query(`select * from app_settings where id = true limit 1`);
-  return rows[0] || { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW', ledger_name: '가계부' };
+  return rows[0] || {
+    dark_mode: false,
+    theme_mode: 'light',
+    pin_enabled: false,
+    currency: 'KRW',
+    ledger_name: '가계부',
+    target_asset_amount: 0,
+  };
 }
 
 async function getRecentCategories() {
@@ -1355,6 +1362,7 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
     pin_enabled: settings.pin_enabled,
     currency: settings.currency,
     ledger_name: settings.ledger_name || '가계부',
+    target_asset_amount: Number(settings.target_asset_amount || 0),
   });
 }));
 
@@ -1394,6 +1402,29 @@ app.put('/api/settings/ledger-name', asyncHandler(async (req, res) => {
      where id = true
      returning dark_mode, theme_mode, pin_enabled, currency, ledger_name`,
     [ledgerName],
+  );
+
+  res.json(result.rows[0]);
+}));
+
+app.put('/api/settings/target-asset', asyncHandler(async (req, res) => {
+  const targetAssetAmount = Math.max(
+    0,
+    Number(req.body.target_asset_amount || 0),
+  );
+
+  const result = await query(
+    `update app_settings
+     set target_asset_amount = $1,
+         updated_at = now()
+     where id = true
+     returning dark_mode,
+               theme_mode,
+               pin_enabled,
+               currency,
+               ledger_name,
+               target_asset_amount`,
+    [targetAssetAmount],
   );
 
   res.json(result.rows[0]);
