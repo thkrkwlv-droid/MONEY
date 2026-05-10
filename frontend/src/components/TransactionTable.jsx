@@ -305,8 +305,8 @@ function TransactionTable({
       const file = event.target.files?.[0];
       if (!file) return;
   
-      setIsImportingExcel(true);
-      
+    setIsImportingExcel(true);
+
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
