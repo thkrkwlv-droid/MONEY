@@ -24,6 +24,18 @@ function downloadExcel(filename, rows) {
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
 
+  worksheet['!cols'] = [
+    { wch: 18 }, // 날짜
+    { wch: 14 }, // 유형
+    { wch: 18 }, // 금액
+    { wch: 16 }, // 카테고리
+    { wch: 16 }, // 결제수단
+    { wch: 16 }, // 자산
+    { wch: 18 }, // 입금자산
+    { wch: 55 }, // 메모
+    { wch: 28 }, // 중복허용
+  ];
+
   XLSX.utils.book_append_sheet(workbook, worksheet, '거래내역');
   XLSX.writeFile(workbook, filename);
 }
@@ -318,6 +330,18 @@ function TransactionTable({
       }
 
       const rows = XLSX.utils.sheet_to_json(sheet);
+
+      const requiredColumns = ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '중복허용'];
+      const firstRow = rows[0] || {};
+      const missingColumns = requiredColumns.filter((column) => !(column in firstRow));
+
+      if (missingColumns.length > 0) {
+        alert(`거래 업로드 양식이 올바르지 않습니다.\n\n누락된 컬럼: ${missingColumns.join(', ')}`);
+        setIsImportingExcel(false);
+        event.target.value = '';
+        return;
+      }
+
       dataRows = rows.slice(1); // 2행 예시는 제외, 3행부터 실제 데이터
     } catch (err) {
       alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
