@@ -80,6 +80,14 @@ function normalizeTransactionType(value) {
   return 'expense';
 }
 
+function normalizeLookupName(value) {
+  return String(value || '')
+    .replace('예시:', '')
+    .trim()
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
 function makeTransactionDuplicateKey(transaction) {
   return [
     transaction.transaction_date,
@@ -302,11 +310,11 @@ function TransactionTable({
     const dataRows = rows.slice(1); // 2행 예시는 제외, 3행부터 실제 데이터
 
     const categoryMap = new Map(
-      (categories || []).map((category) => [String(category.name || '').trim(), category.id])
+      (categories || []).map((category) => [normalizeLookupName(category.name), category.id])
     );
 
     const assetMap = new Map(
-      (assets || []).map((asset) => [String(asset.name || '').trim(), asset.id])
+      (assets || []).map((asset) => [normalizeLookupName(asset.name), asset.id])
     );
 
     const existingTransactionKeys = new Set(
@@ -334,10 +342,10 @@ function TransactionTable({
         const type = normalizeTransactionType(row.유형);
         const transactionDate = normalizeExcelDate(row.날짜);
         const amount = normalizeExcelAmount(row.금액);
-        const categoryName = String(row.카테고리 || '').replace('예시:', '').trim();
-        const assetName = String(row.자산 || '').replace('예시:', '').trim();
-        const toAssetName = String(row.입금자산 || '').replace('예시:', '').trim();
-
+        const categoryName = normalizeLookupName(row.카테고리);
+        const assetName = normalizeLookupName(row.자산);
+        const toAssetName = normalizeLookupName(row.입금자산);
+        
         const categoryId = type === 'transfer' ? null : categoryMap.get(categoryName) || null;
         const assetId = assetMap.get(assetName) || null;
         const toAssetId = type === 'transfer' ? assetMap.get(toAssetName) || null : null;
