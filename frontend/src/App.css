@@ -2016,3 +2016,43 @@ input, select {
   min-height: 220px;
   margin-top: 0.75rem;
 }
+
+@media (max-width: 768px) {
+  .toolbar-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .toolbar-actions button {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 140px;
+  }
+
+  .stats-grid,
+  .dashboard-grid,
+  .asset-card-grid,
+  .list-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-wrap {
+    min-height: 260px;
+  }
+
+  .month-control-panel {
+    width: 100%;
+  }
+
+  .month-nav-row {
+    flex-wrap: wrap;
+  }
+
+  .month-picker {
+    width: 100%;
+  }
+
+  .side-nav {
+    overflow-x: auto;
+  }
+}
