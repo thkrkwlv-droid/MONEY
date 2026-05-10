@@ -584,139 +584,221 @@ function ManagementPanel({
         </div>
       </Section>
 
-            <Section title="기초자산 관리" description="은행별 잔액, 현금, 카드대금 등 현재 보유 자산을 입력합니다.">
+      <Section title="기초자산 관리" description="은행별 잔액, 현금, 카드대금 등 현재 보유 자산을 입력합니다.">
         <form className="form-grid compact-form" onSubmit={async (e) => {
           e.preventDefault();
+      
           await onSaveAsset({
             ...assetForm,
             balance: parseAmount(assetForm.balanceInput),
           });
+      
           resetAssetForm();
         }}>
           <label>
             <span>자산명</span>
+      
             <input
               value={assetForm.name}
-              onChange={(e) => setAssetForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setAssetForm((prev) => ({
+                  ...prev,
+                  name: e.target.value,
+                }))
+              }
               placeholder="예: 국민은행, 카카오뱅크, 현금"
               required
             />
           </label>
-
+      
           <label>
             <span>유형</span>
-            <select value={assetForm.asset_type} onChange={(e) => setAssetForm((prev) => ({ ...prev, asset_type: e.target.value }))}>
-              {ASSET_TYPES.map((item) => <option key={item} value={item}>{item}</option>)}
+      
+            <select
+              value={assetForm.asset_type}
+              onChange={(e) =>
+                setAssetForm((prev) => ({
+                  ...prev,
+                  asset_type: e.target.value,
+                }))
+              }
+            >
+              {ASSET_TYPES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
             </select>
           </label>
-
+      
           <label>
             <span>현재 금액</span>
+      
             <input
               value={assetForm.balanceInput}
-              onChange={(e) => setAssetForm((prev) => ({
-                ...prev,
-                balanceInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '',
-              }))}
+              onChange={(e) =>
+                setAssetForm((prev) => ({
+                  ...prev,
+                  balanceInput:
+                    e.target.value.replace(/[^0-9]/g, '')
+                      ? formatAmount(
+                          Number(
+                            e.target.value.replace(/[^0-9]/g, '')
+                          )
+                        )
+                      : '',
+                }))
+              }
               placeholder="예: 1,000,000"
               required
             />
           </label>
-
+      
           <label className="field-span-2">
             <span>메모</span>
-            <input value={assetForm.memo || ''} onChange={(e) => setAssetForm((prev) => ({ ...prev, memo: e.target.value }))} />
+      
+            <input
+              value={assetForm.memo || ''}
+              onChange={(e) =>
+                setAssetForm((prev) => ({
+                  ...prev,
+                  memo: e.target.value,
+                }))
+              }
+            />
           </label>
-
+      
           <div className="actions">
-            <button type="submit" className="primary-button">{assetForm.id ? '기초자산 수정' : '기초자산 추가'}</button>
-            {assetForm.id && <button type="button" className="secondary-button" onClick={resetAssetForm}>취소</button>}
+            <button
+              type="submit"
+              className="primary-button"
+            >
+              {assetForm.id ? '기초자산 수정' : '기초자산 추가'}
+            </button>
+      
+            {assetForm.id && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={resetAssetForm}
+              >
+                취소
+              </button>
+            )}
           </div>
         </form>
-
+      
         <div className="asset-maintenance-card wide-card">
           <div>
             <strong>엑셀 업로드 로그</strong>
+      
             <p className="muted">
               최근 거래 엑셀 업로드 결과를 확인합니다.
             </p>
           </div>
-
+      
           <div className="history-list">
             {(uploadLogs || []).length > 0 ? (
               uploadLogs.slice(0, 10).map((log) => (
                 <div key={log.id} className="history-card">
                   <div className="history-card-header">
-                    <strong>{log.status === 'fail' ? '실패' : '성공'}</strong>
+                    <strong>
+                      {log.status === 'fail' ? '실패' : '성공'}
+                    </strong>
+      
                     <span className="muted">
                       {log.created_at
                         ? new Date(log.created_at).toLocaleString('ko-KR')
                         : '-'}
                     </span>
                   </div>
-
+      
                   {log.file_name && (
                     <p className="muted">
                       파일: {log.file_name}
                     </p>
                   )}
-
+      
                   <p>
-                    업로드 대상 {log.total_rows || 0}행 / 등록 {log.imported_rows || 0}건 / 제외 {log.status === 'fail'
-                      ? Number(log.excluded_rows || log.total_rows || 0)
-                      : Math.max(0, Number(log.total_rows || 0) - Number(log.imported_rows || 0))}건
-                    {log.transfer_rows ? ` / 자산이동 ${log.transfer_rows}건` : ''}
+                    업로드 대상 {log.total_rows || 0}행 / 등록 {log.imported_rows || 0}건 / 제외{' '}
+                    {log.status === 'fail'
+                      ? Number(
+                          log.excluded_rows ||
+                          log.total_rows ||
+                          0
+                        )
+                      : Math.max(
+                          0,
+                          Number(log.total_rows || 0) -
+                          Number(log.imported_rows || 0)
+                        )}건
+      
+                    {log.transfer_rows
+                      ? ` / 자산이동 ${log.transfer_rows}건`
+                      : ''}
                   </p>
-
+      
                   {log.error_message && (
-                    <p className="muted">{log.error_message}</p>
+                    <p className="muted">
+                      {log.error_message}
+                    </p>
                   )}
                 </div>
               ))
             ) : (
-              <p className="muted">아직 엑셀 업로드 로그가 없습니다.</p>
+              <p className="muted">
+                아직 엑셀 업로드 로그가 없습니다.
+              </p>
             )}
           </div>
         </div>
+        <div className="asset-maintenance-card wide-card">
+          <div>
             <strong>거래 수정/삭제 히스토리</strong>
+      
             <p className="muted">
               최근 거래 수정 및 삭제 기록을 확인합니다. 원본 거래내역을 복구하거나 변경하지는 않습니다.
             </p>
           </div>
-
+      
           {(transactionHistories || []).length > 10 && (
             <button
               type="button"
               className="secondary-button"
               onClick={() => setShowAllHistories((prev) => !prev)}
             >
-              {showAllHistories ? '최근 10개만 보기' : `전체 보기 (${transactionHistories.length}건)`}
+              {showAllHistories
+                ? '최근 10개만 보기'
+                : `전체 보기 (${transactionHistories.length}건)`}
             </button>
           )}
-          
+      
           <div className="history-list">
             {(transactionHistories || []).length > 0 ? (
               visibleTransactionHistories.map((history) => {
                 const beforeData = history.before_data || {};
                 const afterData = history.after_data || null;
-
+      
                 return (
                   <div key={history.id} className="history-card">
                     <div className="history-card-header">
-                      <strong>{history.action === 'delete' ? '삭제' : '수정'}</strong>
+                      <strong>
+                        {history.action === 'delete' ? '삭제' : '수정'}
+                      </strong>
+      
                       <span className="muted">
                         {history.created_at
                           ? new Date(history.created_at).toLocaleString('ko-KR')
                           : '-'}
                       </span>
                     </div>
-
+      
                     <p>
                       <b>수정 전:</b>{' '}
                       {beforeData.transaction_date || '-'} / {beforeData.note || '메모 없음'} /{' '}
                       {Number(beforeData.amount || 0).toLocaleString()}원
                     </p>
-
+      
                     {afterData && (
                       <p>
                         <b>수정 후:</b>{' '}
@@ -728,19 +810,22 @@ function ManagementPanel({
                 );
               })
             ) : (
-              <p className="muted">아직 거래 수정/삭제 히스토리가 없습니다.</p>
+              <p className="muted">
+                아직 거래 수정/삭제 히스토리가 없습니다.
+              </p>
             )}
           </div>
         </div>
-
+      
         <div className="asset-maintenance-card">
           <div>
             <strong>기초자산 엑셀 등록</strong>
+      
             <p className="muted">
               엑셀 양식을 내려받아 자산명, 유형, 현재금액, 메모를 입력한 뒤 한 번에 등록할 수 있습니다.
             </p>
           </div>
-
+      
           <div className="actions">
             <button
               type="button"
@@ -749,9 +834,10 @@ function ManagementPanel({
             >
               엑셀 양식 다운로드
             </button>
-
+      
             <label className="secondary-button file-button">
               엑셀 업로드
+      
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -760,7 +846,7 @@ function ManagementPanel({
               />
             </label>
           </div>
-        </div>       
+        </div>
 
         <div className="asset-maintenance-card">
           <div>
