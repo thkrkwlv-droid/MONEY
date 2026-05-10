@@ -1366,6 +1366,22 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
   });
 }));
 
+app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
+  const snapshotResult = await query(
+    `delete from asset_snapshots
+     where snapshot_date < current_date - interval '24 months'
+     returning id`,
+  );
+
+  res.json({
+    success: true,
+    deleted: {
+      asset_snapshots: snapshotResult.rowCount,
+    },
+    message: '오래된 캐시 데이터를 정리했습니다.',
+  });
+}));
+
 app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
   await withTransaction(async (client) => {
   await recalculateAllAssets(client);
