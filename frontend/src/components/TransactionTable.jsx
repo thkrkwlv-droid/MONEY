@@ -28,6 +28,34 @@ function downloadExcel(filename, rows) {
   XLSX.writeFile(workbook, filename);
 }
 
+function normalizeExcelDate(value) {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === 'number') {
+    const parsed = XLSX.SSF.parse_date_code(value);
+
+    if (parsed) {
+      const month = String(parsed.m).padStart(2, '0');
+      const day = String(parsed.d).padStart(2, '0');
+
+      return `${parsed.y}-${month}-${day}`;
+    }
+  }
+
+  const text = String(value || '')
+    .replace('예시:', '')
+    .trim();
+
+  // 20260501 → 2026-05-01 변환
+  if (/^\d{8}$/.test(text)) {
+    return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
+  }
+
+  return text;
+}
+
 function isValidDateText(value) {
   const text = String(value || '').trim();
   return /^\d{4}-\d{2}-\d{2}$/.test(text);
@@ -293,7 +321,7 @@ function TransactionTable({
       .map((row, index) => {
         const excelRowNumber = index + 3;
         const type = normalizeTransactionType(row.유형);
-        const transactionDate = String(row.날짜 || '').replace('예시:', '').trim();
+        const transactionDate = normalizeExcelDate(row.날짜);
         const amount = Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim());
         const categoryName = String(row.카테고리 || '').replace('예시:', '').trim();
         const assetName = String(row.자산 || '').replace('예시:', '').trim();
