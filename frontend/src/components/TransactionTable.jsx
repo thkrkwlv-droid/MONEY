@@ -261,9 +261,9 @@ function TransactionTable({
         const type = normalizeTransactionType(row.유형);
         const transactionDate = String(row.날짜 || '').replace('예시:', '').trim();
         const amount = Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim());
-        const categoryName = String(row.카테고리 || '').trim();
-        const assetName = String(row.자산 || '').trim();
-        const toAssetName = String(row.입금자산 || '').trim();
+        const categoryName = String(row.카테고리 || '').replace('예시:', '').trim();
+        const assetName = String(row.자산 || '').replace('예시:', '').trim();
+        const toAssetName = String(row.입금자산 || '').replace('예시:', '').trim();
 
         const categoryId = type === 'transfer' ? null : categoryMap.get(categoryName) || null;
         const assetId = assetMap.get(assetName) || null;
