@@ -122,6 +122,7 @@ function App() {
   const [assetSnapshots, setAssetSnapshots] = useState([]);
   const [transactionHistories, setTransactionHistories] = useState([]);
   const [uploadLogs, setUploadLogs] = useState([]);
+  const [isSavingAssetSnapshot, setIsSavingAssetSnapshot] = useState(false);
 
   const defaultCategoryId = useMemo(() => {
     return (
@@ -207,12 +208,18 @@ function App() {
   }
 
   async function handleCreateTodayAssetSnapshot() {
+    setIsSavingAssetSnapshot(true);
+    setError('');
+    setMessage('');
+  
     try {
       await createTodayAssetSnapshot();
       await refreshAssetSnapshots();
       setMessage('오늘 기준 자산 기록을 저장했습니다.');
     } catch (err) {
       setError(err.message || '자산 기록 저장에 실패했습니다.');
+    } finally {
+      setIsSavingAssetSnapshot(false);
     }
   }
 
