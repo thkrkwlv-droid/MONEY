@@ -28,6 +28,23 @@ function downloadExcel(filename, rows) {
   XLSX.writeFile(workbook, filename);
 }
 
+function downloadTransactionTemplate() {
+  const rows = [
+    {
+      날짜: '예시: 2026-05-01',
+      유형: '예시: 지출',
+      금액: '예시: 15000',
+      카테고리: '예시: 식비',
+      결제수단: '예시: 현금',
+      자산: '예시: 현금',
+      입금자산: '',
+      메모: '예시 행은 업로드 시 제외됩니다. 실제 데이터는 3행부터 입력하세요.',
+    },
+  ];
+
+  downloadExcel('MONEY_거래내역_업로드_양식.xlsx', rows);
+}
+
 function TransactionCard({ transaction, onEdit, onDelete }) {
   return (
     <article className="transaction-card">
@@ -231,6 +248,13 @@ function TransactionTable({
             disabled={filteredTransactions.length === 0}
           >
             엑셀 내보내기
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={downloadTransactionTemplate}
+          >
+            거래 양식 다운로드
           </button>
         </div>
       </div>
