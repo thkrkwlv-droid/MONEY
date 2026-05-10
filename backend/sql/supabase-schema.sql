@@ -69,14 +69,10 @@ create table if not exists upload_logs (
   imported_rows integer not null default 0,
   excluded_rows integer not null default 0,
   transfer_rows integer not null default 0,
-  status varchar(20) not null default 'success',
+  status varchar(20) not null default 'success' check (status in ('success', 'fail')),
   error_message varchar(1000),
   created_at timestamptz not null default now()
 );
-
-alter table upload_logs
-add constraint upload_logs_status_check
-check (status in ('success', 'fail'));
 
 alter table upload_logs
 drop constraint if exists upload_logs_type_check;
