@@ -1684,7 +1684,7 @@ app.post('/api/upload-logs', asyncHandler(async (req, res) => {
     )
     returning *`,
     [
-      req.body.upload_type || 'transaction_excel',
+      'transaction_excel',
       req.body.file_name
         ? String(req.body.file_name).slice(0, 255)
         : null,
