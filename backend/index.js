@@ -692,52 +692,39 @@ async function getAutocomplete(queryText = '') {
 }
 
 async function getBootstrap(month) {
-  await ensureAutomationFresh();
+  // await ensureAutomationFresh(); // 주석 처리
+}
 
   const { prevStart, prevEnd } = getMonthRange(month);
 
-  const [
-    categories,
-    favorites,
-    recurringTransactions,
-    fixedExpenses,
-    settings,
-    transactions,
-    previousTransactionsResult,
-    dashboard,
-    recentCategories,
-    budgets,
-    assets,
-  ] = await Promise.all([
-    getCategories(),
-    getFavorites(),
-    getRecurringTransactions(),
-    getFixedExpenses(),
-    getSettings(),
-    getTransactions({ month }),
-    query(
-      `select
-          t.*,
-          c.color as category_color,
-          c.name as category_name,
-          a.name as asset_account_name,
-          a.asset_type as asset_account_type,
-          ta.name as transfer_to_asset_account_name,
-          ta.asset_type as transfer_to_asset_account_type
-       from transactions t
-       left join categories c on c.id = t.category_id
-       left join asset_accounts a on a.id = t.asset_account_id
-       left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
-       where t.transaction_date between $1 and $2
-       order by t.transaction_date desc, t.created_at desc
-       limit 300`,
-      [prevStart, prevEnd],
-    ),
-    getDashboard(month),
-    getRecentCategories(),
-    getBudgets(month),
-    getAssets(),
-  ]);
+ const categories = await getCategories();
+const favorites = await getFavorites();
+const recurringTransactions = await getRecurringTransactions();
+const fixedExpenses = await getFixedExpenses();
+const settings = await getSettings();
+const transactions = await getTransactions({ month });
+const previousTransactionsResult = await query(
+  `select
+      t.*,
+      c.color as category_color,
+      c.name as category_name,
+      a.name as asset_account_name,
+      a.asset_type as asset_account_type,
+      ta.name as transfer_to_asset_account_name,
+      ta.asset_type as transfer_to_asset_account_type
+   from transactions t
+   left join categories c on c.id = t.category_id
+   left join asset_accounts a on a.id = t.asset_account_id
+   left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
+   where t.transaction_date between $1 and $2
+   order by t.transaction_date desc, t.created_at desc
+   limit 300`,
+  [prevStart, prevEnd],
+);
+const dashboard = await getDashboard(month);
+const recentCategories = await getRecentCategories();
+const budgets = await getBudgets(month);
+const assets = await getAssets();
 
   return {
     categories,
@@ -764,14 +751,14 @@ app.get('/api/bootstrap', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/dashboard', asyncHandler(async (req, res) => {
-  await ensureAutomationFresh();
+  // await ensureAutomationFresh();
   const dashboard = await getDashboard(req.query.month);
   const budgets = await getBudgets(req.query.month);
   res.json({ dashboard, budgets });
 }));
 
 app.get('/api/transactions', asyncHandler(async (req, res) => {
-  await ensureAutomationFresh();
+  // await ensureAutomationFresh();
   const rows = await getTransactions({
     month: req.query.month,
     startDate: req.query.startDate,
@@ -975,26 +962,19 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
     });
   }
 
-  const inserted = await withTransaction(async (client) => {
-    const resultRows = [];
-
-    for (const item of transactions) {
-      const result = await client.query(
-        `insert into transactions (
-          transaction_date,
-          type,
-          amount,
-          category_id,
-          asset_account_id,
-          transfer_to_asset_account_id,
-          note,
-          payment_method,
-          auto_generated
-        ) values (
-          $1, $2, $3, $4, $5, $6, $7, $8, false
-        )
-        returning *`,
-        [
+  const chunkSize = 50; // 한 번에 50건씩 insert
+  const inserted = [];
+  
+  await withTransaction(async (client) => {
+    for (let i = 0; i < transactions.length; i += chunkSize) {
+      const chunk = transactions.slice(i, i + chunkSize);
+      const values = [];
+      const params = [];
+      let idx = 1;
+  
+      chunk.forEach((item) => {
+        values.push(`($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++}, false)`);
+        params.push(
           item.transaction_date,
           item.type,
           Number(item.amount),
@@ -1002,14 +982,22 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
           item.asset_account_id || item.from_asset_account_id || null,
           item.to_asset_account_id || null,
           item.note || '',
-          item.payment_method || '',
-        ],
+          item.payment_method || ''
+        );
+      });
+  
+      const result = await client.query(
+        `insert into transactions (
+          transaction_date, type, amount, category_id,
+          asset_account_id, transfer_to_asset_account_id,
+          note, payment_method, auto_generated
+        ) values ${values.join(', ')}
+        returning *`,
+        params,
       );
-
-      resultRows.push(result.rows[0]);
+  
+      inserted.push(...result.rows);
     }
-
-    return resultRows;
   });
 
   res.status(201).json({
@@ -1358,7 +1346,7 @@ app.post('/api/recurring-transactions', asyncHandler(async (req, res) => {
     ],
   );
 
-  await ensureAutomationFresh();
+// await ensureAutomationFresh();
   res.status(201).json(result.rows[0]);
 }));
 
@@ -1406,7 +1394,7 @@ app.put('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
     ],
   );
 
-  await ensureAutomationFresh();
+// await ensureAutomationFresh();
   res.json(result.rows[0]);
 }));
 
@@ -1462,7 +1450,7 @@ app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
     ],
   );
 
-  await ensureAutomationFresh();
+// await ensureAutomationFresh();
   res.status(201).json(result.rows[0]);
 }));
 
@@ -1520,7 +1508,7 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
     ],
   );
 
-  await ensureAutomationFresh();
+// await ensureAutomationFresh();
   res.json(result.rows[0]);
 }));
 
@@ -2174,7 +2162,7 @@ app.post('/api/system/restore', asyncHandler(async (req, res) => {
     );
   });
 
-  await ensureAutomationFresh();
+// await ensureAutomationFresh();
   res.json({ success: true });
 }));
 
