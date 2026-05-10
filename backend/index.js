@@ -130,15 +130,18 @@ async function getRecurringTransactions() {
 
 async function getFixedExpenses() {
   const { rows } = await query(
-    `select f.*, c.name as category_name
-    from_asset.name as from_asset_name,
-    to_asset.name as to_asset_name,
+    `select
+        f.*,
+        c.name as category_name,
+        from_asset.name as from_asset_name,
+        to_asset.name as to_asset_name
      from fixed_expenses f
-     left join asset_accounts from_asset on from_asset.id = f.from_asset_account_id
-      left join asset_accounts to_asset on to_asset.id = f.to_asset_account_id
      left join categories c on c.id = f.category_id
+     left join asset_accounts from_asset on from_asset.id = f.from_asset_account_id
+     left join asset_accounts to_asset on to_asset.id = f.to_asset_account_id
      order by f.created_at desc`,
   );
+
   return rows;
 }
 
