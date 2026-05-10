@@ -72,18 +72,29 @@ async function processFixedExpenses(client, todayIso) {
       const dueDate = cursor.format('YYYY-MM-DD');
       await client.query(
         `insert into transactions (
-          transaction_date, type, amount, category_id, note, payment_method,
-          source_type, source_id, auto_generated
+          transaction_date,
+          type,
+          amount,
+          category_id,
+          asset_account_id,
+          transfer_to_asset_account_id,
+          note,
+          payment_method,
+          source_type,
+          source_id,
+          auto_generated
         )
-        values ($1, $2, $3, $4, $5, $6, 'fixed_expense', $7, true)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, 'fixed_expense', $9, true)
         on conflict (source_type, source_id, transaction_date) do nothing`,
         [
           dueDate,
           item.type || 'expense',
           item.amount,
-          item.category_id,
+          item.type === 'transfer' ? null : item.category_id,
+          item.type === 'transfer' ? item.from_asset_account_id : null,
+          item.type === 'transfer' ? item.to_asset_account_id : null,
           item.note || item.name,
-          item.payment_method,
+          item.type === 'transfer' ? '자산이동' : item.payment_method,
           item.id,
         ],
       );
