@@ -816,6 +816,69 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
     });
   }
 
+    const categoryIds = [...new Set(
+    transactions
+      .map((item) => item.category_id)
+      .filter(Boolean)
+  )];
+
+  const assetIds = [...new Set(
+    transactions
+      .flatMap((item) => [
+        item.asset_account_id || item.from_asset_account_id,
+        item.to_asset_account_id,
+      ])
+      .filter(Boolean)
+  )];
+
+  if (categoryIds.length > 0) {
+    const { rows } = await query(
+      `select id from categories where id = any($1::uuid[])`,
+      [categoryIds],
+    );
+
+    if (rows.length !== categoryIds.length) {
+      return res.status(400).json({ error: '존재하지 않는 카테고리가 포함되어 있습니다.' });
+    }
+  }
+
+  if (assetIds.length > 0) {
+    const { rows } = await query(
+      `select id from asset_accounts where id = any($1::uuid[])`,
+      [assetIds],
+    );
+
+    if (rows.length !== assetIds.length) {
+      return res.status(400).json({ error: '존재하지 않는 자산이 포함되어 있습니다.' });
+    }
+  }
+
+  const invalidTransferRows = transactions
+    .map((item, index) => {
+      if (item.type !== 'transfer') return null;
+
+      const fromAssetId = item.asset_account_id || item.from_asset_account_id;
+      const toAssetId = item.to_asset_account_id;
+
+      if (!fromAssetId || !toAssetId) {
+        return `${index + 1}번째 거래`;
+      }
+
+      if (fromAssetId === toAssetId) {
+        return `${index + 1}번째 거래`;
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+
+  if (invalidTransferRows.length > 0) {
+    return res.status(400).json({
+      error: '자산이동 거래의 출금/입금 자산이 올바르지 않습니다.',
+      details: invalidTransferRows,
+    });
+  }
+
   const inserted = await withTransaction(async (client) => {
     const resultRows = [];
 
