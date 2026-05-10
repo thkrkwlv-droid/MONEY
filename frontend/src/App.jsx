@@ -86,6 +86,7 @@ function App() {
     fixedExpenses: [],
     settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW', ledger_name: '가계부' },
     transactions: [],
+    previousTransactions: [],
     dashboard: null,
     recentCategories: [],
     budgets: [],
@@ -670,6 +671,7 @@ function App() {
             <MonthlyReport
               month={month}
               transactions={data.transactions}
+              previousTransactions={data.previousTransactions}
               fixedExpenses={data.fixedExpenses}
             />
           )}
