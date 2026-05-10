@@ -1009,8 +1009,6 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
       resultRows.push(result.rows[0]);
     }
 
-    await recalculateAllAssets(client);
-
     return resultRows;
   });
 
@@ -1205,8 +1203,6 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
 
     await recordTransactionHistory(client, 'update', previousTransaction, updatedTransaction);
 
-    await recalculateAllAssets(client);
-
     return updatedTransaction;
   });
 
@@ -1229,7 +1225,6 @@ app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
       [req.params.id],
     );
 
-    await recalculateAllAssets(client);
   });
 
   res.json({ success: true });
@@ -1760,88 +1755,6 @@ app.get('/api/assets/snapshots', asyncHandler(async (req, res) => {
   );
 
   res.json(rows);
-}));
-
-app.post('/api/assets/snapshots/today', asyncHandler(async (_req, res) => {
-  const assets = await getAssets();
-
-  const summary = assets.reduce(
-    (acc, asset) => {
-      const balance = Number(asset.balance || 0);
-
-      acc.total_asset_amount += balance;
-
-      if (asset.asset_type === '현금') {
-        acc.cash_amount += balance;
-      } else if (asset.asset_type === '입출금') {
-        acc.bank_amount += balance;
-      } else if (asset.asset_type === '예금' || asset.asset_type === '적금') {
-        acc.saving_amount += balance;
-      } else if (asset.asset_type === '투자') {
-        acc.investment_amount += balance;
-      } else if (asset.asset_type === '카드') {
-        acc.card_amount += balance;
-      } else {
-        acc.etc_amount += balance;
-      }
-
-      return acc;
-    },
-    {
-      total_asset_amount: 0,
-      cash_amount: 0,
-      bank_amount: 0,
-      saving_amount: 0,
-      investment_amount: 0,
-      card_amount: 0,
-      etc_amount: 0,
-    },
-  );
-
-  const result = await query(
-    `insert into asset_snapshots (
-      snapshot_date,
-      total_asset_amount,
-      cash_amount,
-      bank_amount,
-      saving_amount,
-      investment_amount,
-      card_amount,
-      etc_amount
-    ) values (
-      current_date,
-      $1, $2, $3, $4, $5, $6, $7
-    )
-    on conflict (snapshot_date)
-    do update set
-      total_asset_amount = excluded.total_asset_amount,
-      cash_amount = excluded.cash_amount,
-      bank_amount = excluded.bank_amount,
-      saving_amount = excluded.saving_amount,
-      investment_amount = excluded.investment_amount,
-      card_amount = excluded.card_amount,
-      etc_amount = excluded.etc_amount
-    returning *`,
-    [
-      summary.total_asset_amount,
-      summary.cash_amount,
-      summary.bank_amount,
-      summary.saving_amount,
-      summary.investment_amount,
-      summary.card_amount,
-      summary.etc_amount,
-    ],
-  );
-
-  res.status(201).json(result.rows[0]);
-}));
-
-app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
-  await withTransaction(async (client) => {
-  await recalculateAllAssets(client);
-});
-
-  res.json({ success: true });
 }));
 
 app.put('/api/settings/theme', asyncHandler(async (req, res) => {
