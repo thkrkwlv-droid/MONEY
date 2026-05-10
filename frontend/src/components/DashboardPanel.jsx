@@ -180,7 +180,12 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dashboard?.balanceFlow || []}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value) =>
+                    String(value || '').slice(0, 10).slice(5)
+                  }
+                />
                 <YAxis tickFormatter={(value) => `${Math.round(value / 10000)}만`} />
                 <Tooltip formatter={(value) => `${formatAmount(value)}원`} />
                 <Line type="monotone" dataKey="balance" stroke="#6366f1" strokeWidth={3} dot={false} />
