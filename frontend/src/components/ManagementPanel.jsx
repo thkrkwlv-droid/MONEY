@@ -4,6 +4,10 @@ import { PAYMENT_METHODS, formatAmount, parseAmount, today, WEEKDAY_NAMES } from
 
 const ASSET_TYPES = ['입출금', '저축/적금', '현금', '증권', '카드대금', '기타'];
 
+function normalizeAssetName(name) {
+  return String(name || '').trim().replace(/\s+/g, '').toLowerCase();
+}
+
 const THEME_OPTIONS = [
   { value: 'light', label: '라이트' },
   { value: 'dark', label: '다크' },
@@ -172,6 +176,13 @@ function ManagementPanel({
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet);
   
+      const existingAssetNames = new Set(
+        (assets || []).map((asset) => normalizeAssetName(asset.name))
+      );
+      
+      const duplicatedInExcel = new Set();
+      const seenInExcel = new Set();
+      
       const assetsToImport = rows
         .map((row) => ({
           name: String(row.자산명 || row.name || '').trim(),
@@ -180,10 +191,29 @@ function ManagementPanel({
           initial_balance: parseAmount(row.현재금액 ?? row.balance ?? 0),
           memo: String(row.메모 || row.memo || '').trim(),
         }))
-        .filter((row) => row.name);
+        .filter((row) => row.name)
+        .filter((row) => {
+          const normalizedName = normalizeAssetName(row.name);
+      
+          if (seenInExcel.has(normalizedName)) {
+            duplicatedInExcel.add(row.name);
+            return false;
+          }
+      
+          seenInExcel.add(normalizedName);
+          return true;
+        })
+        .filter((row) => {
+          const normalizedName = normalizeAssetName(row.name);
+          return !existingAssetNames.has(normalizedName);
+        });
   
+      if (duplicatedInExcel.size > 0) {
+        alert(`엑셀 파일 안에 중복된 자산명이 있어 제외했습니다.\n\n${[...duplicatedInExcel].join(', ')}`);
+      }
+      
       if (assetsToImport.length === 0) {
-        alert('업로드할 자산 데이터가 없습니다.');
+        alert('등록할 수 있는 신규 자산이 없습니다.\n\n이미 등록된 자산명이거나 엑셀에 유효한 자산명이 없습니다.');
         event.target.value = '';
         return;
       }
