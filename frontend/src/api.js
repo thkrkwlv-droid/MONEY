@@ -103,5 +103,7 @@ export const importBackup = (data) => post('/api/system/restore', data);
 export const runAutomation = () => post('/api/system/run-automation', {});
 export const cleanupCache = () => post('/api/system/cleanup-cache', {});
 export const fetchTransactionHistories = () => get('/api/transaction-histories?limit=50');
+export const fetchUploadLogs = () => get('/api/upload-logs');
+export const createUploadLog = (data) => post('/api/upload-logs', data);
 export const fetchAssetSnapshots = () => get('/api/assets/snapshots?limit=90');
 export const createTodayAssetSnapshot = () => post('/api/assets/snapshots/today', {});
