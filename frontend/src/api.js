@@ -43,6 +43,8 @@ export const fetchTransactions = (filters = {}) => {
   return get(`/api/transactions${params.toString() ? `?${params}` : ''}`);
 };
 export const createTransaction = (data) => post('/api/transactions', data);
+export const createTransactionsBulk = (transactions) =>
+  post('/api/transactions/bulk', { transactions });
 export const updateTransaction = (id, data) => put(`/api/transactions/${id}`, data);
 export const deleteTransaction = (id) => del(`/api/transactions/${id}`);
 export const fetchAutocomplete = (query) =>
