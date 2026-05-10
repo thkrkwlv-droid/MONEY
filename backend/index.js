@@ -1653,6 +1653,47 @@ app.get('/api/settings', asyncHandler(async (_req, res) => {
   });
 }));
 
+app.get('/api/upload-logs', asyncHandler(async (_req, res) => {
+  const { rows } = await query(
+    `select *
+     from upload_logs
+     order by created_at desc
+     limit 50`,
+  );
+
+  res.json(rows);
+}));
+
+app.post('/api/upload-logs', asyncHandler(async (req, res) => {
+  const result = await query(
+    `insert into upload_logs (
+      upload_type,
+      file_name,
+      total_rows,
+      imported_rows,
+      excluded_rows,
+      transfer_rows,
+      status,
+      error_message
+    ) values (
+      $1, $2, $3, $4, $5, $6, $7, $8
+    )
+    returning *`,
+    [
+      req.body.upload_type || 'transaction_excel',
+      req.body.file_name || null,
+      Number(req.body.total_rows || 0),
+      Number(req.body.imported_rows || 0),
+      Number(req.body.excluded_rows || 0),
+      Number(req.body.transfer_rows || 0),
+      req.body.status || 'success',
+      req.body.error_message || null,
+    ],
+  );
+
+  res.status(201).json(result.rows[0]);
+}));
+
 app.get('/api/transaction-histories', asyncHandler(async (req, res) => {
   const limit = Math.min(Number(req.query.limit || 50), 200);
 
