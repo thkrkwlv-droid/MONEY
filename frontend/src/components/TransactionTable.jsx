@@ -442,17 +442,6 @@ function TransactionTable({
       }
 
       setUploadPreview(null);
-    } catch (err) {
-      setExcelImportStatus('');
-      throw err;
-    } finally {
-      setIsImportingExcel(false);
-      resetTransactionExcelInput();
-
-      setTimeout(() => {
-        setExcelImportStatus('');
-      }, 2000);
-    }
   }
 
 
