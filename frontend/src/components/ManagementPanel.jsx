@@ -655,6 +655,12 @@ function ManagementPanel({
                     </span>
                   </div>
 
+                  {log.file_name && (
+                    <p className="muted">
+                      파일: {log.file_name}
+                    </p>
+                  )}
+
                   <p>
                     업로드 대상 {log.total_rows}행 / 등록 {log.imported_rows}건 / 제외 {log.excluded_rows}건
                     {log.transfer_rows ? ` / 자산이동 ${log.transfer_rows}건` : ''}
