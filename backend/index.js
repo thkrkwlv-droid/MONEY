@@ -1098,6 +1098,16 @@ app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
     note: normalizeText(req.body.note),
   });
 
+  if (payload.type === 'transfer') {
+    if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
+      throw new Error('자산이동 자동 거래는 출금 자산과 입금 자산을 모두 선택해주세요.');
+    }
+  
+    if (payload.from_asset_account_id === payload.to_asset_account_id) {
+      throw new Error('출금 자산과 입금 자산은 다르게 선택해주세요.');
+    }
+  }
+  
   const nextRunDate = getInitialFixedExpenseNextRunDate(payload);
   const result = await query(
     `insert into fixed_expenses (
@@ -1136,6 +1146,16 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
     note: normalizeText(req.body.note),
   });
 
+  if (payload.type === 'transfer') {
+    if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
+      throw new Error('자산이동 자동 거래는 출금 자산과 입금 자산을 모두 선택해주세요.');
+    }
+  
+    if (payload.from_asset_account_id === payload.to_asset_account_id) {
+      throw new Error('출금 자산과 입금 자산은 다르게 선택해주세요.');
+    }
+  }
+  
   const nextRunDate = getInitialFixedExpenseNextRunDate(payload);
   const result = await query(
     `update fixed_expenses
