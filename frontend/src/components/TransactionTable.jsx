@@ -499,6 +499,10 @@ function TransactionTable({
         startDate: '',
         endDate: '',
       });
+
+      if (transactionsToImport.some((transaction) => transaction.type === 'transfer')) {
+        setShowTransfers(true);
+      }
     } finally {
       setIsImportingExcel(false);
       setExcelImportStatus('');
