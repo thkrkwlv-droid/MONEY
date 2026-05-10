@@ -2008,9 +2008,11 @@ input, select {
 
 .asset-chart-card {
   overflow: hidden;
+  padding-bottom: 1rem;
 }
 
 .asset-chart-wrap {
   width: 100%;
   min-height: 220px;
+  margin-top: 0.75rem;
 }
