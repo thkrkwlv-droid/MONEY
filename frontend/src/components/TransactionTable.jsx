@@ -85,10 +85,19 @@ function normalizeExcelAmount(value) {
 }
 
 function normalizeTransactionType(value) {
-  const text = String(value || '').replace('예시:', '').trim();
+  const text = String(value || '')
+    .replace('예시:', '')
+    .trim()
+    .toLowerCase();
 
-  if (text === '수입') return 'income';
-  if (text === '자산이동') return 'transfer';
+  if (['수입', '입금', 'income', 'in', '입'].includes(text)) {
+    return 'income';
+  }
+
+  if (['자산이동', '이체', 'transfer', 'move', '이동'].includes(text)) {
+    return 'transfer';
+  }
+
   return 'expense';
 }
 
