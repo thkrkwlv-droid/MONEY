@@ -882,6 +882,10 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
   const duplicateCheckRows = [];
 
   for (const item of transactions) {
+    if (item.allow_duplicate === true) {
+      continue;
+    }
+
     const duplicateResult = await query(
       `select id
        from transactions
