@@ -325,7 +325,7 @@ function TransactionTable({
 
     function handleExportCsv() {
       const rows = [
-        ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '자동생성'],
+        ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '자동생성', '중복허용'],
         ...filteredTransactions.map((transaction) => [
           transaction.transaction_date,
           transaction.type === 'income'
@@ -340,6 +340,7 @@ function TransactionTable({
           transaction.transfer_to_asset_account_name || '',
           transaction.note || '',
           transaction.auto_generated ? 'Y' : 'N',
+          '',
         ]),
       ];
   
