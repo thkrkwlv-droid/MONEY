@@ -61,6 +61,17 @@ function isValidDateText(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(text);
 }
 
+function normalizeExcelAmount(value) {
+  const text = String(value || '')
+    .replace('예시:', '')
+    .replace(/원/g, '')
+    .replace(/₩/g, '')
+    .replace(/,/g, '')
+    .trim();
+
+  return Number(text);
+}
+
 function normalizeTransactionType(value) {
   const text = String(value || '').replace('예시:', '').trim();
 
@@ -322,7 +333,7 @@ function TransactionTable({
         const excelRowNumber = index + 3;
         const type = normalizeTransactionType(row.유형);
         const transactionDate = normalizeExcelDate(row.날짜);
-        const amount = Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim());
+        const amount = normalizeExcelAmount(row.금액);
         const categoryName = String(row.카테고리 || '').replace('예시:', '').trim();
         const assetName = String(row.자산 || '').replace('예시:', '').trim();
         const toAssetName = String(row.입금자산 || '').replace('예시:', '').trim();
