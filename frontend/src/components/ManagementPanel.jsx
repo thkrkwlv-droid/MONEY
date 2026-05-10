@@ -651,7 +651,9 @@ function ManagementPanel({
                   <div className="history-card-header">
                     <strong>{log.status === 'fail' ? '실패' : '성공'}</strong>
                     <span className="muted">
-                      {new Date(log.created_at).toLocaleString('ko-KR')}
+                      {log.created_at
+                        ? new Date(log.created_at).toLocaleString('ko-KR')
+                        : '-'}
                     </span>
                   </div>
 
@@ -662,7 +664,7 @@ function ManagementPanel({
                   )}
 
                   <p>
-                    업로드 대상 {log.total_rows}행 / 등록 {log.imported_rows}건 / 제외 {log.excluded_rows}건
+                    업로드 대상 {log.total_rows || 0}행 / 등록 {log.imported_rows || 0}건 / 제외 {log.excluded_rows || 0}건
                     {log.transfer_rows ? ` / 자산이동 ${log.transfer_rows}건` : ''}
                   </p>
 
