@@ -31,6 +31,7 @@ import {
   updateRecurring,
   updateTheme,
   updateLedgerName,
+  updateTargetAsset,
   updateTransaction,
 } from './api';
 import QuickEntryForm from './components/QuickEntryForm';
@@ -84,7 +85,7 @@ function App() {
     favorites: [],
     recurringTransactions: [],
     fixedExpenses: [],
-    settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW', ledger_name: '가계부' },
+    settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW', ledger_name: '가계부', target_asset_amount: 0, },
     transactions: [],
     previousTransactions: [],
     dashboard: null,
@@ -431,6 +432,15 @@ function App() {
       setError(err.message || '가계부 이름 저장에 실패했습니다.');
     }
   }
+
+  async function handleSaveTargetAsset(targetAssetAmount) {
+    try {
+      await updateTargetAsset(targetAssetAmount);
+      await refreshCurrentMonth('목표 자산을 저장했습니다.');
+    } catch (err) {
+      setError(err.message || '목표 자산 저장에 실패했습니다.');
+    }
+  }
   
   async function handleSavePin(enabled, pin) {
     try {
@@ -705,6 +715,7 @@ function App() {
               onRecalculateAssets={handleRecalculateAssets}
               onChangeTheme={handleChangeTheme}
               onSaveLedgerName={handleSaveLedgerName}
+              onSaveTargetAsset={handleSaveTargetAsset}
               onSavePin={handleSavePin}
               onExportBackup={handleExportBackup}
               onImportBackup={handleImportBackup}
