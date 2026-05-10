@@ -179,14 +179,14 @@ function App() {
     return () => clearTimeout(timer);
   }, [form.note]);
 
-    async function refreshUploadLogs() {
-    try {
-      const rows = await fetchUploadLogs();
-      setUploadLogs(rows);
-    } catch (err) {
-      console.error(err);
+    async function refreshUploadLogs(limit = 30) {
+      try {
+        const rows = await fetchUploadLogs(limit);
+        setUploadLogs(rows);
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }
 
     async function refreshTransactionHistories() {
     try {
