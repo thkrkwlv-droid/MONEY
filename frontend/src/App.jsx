@@ -739,6 +739,7 @@ function App() {
             <TransactionTable
               transactions={data.transactions}
               categories={data.categories}
+              assets={data.assets}
               filters={filters}
               setFilters={setFilters}
               onEdit={handleEditTransaction}
