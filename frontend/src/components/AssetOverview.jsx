@@ -19,7 +19,7 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
       .slice(0, 30)
       .reverse()
       .map((snapshot) => ({
-        date: snapshot.snapshot_date?.slice(5) || '-',
+        date: String(snapshot.snapshot_date || '').slice(0, 10).slice(5) || '-',
         total: Number(snapshot.total_asset_amount || 0),
       }))
   ), [assetSnapshots]);
@@ -70,7 +70,7 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
                 <p className="muted">
                   최신 기록:
                   {' '}
-                  {latestSnapshot.snapshot_date || '-'}
+                  {String(latestSnapshot.snapshot_date || '').slice(0, 10) || '-'}
                   {' '}
                   ·
                   {' '}
