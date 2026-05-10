@@ -2209,3 +2209,12 @@ async function start() {
 }
 
 start();
+
+// DB 풀 상태 확인용 API
+app.get('/api/test-pool', asyncHandler(async (_req, res) => {
+  res.json({
+    total: pool.totalCount,   // 풀에 만들어진 총 연결 수
+    idle: pool.idleCount,     // 유휴 연결 수
+    waiting: pool.waitingCount // 풀을 기다리는 요청 수
+  });
+}));
