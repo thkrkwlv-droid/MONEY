@@ -785,6 +785,37 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: '한 번에 최대 500건까지만 등록할 수 있습니다.' });
   }
 
+  const allowedTypes = new Set(['income', 'expense', 'transfer']);
+
+  const invalidRows = transactions
+    .map((item, index) => {
+      const errors = [];
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(item.transaction_date || ''))) {
+        errors.push('날짜');
+      }
+
+      if (!allowedTypes.has(item.type)) {
+        errors.push('유형');
+      }
+
+      if (!Number.isFinite(Number(item.amount)) || Number(item.amount) <= 0) {
+        errors.push('금액');
+      }
+
+      return errors.length > 0
+        ? `${index + 1}번째 거래(${errors.join(', ')})`
+        : null;
+    })
+    .filter(Boolean);
+
+  if (invalidRows.length > 0) {
+    return res.status(400).json({
+      error: '일부 거래 데이터가 올바르지 않습니다.',
+      details: invalidRows,
+    });
+  }
+
   const inserted = await withTransaction(async (client) => {
     const resultRows = [];
 
@@ -806,8 +837,8 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
         returning *`,
         [
           item.transaction_date,
-          item.type || 'expense',
-          item.amount,
+          item.type,
+          Number(item.amount),
           item.category_id || null,
           item.asset_account_id || item.from_asset_account_id || null,
           item.to_asset_account_id || null,
