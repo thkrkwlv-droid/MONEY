@@ -131,7 +131,7 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
             type="button"
             className="secondary-button"
             onClick={() => {
-              const settingsTabButton = document.querySelector('[data-tab="management"]');
+              const settingsTabButton = document.querySelector('[data-tab="manage"]')
           
               if (settingsTabButton) {
                 settingsTabButton.click();
