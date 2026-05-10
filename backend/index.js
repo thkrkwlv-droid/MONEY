@@ -349,6 +349,24 @@ async function applyCashTransaction(client, type, amount) {
   };
 }
 
+async function recordTransactionHistory(client, action, beforeData, afterData = null) {
+  if (!beforeData?.id) return;
+
+  await client.query(
+    `insert into transaction_histories (
+      transaction_id, action, before_data, after_data
+    ) values (
+      $1, $2, $3::jsonb, $4::jsonb
+    )`,
+    [
+      beforeData.id,
+      action,
+      JSON.stringify(beforeData),
+      afterData ? JSON.stringify(afterData) : null,
+    ],
+  );
+}
+
 async function recalculateAllAssets(client) {
   const cashAsset = await ensureCashAsset(client);
 
@@ -864,8 +882,15 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
     note: normalizeText(req.body.note),
   });
 
-  const updated = await withTransaction(async (client) => {
-    let result;
+    const updated = await withTransaction(async (client) => {
+      const previousResult = await client.query(
+        `select * from transactions where id = $1`,
+        [req.params.id],
+      );
+  
+      const previousTransaction = previousResult.rows[0];
+  
+      let result;
 
     if (payload.type === 'transfer') {
       if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
@@ -927,9 +952,13 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
       );
     }
 
+    const updatedTransaction = result.rows[0];
+
+    await recordTransactionHistory(client, 'update', previousTransaction, updatedTransaction);
+
     await recalculateAllAssets(client);
 
-    return result.rows[0];
+    return updatedTransaction;
   });
 
   res.json(updated);
@@ -937,6 +966,15 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
 
 app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
   await withTransaction(async (client) => {
+    const previousResult = await client.query(
+      `select * from transactions where id = $1`,
+      [req.params.id],
+    );
+
+    const previousTransaction = previousResult.rows[0];
+
+    await recordTransactionHistory(client, 'delete', previousTransaction, null);
+
     await client.query(
       `delete from transactions where id = $1`,
       [req.params.id],
