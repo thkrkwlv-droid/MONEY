@@ -282,14 +282,12 @@ function TransactionTable({
   const [isImportingExcel, setIsImportingExcel] = useState(false);
   const [excelImportStatus, setExcelImportStatus] = useState('');
   const [uploadPreview, setUploadPreview] = useState(null);
-  const [autoCreateUploadItems, setAutoCreateUploadItems] = useState({
-    categories: false,
-    assets: false,
-  });  
+  const [excelImportProgress, setExcelImportProgress] = useState(0);
   const transactionExcelInputRef = useRef(null);
   function clearUploadPreview() {
     setUploadPreview(null);
     setExcelImportStatus('');
+    setExcelImportProgress(0);
     resetTransactionExcelInput();
   }
   
@@ -406,6 +404,7 @@ function TransactionTable({
     try {
       setIsImportingExcel(true);
       setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
+      setExcelImportProgress(80);
 
       await onImportTransactionsExcel(transactionsToImport, {
         totalRows: summary.totalRows,
@@ -415,6 +414,7 @@ function TransactionTable({
       });
 
       setExcelImportStatus('업로드가 완료되었습니다.');
+      setExcelImportProgress(100);
 
       setPage(1);
       setFilters({
@@ -444,6 +444,7 @@ function TransactionTable({
       setUploadPreview(null);
     } catch (err) {
       setExcelImportStatus('');
+      setExcelImportProgress(0);
       throw err;
     } finally {
       setIsImportingExcel(false);
@@ -451,18 +452,20 @@ function TransactionTable({
 
       setTimeout(() => {
         setExcelImportStatus('');
+        setExcelImportProgress(0);
       }, 2000);
     }
   }
 
   async function handleTransactionExcelFile(event) {
-      if (isImportingExcel) return;
-  
-      const file = event.target.files?.[0];
-      if (!file) return;
-  
+    if (isImportingExcel) return;
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     setIsImportingExcel(true);
     setExcelImportStatus('엑셀 파일 읽는 중...');
+    setExcelImportProgress(10);
 
     let dataRows = [];
 
@@ -476,6 +479,7 @@ function TransactionTable({
       }
 
       const rows = XLSX.utils.sheet_to_json(sheet);
+      setExcelImportProgress(30);
 
       const requiredColumns = ['날짜', '유형', '금액', '카테고리', '결제수단', '자산', '입금자산', '메모', '중복허용'];
       const firstRow = rows[0] || {};
@@ -485,6 +489,7 @@ function TransactionTable({
         alert(`거래 업로드 양식이 올바르지 않습니다.\n\n누락된 컬럼: ${missingColumns.join(', ')}`);
         setIsImportingExcel(false);
         setExcelImportStatus('');
+        setExcelImportProgress(0);
         resetTransactionExcelInput();
         return;
       }
@@ -498,11 +503,13 @@ function TransactionTable({
         .filter((item) => !isEmptyExcelRow(item.raw)); // 예시 행/빈 행 제외
 
       setExcelImportStatus(`${dataRows.length}건 검증 중...`);
+      setExcelImportProgress(60);
 
       if (dataRows.length > 500) {
         alert('한 번에 최대 500건까지만 업로드할 수 있습니다.');
         setIsImportingExcel(false);
         setExcelImportStatus('');
+        setExcelImportProgress(0);
         resetTransactionExcelInput();
         return;
       }
@@ -510,6 +517,7 @@ function TransactionTable({
       alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
       setIsImportingExcel(false);
       setExcelImportStatus('');
+      setExcelImportProgress(0);
       resetTransactionExcelInput();
       return;
     }
@@ -626,6 +634,7 @@ function TransactionTable({
       alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
       setIsImportingExcel(false);
       setExcelImportStatus('');
+      setExcelImportProgress(0);
       resetTransactionExcelInput();
       return;
     }
@@ -647,6 +656,7 @@ function TransactionTable({
     });
 
     setExcelImportStatus(`${transactionsToImport.length}건 등록 준비 완료`);
+    setExcelImportProgress(70);
     setIsImportingExcel(false);
   }
   
@@ -703,36 +713,16 @@ function TransactionTable({
               {excelImportStatus}
             </div>
           )}
-          
-          <div className="excel-upload-options">
-            <label>
-              <input
-                type="checkbox"
-                checked={autoCreateUploadItems.categories}
-                onChange={(event) =>
-                  setAutoCreateUploadItems((prev) => ({
-                    ...prev,
-                    categories: event.target.checked,
-                  }))
-                }
-              />
-              없는 카테고리 자동 생성
-            </label>
 
-            <label>
-              <input
-                type="checkbox"
-                checked={autoCreateUploadItems.assets}
-                onChange={(event) =>
-                  setAutoCreateUploadItems((prev) => ({
-                    ...prev,
-                    assets: event.target.checked,
-                  }))
-                }
+          {excelImportProgress > 0 && (
+            <div className="excel-import-progress">
+              <div
+                className="excel-import-progress-bar"
+                style={{ width: `${excelImportProgress}%` }}
               />
-              없는 자산 자동 생성
-            </label>
-          </div>
+            </div>
+          )}
+          
         </div>
       </div>
 

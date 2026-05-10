@@ -1989,17 +1989,19 @@ input, select {
   margin-bottom: 4px;
 }
 
-.excel-upload-options {
+
+.excel-import-progress {
   width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.22);
   margin-top: 6px;
-  font-size: 12px;
 }
 
-.excel-upload-options label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.excel-import-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.95);
+  transition: width 0.2s ease;
 }
