@@ -465,6 +465,7 @@ function App() {
       if (summary) {
         await createUploadLog({
           upload_type: 'transaction_excel',
+          file_name: summary.fileName || null,
           total_rows: summary.totalRows,
           imported_rows: summary.importedRows,
           excluded_rows: summary.excludedRows,
@@ -499,6 +500,7 @@ function App() {
         try {
           await createUploadLog({
             upload_type: 'transaction_excel',
+            file_name: summary.fileName || null,
             total_rows: summary.totalRows,
             imported_rows: 0,
             excluded_rows: summary.totalRows,
