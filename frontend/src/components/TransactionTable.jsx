@@ -428,6 +428,7 @@ function TransactionTable({
           toAssetId: type === 'transfer' ? assetMap.get(lookupValues.toAssetName) || null : null,
         };
 
+        // 행 단위 검증: 날짜, 금액, 카테고리, 자산 연결 상태를 확인합니다.
         const rowErrors = [];
 
         if (!isValidDateText(transactionDate)) rowErrors.push('날짜');
@@ -441,6 +442,7 @@ function TransactionTable({
           return null;
         }
 
+        // 중복 검증: 중복허용 컬럼이 1이면 같은 거래도 등록할 수 있습니다.
         const allowDuplicate = String(row.중복허용 || '').trim() === '1';
 
         const nextTransaction = {
