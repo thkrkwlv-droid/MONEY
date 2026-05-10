@@ -2056,3 +2056,13 @@ input, select {
     overflow-x: auto;
   }
 }
+
+@media (max-width: 768px) {
+  .app-shell {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .content-area {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
