@@ -1715,6 +1715,12 @@ app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
      returning id`,
   );
 
+  const uploadLogResult = await query(
+    `delete from upload_logs
+     where created_at < now() - interval '6 months'
+     returning id`,
+  );
+
   const historyResult = await query(
     `delete from transaction_histories
      where created_at < now() - interval '12 months'
@@ -1726,6 +1732,7 @@ app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
     deleted: {
       asset_snapshots: snapshotResult.rowCount,
       transaction_histories: historyResult.rowCount,
+      upload_logs: uploadLogResult.rowCount,
     },
     message: '오래된 캐시/히스토리 데이터를 정리했습니다.',
   });
