@@ -354,5 +354,3 @@ add column if not exists card_amount bigint not null default 0;
 alter table asset_snapshots
 add column if not exists etc_amount bigint not null default 0;
 
-create unique index if not exists idx_asset_snapshots_snapshot_date_unique
-  on asset_snapshots(snapshot_date);
