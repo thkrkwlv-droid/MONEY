@@ -1988,3 +1988,18 @@ input, select {
   display: block;
   margin-bottom: 4px;
 }
+
+.excel-upload-options {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.excel-upload-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
