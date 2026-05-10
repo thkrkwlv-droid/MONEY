@@ -68,10 +68,17 @@ async function request(method, path, body, signal, timeoutMs = DEFAULT_TIMEOUT_M
   return response.json();
 }
 
-const get = (path, signal) => request('GET', path, undefined, signal);
-const post = (path, body) => request('POST', path, body);
-const put = (path, body) => request('PUT', path, body);
-const del = (path) => request('DELETE', path);
+const get = (path, signal, timeoutMs) =>
+  request('GET', path, undefined, signal, timeoutMs);
+
+const post = (path, body, timeoutMs) =>
+  request('POST', path, body, undefined, timeoutMs);
+
+const put = (path, body, timeoutMs) =>
+  request('PUT', path, body, undefined, timeoutMs);
+
+const del = (path, timeoutMs) =>
+  request('DELETE', path, undefined, undefined, timeoutMs);
 
 // Bootstrap - 첫 로드에 필요한 모든 데이터를 한 번에 가져옵니다.
 export const fetchBootstrap = (month) =>
@@ -89,7 +96,11 @@ export const fetchTransactions = (filters = {}) => {
 };
 export const createTransaction = (data) => post('/api/transactions', data);
 export const createTransactionsBulk = (transactions) =>
-  post('/api/transactions/bulk', { transactions });
+  post(
+    '/api/transactions/bulk',
+    { transactions },
+    LONG_TIMEOUT_MS
+  );
 export const updateTransaction = (id, data) => put(`/api/transactions/${id}`, data);
 export const deleteTransaction = (id) => del(`/api/transactions/${id}`);
 export const fetchAutocomplete = (query) =>
@@ -131,7 +142,8 @@ export const fetchAssets = () => get('/api/assets');
 export const createAsset = (data) => post('/api/assets', data);
 export const updateAsset = (id, data) => put(`/api/assets/${id}`, data);
 export const deleteAsset = (id) => del(`/api/assets/${id}`);
-export const recalculateAssets = () => post('/api/assets/recalculate');
+export const recalculateAssets = () =>
+  post('/api/assets/recalculate', undefined, LONG_TIMEOUT_MS);
 
 // 설정
 export const fetchSettings = () => get('/api/settings');
@@ -144,7 +156,8 @@ export const unlockPin = (pin) => post('/api/settings/unlock', { pin });
 
 // 백업/복원
 export const exportBackup = () => get('/api/system/backup');
-export const importBackup = (data) => post('/api/system/restore', data);
+export const importBackup = (data) =>
+  post('/api/system/restore', data, LONG_TIMEOUT_MS);
 export const runAutomation = () => post('/api/system/run-automation', {});
 export const cleanupCache = () => post('/api/system/cleanup-cache', {});
 export const fetchTransactionHistories = () => get('/api/transaction-histories?limit=50');
