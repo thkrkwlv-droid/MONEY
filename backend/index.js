@@ -2210,17 +2210,3 @@ async function start() {
 
 start();
 
-// CORS 적용 (맨 아래, 한 번만)
-app.use(cors({ origin: '*' }));
-
-// DB 풀 상태 확인용 단일 API
-app.get('/api/test-pool', asyncHandler(async (_req, res) => {
-  res.json({
-    ok: true,
-    pool: {
-      total: pool.totalCount,
-      idle: pool.idleCount,
-      waiting: pool.waitingCount
-    }
-  });
-}));
