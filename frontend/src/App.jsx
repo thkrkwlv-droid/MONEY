@@ -687,7 +687,7 @@ function App() {
           )}
 
           {activeTab === 'assets' && (
-            <AssetOverview assets={data.assets} />
+            <AssetOverview assets={data.assets} settings={data.settings} />
           )}
           
           {activeTab === 'manage' && (
