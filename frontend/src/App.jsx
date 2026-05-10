@@ -115,6 +115,7 @@ function App() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showTransfers, setShowTransfers] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [assetSnapshots, setAssetSnapshots] = useState([]);
 
   const defaultCategoryId = useMemo(() => {
     return (
@@ -152,6 +153,7 @@ function App() {
 
   useEffect(() => {
     loadBootstrap(month);
+    refreshAssetSnapshots();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month]);
 
@@ -168,6 +170,25 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [form.note]);
+
+    async function refreshAssetSnapshots() {
+    try {
+      const rows = await fetchAssetSnapshots();
+      setAssetSnapshots(rows);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleCreateTodayAssetSnapshot() {
+    try {
+      await createTodayAssetSnapshot();
+      await refreshAssetSnapshots();
+      setMessage('오늘 기준 자산 기록을 저장했습니다.');
+    } catch (err) {
+      setError(err.message || '자산 기록 저장에 실패했습니다.');
+    }
+  }
 
   async function loadBootstrap(targetMonth) {
     setLoading(true);
@@ -727,6 +748,8 @@ function App() {
               fixedExpenses={data.fixedExpenses}
               budgets={data.budgets}
               assets={data.assets}
+              assetSnapshots={assetSnapshots}
+              onCreateTodayAssetSnapshot={handleCreateTodayAssetSnapshot}
               settings={data.settings}
               onSaveCategory={saveCategory}
               onDeleteCategory={removeCategory}
