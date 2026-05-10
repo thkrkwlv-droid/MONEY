@@ -2211,28 +2211,15 @@ async function start() {
 start();
 
 // ===== DB 풀 상태 확인용 테스트 API =====
+app.use(cors({ origin: '*' })); // 이미 상단에서 선언되어 있으면 삭제 가능
 
-// 이미 index.js 상단에서 cors와 pool 선언되었다고 가정
-// const cors = require('cors');
-// const { pool } = require('./db');
-
-// CORS 적용 (이미 선언되어 있어도 안전)
-app.use(cors({
-  origin: '*'
-}));
-
-// 단일 /api/test-pool API
 app.get('/api/test-pool', asyncHandler(async (_req, res) => {
-  try {
-    res.json({
-      ok: true,
-      pool: {
-        total: pool.totalCount,   // 총 생성된 DB 연결 수
-        idle: pool.idleCount,     // 유휴 연결 수
-        waiting: pool.waitingCount // 풀을 기다리는 요청 수
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
+  res.json({
+    ok: true,
+    pool: {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount
+    }
+  });
 }));
