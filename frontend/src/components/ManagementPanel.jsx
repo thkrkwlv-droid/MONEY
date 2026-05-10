@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { PAYMENT_METHODS, formatAmount, parseAmount, today, WEEKDAY_NAMES } from '../utils';
 
 const ASSET_TYPES = ['입출금', '저축/적금', '현금', '증권', '카드대금', '기타'];
@@ -54,6 +55,7 @@ function ManagementPanel({
   onDeleteBudget,
   onSaveAsset,
   onDeleteAsset,
+  onImportAssetsExcel,
   onRecalculateAssets,
   onChangeTheme,
   onSaveLedgerName,
@@ -137,6 +139,58 @@ function ManagementPanel({
     balanceInput: '',
     memo: '',
   });
+
+    function handleDownloadAssetTemplate() {
+      const rows = [
+        {
+          자산명: '국민은행',
+          유형: '입출금',
+          현재금액: 1000000,
+          메모: '월급 통장',
+        },
+        {
+          자산명: '현금',
+          유형: '현금',
+          현재금액: 50000,
+          메모: '지갑 현금',
+        },
+      ];
+  
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+  
+      XLSX.utils.book_append_sheet(workbook, worksheet, '기초자산양식');
+      XLSX.writeFile(workbook, 'MONEY_기초자산_업로드_양식.xlsx');
+    }
+  
+    async function handleAssetExcelFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+  
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+  
+      const assetsToImport = rows
+        .map((row) => ({
+          name: String(row.자산명 || row.name || '').trim(),
+          asset_type: String(row.유형 || row.asset_type || '기타').trim(),
+          balance: parseAmount(row.현재금액 ?? row.balance ?? 0),
+          initial_balance: parseAmount(row.현재금액 ?? row.balance ?? 0),
+          memo: String(row.메모 || row.memo || '').trim(),
+        }))
+        .filter((row) => row.name);
+  
+      if (assetsToImport.length === 0) {
+        alert('업로드할 자산 데이터가 없습니다.');
+        event.target.value = '';
+        return;
+      }
+  
+      await onImportAssetsExcel(assetsToImport);
+      event.target.value = '';
+    }
 
   const handleBackupFile = async (event) => {
     const file = event.target.files?.[0];
@@ -510,6 +564,35 @@ function ManagementPanel({
             {assetForm.id && <button type="button" className="secondary-button" onClick={resetAssetForm}>취소</button>}
           </div>
         </form>
+
+        <div className="asset-maintenance-card">
+          <div>
+            <strong>기초자산 엑셀 등록</strong>
+            <p className="muted">
+              엑셀 양식을 내려받아 자산명, 유형, 현재금액, 메모를 입력한 뒤 한 번에 등록할 수 있습니다.
+            </p>
+          </div>
+
+          <div className="actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={handleDownloadAssetTemplate}
+            >
+              엑셀 양식 다운로드
+            </button>
+
+            <label className="secondary-button file-button">
+              엑셀 업로드
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleAssetExcelFile}
+                hidden
+              />
+            </label>
+          </div>
+        </div>       
 
         <div className="asset-maintenance-card">
           <div>
