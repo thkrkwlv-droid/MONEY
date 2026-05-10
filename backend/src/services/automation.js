@@ -98,6 +98,41 @@ async function processFixedExpenses(client, todayIso) {
           item.id,
         ],
       );
+
+      if (item.type === 'transfer') {
+        await client.query(
+          `update asset_accounts
+           set balance = balance - $1,
+               updated_at = now()
+           where id = $2`,
+          [item.amount, item.from_asset_account_id],
+        );
+      
+        await client.query(
+          `update asset_accounts
+           set balance = balance + $1,
+               updated_at = now()
+           where id = $2`,
+          [item.amount, item.to_asset_account_id],
+        );
+      } else if (item.type === 'income' && item.from_asset_account_id) {
+        await client.query(
+          `update asset_accounts
+           set balance = balance + $1,
+               updated_at = now()
+           where id = $2`,
+          [item.amount, item.from_asset_account_id],
+        );
+      } else if (item.type === 'expense' && item.from_asset_account_id) {
+        await client.query(
+          `update asset_accounts
+           set balance = balance - $1,
+               updated_at = now()
+           where id = $2`,
+          [item.amount, item.from_asset_account_id],
+        );
+      }
+      
       lastGeneratedOn = dueDate;
       cursor = dayjs(getNextFixedExpenseDate(item, dueDate));
     }
