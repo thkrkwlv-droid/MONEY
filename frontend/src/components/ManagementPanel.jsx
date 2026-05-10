@@ -62,6 +62,7 @@ function ManagementPanel({
   assets,
   assetSnapshots,
   transactionHistories,
+  uploadLogs,
   onCreateTodayAssetSnapshot,
   settings,
   onSaveCategory,
@@ -635,6 +636,40 @@ function ManagementPanel({
 
         <div className="asset-maintenance-card wide-card">
           <div>
+        <div className="asset-maintenance-card wide-card">
+          <div>
+            <strong>엑셀 업로드 로그</strong>
+            <p className="muted">
+              최근 거래 엑셀 업로드 결과를 확인합니다.
+            </p>
+          </div>
+
+          <div className="history-list">
+            {(uploadLogs || []).length > 0 ? (
+              uploadLogs.slice(0, 10).map((log) => (
+                <div key={log.id} className="history-card">
+                  <div className="history-card-header">
+                    <strong>{log.status === 'fail' ? '실패' : '성공'}</strong>
+                    <span className="muted">
+                      {new Date(log.created_at).toLocaleString('ko-KR')}
+                    </span>
+                  </div>
+
+                  <p>
+                    업로드 대상 {log.total_rows}행 / 등록 {log.imported_rows}건 / 제외 {log.excluded_rows}건
+                    {log.transfer_rows ? ` / 자산이동 ${log.transfer_rows}건` : ''}
+                  </p>
+
+                  {log.error_message && (
+                    <p className="muted">{log.error_message}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="muted">아직 엑셀 업로드 로그가 없습니다.</p>
+            )}
+          </div>
+        </div>
             <strong>거래 수정/삭제 히스토리</strong>
             <p className="muted">
               최근 거래 수정 및 삭제 기록을 확인합니다. 원본 거래내역을 복구하거나 변경하지는 않습니다.
