@@ -693,38 +693,37 @@ async function getAutocomplete(queryText = '') {
 
 async function getBootstrap(month) {
   // await ensureAutomationFresh(); // 주석 처리
-}
 
   const { prevStart, prevEnd } = getMonthRange(month);
 
- const categories = await getCategories();
-const favorites = await getFavorites();
-const recurringTransactions = await getRecurringTransactions();
-const fixedExpenses = await getFixedExpenses();
-const settings = await getSettings();
-const transactions = await getTransactions({ month });
-const previousTransactionsResult = await query(
-  `select
-      t.*,
-      c.color as category_color,
-      c.name as category_name,
-      a.name as asset_account_name,
-      a.asset_type as asset_account_type,
-      ta.name as transfer_to_asset_account_name,
-      ta.asset_type as transfer_to_asset_account_type
-   from transactions t
-   left join categories c on c.id = t.category_id
-   left join asset_accounts a on a.id = t.asset_account_id
-   left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
-   where t.transaction_date between $1 and $2
-   order by t.transaction_date desc, t.created_at desc
-   limit 300`,
-  [prevStart, prevEnd],
-);
-const dashboard = await getDashboard(month);
-const recentCategories = await getRecentCategories();
-const budgets = await getBudgets(month);
-const assets = await getAssets();
+  const categories = await getCategories();
+  const favorites = await getFavorites();
+  const recurringTransactions = await getRecurringTransactions();
+  const fixedExpenses = await getFixedExpenses();
+  const settings = await getSettings();
+  const transactions = await getTransactions({ month });
+  const previousTransactionsResult = await query(
+    `select
+        t.*,
+        c.color as category_color,
+        c.name as category_name,
+        a.name as asset_account_name,
+        a.asset_type as asset_account_type,
+        ta.name as transfer_to_asset_account_name,
+        ta.asset_type as transfer_to_asset_account_type
+     from transactions t
+     left join categories c on c.id = t.category_id
+     left join asset_accounts a on a.id = t.asset_account_id
+     left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
+     where t.transaction_date between $1 and $2
+     order by t.transaction_date desc, t.created_at desc
+     limit 300`,
+    [prevStart, prevEnd],
+  );
+  const dashboard = await getDashboard(month);
+  const recentCategories = await getRecentCategories();
+  const budgets = await getBudgets(month);
+  const assets = await getAssets();
 
   return {
     categories,
