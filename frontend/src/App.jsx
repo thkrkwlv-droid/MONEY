@@ -740,6 +740,7 @@ function App() {
               onDeleteAsset={removeAsset}
               onImportAssetsExcel={importAssetsExcel}
               onRecalculateAssets={handleRecalculateAssets}
+              onCleanupCache={handleCleanupCache}
               onChangeTheme={handleChangeTheme}
               onSaveLedgerName={handleSaveLedgerName}
               onSaveTargetAsset={handleSaveTargetAsset}
