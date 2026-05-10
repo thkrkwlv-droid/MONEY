@@ -664,7 +664,9 @@ function ManagementPanel({
                   )}
 
                   <p>
-                    업로드 대상 {log.total_rows || 0}행 / 등록 {log.imported_rows || 0}건 / 제외 {log.excluded_rows || 0}건
+                    업로드 대상 {log.total_rows || 0}행 / 등록 {log.imported_rows || 0}건 / 제외 {log.status === 'fail'
+                      ? Number(log.excluded_rows || log.total_rows || 0)
+                      : Math.max(0, Number(log.total_rows || 0) - Number(log.imported_rows || 0))}건
                     {log.transfer_rows ? ` / 자산이동 ${log.transfer_rows}건` : ''}
                   </p>
 
