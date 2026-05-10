@@ -468,7 +468,10 @@ function App() {
           file_name: summary.fileName || null,
           total_rows: summary.totalRows,
           imported_rows: summary.importedRows,
-          excluded_rows: summary.excludedRows,
+          excluded_rows: Math.max(
+            0,
+            Number(summary.totalRows || 0) - Number(summary.importedRows || 0),
+          ),
           transfer_rows: summary.transferRows || 0,
           status: 'success',
         });
@@ -484,8 +487,12 @@ function App() {
 
       await refreshCurrentMonth();
 
+      const excludedRows = summary
+        ? Math.max(0, Number(summary.totalRows || 0) - Number(summary.importedRows || 0))
+        : 0;
+
       const message = summary
-        ? `엑셀 업로드 완료: 업로드 대상 ${summary.totalRows}행 중 ${summary.importedRows}건 등록, ${summary.excludedRows}건 제외했습니다.${summary.transferRows ? ` 자산이동 ${summary.transferRows}건 포함.` : ''}`
+        ? `엑셀 업로드 완료: 업로드 대상 ${summary.totalRows}행 중 ${summary.importedRows}건 등록, ${excludedRows}건 제외했습니다.${summary.transferRows ? ` 자산이동 ${summary.transferRows}건 포함.` : ''}`
         : `${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`;
 
       await refreshCurrentMonth(message);
