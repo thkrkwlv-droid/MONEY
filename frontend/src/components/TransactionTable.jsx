@@ -307,12 +307,25 @@ function TransactionTable({
   
     setIsImportingExcel(true);
 
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet);
+    let dataRows = [];
 
-    const dataRows = rows.slice(1); // 2행 예시는 제외, 3행부터 실제 데이터
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      if (!sheet) {
+        throw new Error('시트를 찾을 수 없습니다.');
+      }
+
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      dataRows = rows.slice(1); // 2행 예시는 제외, 3행부터 실제 데이터
+    } catch (err) {
+      alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
+      setIsImportingExcel(false);
+      event.target.value = '';
+      return;
+    }
 
     const categoryMap = new Map(
       (categories || []).map((category) => [normalizeLookupName(category.name), category.id])
