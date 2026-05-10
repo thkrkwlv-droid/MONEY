@@ -82,10 +82,6 @@ function normalizePaymentMethodText(value, type) {
   return text || '현금';
 }
 
-  const text = String(value).trim();
-  return text.length > 0 ? text : null;
-}
-
 async function ensureAutomationFresh() {
   await runAutomation(false);
 }
