@@ -112,6 +112,24 @@ function isEmptyExcelRow(row) {
     .every((key) => String(row?.[key] ?? '').trim() === '');
 }
 
+function normalizeTransactionNote(value) {
+  return String(value || '')
+    .replace(/\r?\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizePaymentMethod(value, type) {
+  if (type === 'transfer') return '';
+
+  const text = String(value || '')
+    .replace('예시:', '')
+    .replace(/\s+/g, '')
+    .trim();
+
+  return text || '현금';
+}
+
 function normalizeLookupName(value) {
   return String(value || '')
     .replace('예시:', '')
@@ -501,8 +519,8 @@ function TransactionTable({
           asset_account_id: matchedIds.assetId,
           from_asset_account_id: matchedIds.assetId,
           to_asset_account_id: matchedIds.toAssetId,
-          note: String(row.메모 || '').trim(),
-          payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
+          note: normalizeTransactionNote(row.메모),
+          payment_method: normalizePaymentMethod(row.결제수단, type),
           allow_duplicate: allowDuplicate,
         };
         
