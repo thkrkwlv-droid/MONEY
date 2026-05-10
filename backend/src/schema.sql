@@ -75,11 +75,15 @@ create table if not exists upload_logs (
 );
 
 alter table upload_logs
-drop constraint if exists upload_logs_status_check;
-
-alter table upload_logs
 add constraint upload_logs_status_check
 check (status in ('success', 'fail'));
+
+alter table upload_logs
+drop constraint if exists upload_logs_type_check;
+
+alter table upload_logs
+add constraint upload_logs_type_check
+check (upload_type in ('transaction_excel'));
 
 create index if not exists idx_upload_logs_created_at on upload_logs(created_at desc);
 
