@@ -444,8 +444,7 @@ function App() {
       await createTransactionsBulk(transactionsToImport);
 
       const message = summary
-        
-        ? `엑셀 업로드 완료: 총 ${summary.totalRows}행 중 ${summary.importedRows}건 등록, ${summary.excludedRows}건 제외했습니다.`
+        ? `엑셀 업로드 완료: 총 ${summary.totalRows}행 중 ${summary.importedRows}건 등록, ${summary.excludedRows}건 제외했습니다.${summary.transferRows ? ` 자산이동 ${summary.transferRows}건 포함.` : ''}`
         : `${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`;
 
       await refreshCurrentMonth(message);
