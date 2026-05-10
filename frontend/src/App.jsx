@@ -268,6 +268,7 @@ function App() {
 
       setMessage(editingTransaction ? '내역을 수정했습니다.' : '내역을 저장했습니다.');
       loadBootstrap(month);
+      refreshTransactionHistories();
     } catch (err) {
       setError(err.message || '저장에 실패했습니다.');
     } finally {
