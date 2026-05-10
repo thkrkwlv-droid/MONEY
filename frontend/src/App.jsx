@@ -457,7 +457,11 @@ function App() {
       await refreshTransactionHistories();
       await refreshAssetSnapshots();
     } catch (err) {
-      setError(err.message || '거래내역 엑셀 등록에 실패했습니다.');
+      const detailMessage = Array.isArray(err.details)
+        ? `\n${err.details.join('\n')}`
+        : '';
+
+      setError(`${err.message || '거래내역 엑셀 등록에 실패했습니다.'}${detailMessage}`);
     }
   }
 
