@@ -408,7 +408,14 @@ function TransactionTable({
       return;
     }
 
-    await onImportTransactionsExcel(transactionsToImport);
+    const excludedCount = invalidRows.length + duplicatedRows.length;
+
+    await onImportTransactionsExcel(transactionsToImport, {
+      totalRows: dataRows.length,
+      importedRows: transactionsToImport.length,
+      excludedRows: excludedCount,
+    });
+
     event.target.value = '';
   }
 
