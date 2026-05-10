@@ -41,6 +41,19 @@ function normalizeTransactionType(value) {
   return 'expense';
 }
 
+function makeTransactionDuplicateKey(transaction) {
+  return [
+    transaction.transaction_date,
+    transaction.type,
+    Number(transaction.amount || 0),
+    transaction.category_id || '',
+    transaction.asset_account_id || '',
+    transaction.to_asset_account_id || '',
+    String(transaction.note || '').trim(),
+    String(transaction.payment_method || '').trim(),
+  ].join('|');
+}
+
 function downloadTransactionTemplate() {
   const rows = [
     {
@@ -52,6 +65,8 @@ function downloadTransactionTemplate() {
       자산: '예시: 현금',
       입금자산: '',
       메모: '예시 행은 업로드 시 제외됩니다. 실제 데이터는 3행부터 입력하세요.',
+      중복허용: '',
+      
     },
   ];
 
@@ -230,6 +245,7 @@ function TransactionTable({
       입금자산: transaction.transfer_to_asset_account_name || '',
       메모: transaction.note || '',
       자동생성: transaction.auto_generated ? 'Y' : 'N',
+      중복허용: '',
     }));
 
     downloadExcel(`money-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`, rows);
@@ -253,6 +269,24 @@ function TransactionTable({
     const assetMap = new Map(
       (assets || []).map((asset) => [String(asset.name || '').trim(), asset.id])
     );
+
+    const existingTransactionKeys = new Set(
+      (transactions || []).map((transaction) =>
+        makeTransactionDuplicateKey({
+          transaction_date: transaction.transaction_date,
+          type: transaction.type,
+          amount: transaction.amount,
+          category_id: transaction.category_id,
+          asset_account_id: transaction.asset_account_id,
+          to_asset_account_id: transaction.transfer_to_asset_account_id,
+          note: transaction.note,
+          payment_method: transaction.payment_method,
+        })
+      )
+    );
+
+    const seenExcelKeys = new Set();
+    const duplicatedRows = [];
 
     const invalidRows = [];
     const transactionsToImport = dataRows
@@ -282,7 +316,7 @@ function TransactionTable({
           return null;
         }
 
-        return {
+        const nextTransaction = {
           transaction_date: transactionDate,
           type,
           amount,
@@ -293,6 +327,23 @@ function TransactionTable({
           note: String(row.메모 || '').trim(),
           payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
         };
+
+        const allowDuplicate = String(row.중복허용 || '').trim() === '1';
+        const duplicateKey = makeTransactionDuplicateKey(nextTransaction);
+
+        if (
+          !allowDuplicate &&
+          (existingTransactionKeys.has(duplicateKey) || seenExcelKeys.has(duplicateKey))
+        ) {
+          duplicatedRows.push(`${excelRowNumber}행`);
+          return null;
+        }
+
+        if (!allowDuplicate) {
+          seenExcelKeys.add(duplicateKey);
+        }
+
+        return nextTransaction;
       })
       .filter(Boolean);
 
@@ -300,6 +351,10 @@ function TransactionTable({
       alert(`일부 행은 오류가 있어 제외했습니다.\n\n${invalidRows.join('\n')}`);
     }
 
+    if (duplicatedRows.length > 0) {
+      alert(`이미 등록된 거래 또는 엑셀 안에서 중복된 거래는 제외했습니다.\n\n${duplicatedRows.join('\n')}`);
+    }
+      
     if (transactionsToImport.length === 0) {
       alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
       event.target.value = '';
