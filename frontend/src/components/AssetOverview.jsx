@@ -1,8 +1,13 @@
 import { formatAmount } from '../utils';
 
-function AssetOverview({ assets = [] }) {
+function AssetOverview({ assets = [], settings = {} }) {
   const sortedAssets = [...assets].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
   const totalAsset = sortedAssets.reduce((sum, item) => sum + Number(item.balance || 0), 0);
+
+  const targetAssetAmount = Number(settings?.target_asset_amount || 0);
+  const targetProgress = targetAssetAmount > 0
+    ? Math.min(100, Math.round((totalAsset / targetAssetAmount) * 100))
+    : 0;
 
   return (
     <section className="stack gap-lg">
@@ -18,6 +23,25 @@ function AssetOverview({ assets = [] }) {
         <strong>{formatAmount(totalAsset)}원</strong>
         <p className="muted">등록된 자산 {sortedAssets.length}개 기준</p>
       </div>
+
+      {targetAssetAmount > 0 && (
+        <div className="asset-target-card panel">
+          <div>
+            <span>목표 자산</span>
+            <strong>{formatAmount(targetAssetAmount)}원</strong>
+            <p className="muted">
+              현재 {formatAmount(totalAsset)}원 · 진행률 {targetProgress}%
+            </p>
+          </div>
+      
+          <div className="asset-target-track">
+            <div
+              className="asset-target-fill"
+              style={{ width: `${targetProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {sortedAssets.length === 0 ? (
         <div className="panel empty-state">
