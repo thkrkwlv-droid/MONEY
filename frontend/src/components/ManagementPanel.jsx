@@ -328,6 +328,33 @@ function ManagementPanel({
               </select>
             </label>
           )}
+
+          {fixedForm.type !== 'transfer' && (
+            <label>
+              <span>
+                {fixedForm.type === 'income' ? '입금 자산' : '출금 자산'}
+              </span>
+          
+              <select
+                value={fixedForm.from_asset_account_id || ''}
+                onChange={(e) =>
+                  setFixedForm((prev) => ({
+                    ...prev,
+                    from_asset_account_id: e.target.value,
+                  }))
+                }
+              >
+                <option value="">선택 안함</option>
+          
+                {assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          
           <label><span>매월 날짜</span><input type="number" min="1" max="31" value={fixedForm.day_of_month} onChange={(e) => setFixedForm((prev) => ({ ...prev, day_of_month: Number(e.target.value) }))} required /></label>
           <label><span>시작일</span><input type="date" value={fixedForm.start_date} onChange={(e) => setFixedForm((prev) => ({ ...prev, start_date: e.target.value }))} required /></label>
           {fixedForm.type !== 'transfer' && (
