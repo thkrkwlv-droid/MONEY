@@ -705,7 +705,9 @@ function ManagementPanel({
                     <div className="history-card-header">
                       <strong>{history.action === 'delete' ? '삭제' : '수정'}</strong>
                       <span className="muted">
-                        {new Date(history.created_at).toLocaleString('ko-KR')}
+                        {history.created_at
+                          ? new Date(history.created_at).toLocaleString('ko-KR')
+                          : '-'}
                       </span>
                     </div>
 
