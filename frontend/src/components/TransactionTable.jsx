@@ -381,6 +381,8 @@ function TransactionTable({
           return null;
         }
 
+        const allowDuplicate = String(row.중복허용 || '').trim() === '1';
+
         const nextTransaction = {
           transaction_date: transactionDate,
           type,
@@ -391,9 +393,9 @@ function TransactionTable({
           to_asset_account_id: toAssetId,
           note: String(row.메모 || '').trim(),
           payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
+          allow_duplicate: allowDuplicate,
         };
-
-        const allowDuplicate = String(row.중복허용 || '').trim() === '1';
+        
         const duplicateKey = makeTransactionDuplicateKey(nextTransaction);
 
         if (
