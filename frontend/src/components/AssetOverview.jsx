@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -13,13 +14,31 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
   const sortedAssets = [...assets].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
   const totalAsset = sortedAssets.reduce((sum, item) => sum + Number(item.balance || 0), 0);
   
-  const chartData = [...assetSnapshots]
-    .slice(0, 30)
-    .reverse()
-    .map((snapshot) => ({
-      date: snapshot.snapshot_date?.slice(5) || '-',
-      total: Number(snapshot.total_asset_amount || 0),
-    }));
+  const chartData = useMemo(() => (
+    [...assetSnapshots]
+      .slice(0, 30)
+      .reverse()
+      .map((snapshot) => ({
+        date: snapshot.snapshot_date?.slice(5) || '-',
+        total: Number(snapshot.total_asset_amount || 0),
+      }))
+  ), [assetSnapshots]);
+
+    const latestSnapshot = useMemo(
+      () => assetSnapshots?.[0] || null,
+      [assetSnapshots]
+    );
+    
+    const previousSnapshot = useMemo(
+      () => assetSnapshots?.[1] || null,
+      [assetSnapshots]
+    );
+    
+    const latestChange = useMemo(() => (
+      latestSnapshot && previousSnapshot
+        ? Number(latestSnapshot.total_asset_amount || 0) - Number(previousSnapshot.total_asset_amount || 0)
+        : 0
+    ), [latestSnapshot, previousSnapshot]);
 
   const targetAssetAmount = Number(settings?.target_asset_amount || 0);
   const targetProgress = targetAssetAmount > 0
@@ -41,25 +60,55 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
         <p className="muted">등록된 자산 {sortedAssets.length}개 기준</p>
       </div>
 
-      {chartData.length > 0 && (
+      {chartData.length > 0 ? (
         <div className="panel asset-chart-card">
           <div className="section-heading compact">
             <div>
               <h3>자산 히스토리</h3>
               <p className="muted">최근 30개 자산 기록 기준 총자산 흐름입니다.</p>
+              {latestSnapshot && (
+                <p className="muted">
+                  최신 기록:
+                  {' '}
+                  {latestSnapshot.snapshot_date || '-'}
+                  {' '}
+                  ·
+                  {' '}
+                  {formatAmount(latestSnapshot.total_asset_amount || 0)}원
+                </p>
+              )}
             </div>
           </div>
+
+          {latestSnapshot && previousSnapshot && (
+            <p className={latestChange >= 0 ? 'positive-text' : 'danger-text'}>
+              직전 기록 대비:
+              {' '}
+              {latestChange >= 0 ? '+' : ''}
+              {formatAmount(latestChange)}원
+            </p>
+          )}
       
           <div className="asset-chart-wrap">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
-                <YAxis
-                  tickFormatter={(value) => `${Math.round(Number(value) / 10000)}만`}
-                />
+                  <YAxis
+                    width={70}
+                    tickFormatter={(value) => {
+                      const amount = Number(value || 0);
+                  
+                      if (amount >= 100000000) {
+                        return `${Math.round(amount / 100000000)}억`;
+                      }
+                  
+                      return `${Math.round(amount / 10000)}만`;
+                    }}
+                  />
                 <Tooltip
-                  formatter={(value) => [`${formatAmount(value)}원`, '총 자산']}
+                  formatter={(value) => [`${formatAmount(Number(value || 0))}원`, '총 자산']}
+                  labelFormatter={(label) => `기록일: ${label}`}
                 />
                 <Area
                   type="monotone"
@@ -70,6 +119,14 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      ) : (
+        <div className="panel empty-state">
+          <strong>아직 자산 히스토리가 없습니다.</strong>
+      
+          <p className="muted">
+            설정/관리 → 기초자산 관리 → 오늘 자산 기록 저장 버튼으로 자산 흐름 데이터를 만들 수 있습니다.
+          </p>
         </div>
       )}
 
