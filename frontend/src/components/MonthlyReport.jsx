@@ -71,6 +71,25 @@ function buildReport(transactions = [], fixedExpenses = [], mode = 'category') {
   };
 }
 
+function buildSpendingInsights(expenseRows = []) {
+  if (!expenseRows.length) {
+    return [];
+  }
+
+  const topExpense = expenseRows[0];
+
+  return [
+    {
+      title: '가장 큰 지출',
+      text: `${topExpense.name}에 ${formatAmount(topExpense.total)}원을 사용했어요.`,
+    },
+    {
+      title: '지출 비중',
+      text: `이번 달 지출 중 ${topExpense.name} 비중이 가장 높아요.`,
+    },
+  ];
+}
+
 function ReportList({ title, rows, type, modeLabel }) {
   const total = rows.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
@@ -159,6 +178,11 @@ function MonthlyReport({ month, transactions = [], fixedExpenses = [] }) {
     [transactions, fixedExpenses, reportMode]
   );
 
+  const insights = useMemo(
+  () => buildSpendingInsights(report.expenseRows),
+  [report.expenseRows]
+);
+
   return (
     <section className="stack gap-lg">
       <div className="panel stack gap-md">
@@ -204,6 +228,17 @@ function MonthlyReport({ month, transactions = [], fixedExpenses = [] }) {
           <small>수입 - 지출</small>
         </div>
       </div>
+
+      {insights.length > 0 && (
+        <div className="report-insight-grid">
+          {insights.map((insight) => (
+            <div key={insight.title} className="report-insight-card">
+              <span>{insight.title}</span>
+              <strong>{insight.text}</strong>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="monthly-report-grid">
         <ReportList
