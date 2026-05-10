@@ -449,6 +449,8 @@ function App() {
         : `${transactionsToImport.length}개의 거래내역을 엑셀로 등록했습니다.`;
 
       await refreshCurrentMonth(message);
+      await refreshTransactionHistories();
+      await refreshAssetSnapshots();
     } catch (err) {
       setError(err.message || '거래내역 엑셀 등록에 실패했습니다.');
     }
