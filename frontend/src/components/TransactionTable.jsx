@@ -489,6 +489,16 @@ function TransactionTable({
         importedRows: transactionsToImport.length,
         excludedRows: excludedCount,
       });
+
+      setPage(1);
+      setFilters({
+        search: '',
+        type: '',
+        categoryId: '',
+        paymentMethod: '',
+        startDate: '',
+        endDate: '',
+      });
     } finally {
       setIsImportingExcel(false);
       setExcelImportStatus('');
