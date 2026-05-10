@@ -61,6 +61,7 @@ function ManagementPanel({
   onDeleteAsset,
   onImportAssetsExcel,
   onRecalculateAssets,
+  onCleanupCache,
   onChangeTheme,
   onSaveLedgerName,
   onSaveTargetAsset,
@@ -639,6 +640,24 @@ function ManagementPanel({
             onClick={onRecalculateAssets}
           >
             자산 재계산
+          </button>
+        </div>
+
+        <div className="asset-maintenance-card">
+          <div>
+            <strong>오래된 캐시 데이터 정리</strong>
+
+            <p className="muted">
+              24개월보다 오래된 자산 그래프용 캐시만 삭제합니다. 거래내역, 자산 금액, 카테고리, 설정은 삭제되지 않습니다.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onCleanupCache}
+          >
+            캐시 정리
           </button>
         </div>
 
