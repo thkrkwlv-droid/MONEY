@@ -127,6 +127,15 @@ create table if not exists fixed_expenses (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists idx_fixed_expenses_next_run_date
+  on fixed_expenses(next_run_date);
+
+create index if not exists idx_fixed_expenses_is_active
+  on fixed_expenses(is_active);
+
+create index if not exists idx_fixed_expenses_type
+  on fixed_expenses(type);
+
 create table if not exists budgets (
   id uuid primary key default gen_random_uuid(),
   month_start date not null,
