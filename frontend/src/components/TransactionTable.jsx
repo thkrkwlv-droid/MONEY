@@ -281,7 +281,14 @@ function TransactionTable({
   const [page, setPage] = useState(1);
   const [isImportingExcel, setIsImportingExcel] = useState(false);
   const [excelImportStatus, setExcelImportStatus] = useState('');
+  const [uploadPreview, setUploadPreview] = useState(null);
   const transactionExcelInputRef = useRef(null);
+  function clearUploadPreview() {
+    setUploadPreview(null);
+    setExcelImportStatus('');
+    resetTransactionExcelInput();
+  }
+  
   function resetTransactionExcelInput() {
     if (transactionExcelInputRef.current) {
       transactionExcelInputRef.current.value = '';
@@ -386,6 +393,64 @@ function TransactionTable({
 
     downloadExcel(`money-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`, rows);
   }
+
+  async function handleConfirmUploadPreview() {
+    if (!uploadPreview?.transactionsToImport?.length) return;
+
+    const { transactionsToImport, summary } = uploadPreview;
+
+    try {
+      setIsImportingExcel(true);
+      setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
+
+      await onImportTransactionsExcel(transactionsToImport, {
+        totalRows: summary.totalRows,
+        importedRows: summary.importedRows,
+        excludedRows: summary.excludedRows,
+        transferRows: summary.transferRows,
+      });
+
+      setExcelImportStatus('업로드가 완료되었습니다.');
+
+      setPage(1);
+      setFilters({
+        search: '',
+        type: '',
+        categoryId: '',
+        paymentMethod: '',
+        startDate: '',
+        endDate: '',
+      });
+
+      if (transactionsToImport.some((transaction) => transaction.type === 'transfer')) {
+        setShowTransfers(true);
+      }
+
+      const latestTransactionDate = transactionsToImport
+        .map((transaction) => transaction.transaction_date)
+        .sort()
+        .at(-1);
+
+      if (latestTransactionDate && onMoveToMonth) {
+        const latestMonth = latestTransactionDate.slice(0, 7);
+        onMoveToMonth(latestMonth);
+        setExcelImportStatus(`${latestMonth} 월로 이동했습니다.`);
+      }
+
+      setUploadPreview(null);
+    } catch (err) {
+      setExcelImportStatus('');
+      throw err;
+    } finally {
+      setIsImportingExcel(false);
+      resetTransactionExcelInput();
+
+      setTimeout(() => {
+        setExcelImportStatus('');
+      }, 2000);
+    }
+  }
+
 
     async function handleTransactionExcelFile(event) {
       if (isImportingExcel) return;
@@ -564,9 +629,22 @@ function TransactionTable({
 
     const excludedCount = uploadSummary.invalidRows.length + uploadSummary.duplicatedRows.length;
     const targetRowCount = dataRows.length;
-    
-    try {
-      setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
+    const transferCount = transactionsToImport.filter((transaction) => transaction.type === 'transfer').length;
+
+    setUploadPreview({
+      transactionsToImport,
+      summary: {
+        totalRows: targetRowCount,
+        importedRows: transactionsToImport.length,
+        excludedRows: excludedCount,
+        transferRows: transferCount,
+        invalidRows: uploadSummary.invalidRows,
+        duplicatedRows: uploadSummary.duplicatedRows,
+      },
+    });
+
+    setExcelImportStatus(`${transactionsToImport.length}건 등록 준비 완료`);
+    setIsImportingExcel(false);
 
       const transferCount = transactionsToImport.filter((transaction) => transaction.type === 'transfer').length;
 
@@ -673,6 +751,75 @@ function TransactionTable({
           )}          
         </div>
       </div>
+
+      {uploadPreview && (
+        <div className="panel stack gap-sm upload-preview-panel">
+          <div className="section-heading compact">
+            <div>
+              <h3>거래 엑셀 업로드 미리보기</h3>
+              <p className="muted">
+                등록 전 내용을 확인하세요. 등록 실행을 눌러야 실제 거래내역에 반영됩니다.
+              </p>
+            </div>
+          </div>
+
+          <div className="list-grid small-cards">
+            <div className="mini-card">
+              <strong>업로드 대상</strong>
+              <p className="muted">{uploadPreview.summary.totalRows}행</p>
+            </div>
+
+            <div className="mini-card">
+              <strong>등록 예정</strong>
+              <p className="muted">{uploadPreview.summary.importedRows}건</p>
+            </div>
+
+            <div className="mini-card">
+              <strong>제외 예정</strong>
+              <p className="muted">{uploadPreview.summary.excludedRows}건</p>
+            </div>
+
+            <div className="mini-card">
+              <strong>자산이동</strong>
+              <p className="muted">{uploadPreview.summary.transferRows || 0}건</p>
+            </div>
+          </div>
+
+          {uploadPreview.summary.invalidRows.length > 0 && (
+            <div className="upload-preview-warning">
+              <strong>오류 제외 행</strong>
+              <p className="muted">{uploadPreview.summary.invalidRows.join(', ')}</p>
+            </div>
+          )}
+
+          {uploadPreview.summary.duplicatedRows.length > 0 && (
+            <div className="upload-preview-warning">
+              <strong>중복 제외 행</strong>
+              <p className="muted">{uploadPreview.summary.duplicatedRows.join(', ')}</p>
+            </div>
+          )}
+
+          <div className="inline-actions">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleConfirmUploadPreview}
+              disabled={isImportingExcel}
+            >
+              등록 실행
+            </button>
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={clearUploadPreview}
+              disabled={isImportingExcel}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}      
 
       <div className="filter-layout">
         <label className="search-filter">
