@@ -40,6 +40,21 @@ create table if not exists transaction_histories (
   created_at timestamptz not null default now()
 );
 
+create table if not exists upload_logs (
+  id uuid primary key default gen_random_uuid(),
+  upload_type varchar(30) not null default 'transaction_excel',
+  file_name text,
+  total_rows integer not null default 0,
+  imported_rows integer not null default 0,
+  excluded_rows integer not null default 0,
+  transfer_rows integer not null default 0,
+  status varchar(20) not null default 'success',
+  error_message text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_upload_logs_created_at on upload_logs(created_at desc);
+
 create table if not exists favorites (
   id uuid primary key default gen_random_uuid(),
   name varchar(120) not null,
