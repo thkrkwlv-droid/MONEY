@@ -226,6 +226,7 @@ function TransactionTable({
 }) {
   const [page, setPage] = useState(1);
   const [isImportingExcel, setIsImportingExcel] = useState(false);
+  const [excelImportStatus, setExcelImportStatus] = useState('');
   const pageSize = 7;
 
   const filteredTransactions = useMemo(() => {
@@ -331,6 +332,7 @@ function TransactionTable({
       if (!file) return;
   
     setIsImportingExcel(true);
+    setExcelImportStatus('엑셀 파일 읽는 중...');
 
     let dataRows = [];
 
@@ -356,7 +358,18 @@ function TransactionTable({
         return;
       }
 
-      dataRows = rows.slice(1).filter((row) => !isEmptyExcelRow(row)); // 2행 예시는 제외, 빈 행 제외
+      dataRows = rows
+        .slice(1)
+        .filter((row) => !isEmptyExcelRow(row)); // 2행 예시는 제외, 빈 행 제외
+
+      setExcelImportStatus(`${dataRows.length}건 검증 중...`);
+
+      if (dataRows.length > 500) {
+        alert('한 번에 최대 500건까지만 업로드할 수 있습니다.');
+        setIsImportingExcel(false);
+        event.target.value = '';
+        return;
+      }
     } catch (err) {
       alert('엑셀 파일을 읽지 못했습니다. 파일 형식이 올바른지 확인해주세요.');
       setIsImportingExcel(false);
@@ -469,6 +482,8 @@ function TransactionTable({
     const excludedCount = invalidRows.length + duplicatedRows.length;
 
     try {
+      setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
+
       await onImportTransactionsExcel(transactionsToImport, {
         totalRows: dataRows.length,
         importedRows: transactionsToImport.length,
@@ -476,6 +491,7 @@ function TransactionTable({
       });
     } finally {
       setIsImportingExcel(false);
+      setExcelImportStatus('');
       event.target.value = '';
     }
   }
@@ -526,6 +542,12 @@ function TransactionTable({
               hidden
             />
           </label>
+
+          {excelImportStatus && (
+            <div className="excel-import-status">
+              {excelImportStatus}
+            </div>
+          )}          
         </div>
       </div>
 
