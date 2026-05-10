@@ -127,6 +127,19 @@ function AssetOverview({ assets = [], settings = {}, assetSnapshots = [] }) {
           <p className="muted">
             설정/관리 → 기초자산 관리 → 오늘 자산 기록 저장 버튼으로 자산 흐름 데이터를 만들 수 있습니다.
           </p>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              const settingsTabButton = document.querySelector('[data-tab="management"]');
+          
+              if (settingsTabButton) {
+                settingsTabButton.click();
+              }
+            }}
+          >
+            설정/관리로 이동
+          </button>
         </div>
       )}
 
