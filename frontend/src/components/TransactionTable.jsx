@@ -28,6 +28,19 @@ function downloadExcel(filename, rows) {
   XLSX.writeFile(workbook, filename);
 }
 
+function isValidDateText(value) {
+  const text = String(value || '').trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text);
+}
+
+function normalizeTransactionType(value) {
+  const text = String(value || '').replace('예시:', '').trim();
+
+  if (text === '수입') return 'income';
+  if (text === '자산이동') return 'transfer';
+  return 'expense';
+}
+
 function downloadTransactionTemplate() {
   const rows = [
     {
@@ -241,32 +254,51 @@ function TransactionTable({
       (assets || []).map((asset) => [String(asset.name || '').trim(), asset.id])
     );
 
+    const invalidRows = [];
     const transactionsToImport = dataRows
-      .map((row) => {
-        const typeText = String(row.유형 || '').replace('예시:', '').trim();
-        const type =
-          typeText === '수입'
-            ? 'income'
-            : typeText === '자산이동'
-              ? 'transfer'
-              : 'expense';
-
+      .map((row, index) => {
+        const excelRowNumber = index + 3;
+        const type = normalizeTransactionType(row.유형);
+        const transactionDate = String(row.날짜 || '').replace('예시:', '').trim();
+        const amount = Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim());
+        const categoryName = String(row.카테고리 || '').trim();
         const assetName = String(row.자산 || '').trim();
         const toAssetName = String(row.입금자산 || '').trim();
 
+        const categoryId = type === 'transfer' ? null : categoryMap.get(categoryName) || null;
+        const assetId = assetMap.get(assetName) || null;
+        const toAssetId = type === 'transfer' ? assetMap.get(toAssetName) || null : null;
+
+        const rowErrors = [];
+
+        if (!isValidDateText(transactionDate)) rowErrors.push('날짜');
+        if (!Number.isFinite(amount) || amount <= 0) rowErrors.push('금액');
+        if (type !== 'transfer' && categoryName && !categoryId) rowErrors.push('카테고리');
+        if (assetName && !assetId) rowErrors.push('자산');
+        if (type === 'transfer' && (!assetId || !toAssetId)) rowErrors.push('자산이동 자산');
+
+        if (rowErrors.length > 0) {
+          invalidRows.push(`${excelRowNumber}행(${rowErrors.join(', ')})`);
+          return null;
+        }
+
         return {
-          transaction_date: String(row.날짜 || '').replace('예시:', '').trim(),
+          transaction_date: transactionDate,
           type,
-          amount: Number(String(row.금액 || '').replace('예시:', '').replace(/,/g, '').trim()),
-          category_id: type === 'transfer' ? null : categoryMap.get(String(row.카테고리 || '').trim()) || null,
-          asset_account_id: assetMap.get(assetName) || null,
-          from_asset_account_id: assetMap.get(assetName) || null,
-          to_asset_account_id: type === 'transfer' ? assetMap.get(toAssetName) || null : null,
+          amount,
+          category_id: categoryId,
+          asset_account_id: assetId,
+          from_asset_account_id: assetId,
+          to_asset_account_id: toAssetId,
           note: String(row.메모 || '').trim(),
           payment_method: type === 'transfer' ? '' : String(row.결제수단 || '').trim() || '현금',
         };
       })
-      .filter((row) => row.transaction_date && row.amount > 0);
+      .filter(Boolean);
+
+    if (invalidRows.length > 0) {
+      alert(`일부 행은 오류가 있어 제외했습니다.\n\n${invalidRows.join('\n')}`);
+    }
 
     if (transactionsToImport.length === 0) {
       alert('등록할 수 있는 거래내역이 없습니다. 3행부터 실제 데이터를 입력했는지 확인해주세요.');
