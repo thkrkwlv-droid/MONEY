@@ -405,9 +405,11 @@ function TransactionTable({
     );
 
     const seenExcelKeys = new Set();
-    const duplicatedRows = [];
 
-    const invalidRows = [];
+    const uploadSummary = {
+      invalidRows: [],
+      duplicatedRows: [],
+    };
     const transactionsToImport = dataRows
       .map((row, index) => {
         const excelRowNumber = index + 3;
@@ -431,7 +433,7 @@ function TransactionTable({
         if (type === 'transfer' && (!assetId || !toAssetId)) rowErrors.push('자산이동 자산');
 
         if (rowErrors.length > 0) {
-          invalidRows.push(`${excelRowNumber}행(${rowErrors.join(', ')})`);
+          uploadSummary.invalidRows.push(`${excelRowNumber}행(${rowErrors.join(', ')})`);
           return null;
         }
 
@@ -456,7 +458,7 @@ function TransactionTable({
           !allowDuplicate &&
           (existingTransactionKeys.has(duplicateKey) || seenExcelKeys.has(duplicateKey))
         ) {
-          duplicatedRows.push(`${excelRowNumber}행`);
+          uploadSummary.duplicatedRows.push(`${excelRowNumber}행`);
           return null;
         }
 
@@ -468,12 +470,12 @@ function TransactionTable({
       })
       .filter(Boolean);
 
-    if (invalidRows.length > 0) {
-      alert(`일부 행은 오류가 있어 제외했습니다.\n\n${invalidRows.join('\n')}`);
+    if (uploadSummary.invalidRows.length > 0) {
+      alert(`일부 행은 오류가 있어 제외했습니다.\n\n${uploadSummary.invalidRows.join('\n')}`);
     }
 
-    if (duplicatedRows.length > 0) {
-      alert(`이미 등록된 거래 또는 엑셀 안에서 중복된 거래는 제외했습니다.\n\n${duplicatedRows.join('\n')}`);
+    if (uploadSummary.duplicatedRows.length > 0) {
+      alert(`이미 등록된 거래 또는 엑셀 안에서 중복된 거래는 제외했습니다.\n\n${uploadSummary.duplicatedRows.join('\n')}`);
     }
       
     if (transactionsToImport.length === 0) {
@@ -484,7 +486,7 @@ function TransactionTable({
       return;
     }
 
-    const excludedCount = invalidRows.length + duplicatedRows.length;
+    const excludedCount = uploadSummary.invalidRows.length + uploadSummary.duplicatedRows.length;
 
     try {
       setExcelImportStatus(`${transactionsToImport.length}건 업로드 중...`);
