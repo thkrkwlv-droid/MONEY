@@ -651,18 +651,51 @@ async function getAutocomplete(queryText = '') {
 
 async function getBootstrap(month) {
   await ensureAutomationFresh();
-const [categories, favorites, recurringTransactions, fixedExpenses, settings, transactions, dashboard, recentCategories, budgets, assets] =    await Promise.all([
-      getCategories(),
-      getFavorites(),
-      getRecurringTransactions(),
-      getFixedExpenses(),
-      getSettings(),
-      getTransactions({ month }),
-      getDashboard(month),
-      getRecentCategories(),
-      getBudgets(month),
-      getAssets(),
-    ]);
+
+  const { prevStart, prevEnd } = getMonthRange(month);
+
+  const [
+    categories,
+    favorites,
+    recurringTransactions,
+    fixedExpenses,
+    settings,
+    transactions,
+    previousTransactionsResult,
+    dashboard,
+    recentCategories,
+    budgets,
+    assets,
+  ] = await Promise.all([
+    getCategories(),
+    getFavorites(),
+    getRecurringTransactions(),
+    getFixedExpenses(),
+    getSettings(),
+    getTransactions({ month }),
+    query(
+      `select
+          t.*,
+          c.color as category_color,
+          c.name as category_name,
+          a.name as asset_account_name,
+          a.asset_type as asset_account_type,
+          ta.name as transfer_to_asset_account_name,
+          ta.asset_type as transfer_to_asset_account_type
+       from transactions t
+       left join categories c on c.id = t.category_id
+       left join asset_accounts a on a.id = t.asset_account_id
+       left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
+       where t.transaction_date between $1 and $2
+       order by t.transaction_date desc, t.created_at desc
+       limit 300`,
+      [prevStart, prevEnd],
+    ),
+    getDashboard(month),
+    getRecentCategories(),
+    getBudgets(month),
+    getAssets(),
+  ]);
 
   return {
     categories,
@@ -671,6 +704,7 @@ const [categories, favorites, recurringTransactions, fixedExpenses, settings, tr
     fixedExpenses,
     settings,
     transactions,
+    previousTransactions: previousTransactionsResult.rows,
     dashboard,
     recentCategories,
     budgets,
