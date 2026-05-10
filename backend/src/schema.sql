@@ -70,7 +70,7 @@ create table if not exists upload_logs (
   excluded_rows integer not null default 0,
   transfer_rows integer not null default 0,
   status varchar(20) not null default 'success',
-  error_message text,
+  error_message varchar(1000),
   created_at timestamptz not null default now()
 );
 
@@ -84,6 +84,18 @@ drop constraint if exists upload_logs_type_check;
 alter table upload_logs
 add constraint upload_logs_type_check
 check (upload_type in ('transaction_excel'));
+
+alter table upload_logs
+drop constraint if exists upload_logs_rows_check;
+
+alter table upload_logs
+add constraint upload_logs_rows_check
+check (
+  total_rows >= 0
+  and imported_rows >= 0
+  and excluded_rows >= 0
+  and transfer_rows >= 0
+);
 
 create index if not exists idx_upload_logs_created_at on upload_logs(created_at desc);
 
@@ -354,3 +366,5 @@ add column if not exists etc_amount bigint not null default 0;
 alter table upload_logs
 alter column file_name type varchar(255);
 
+alter table upload_logs
+alter column error_message type varchar(1000);
