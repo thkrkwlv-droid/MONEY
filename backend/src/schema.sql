@@ -112,6 +112,7 @@ create table if not exists app_settings (
   pin_hash text,
   currency varchar(10) not null default 'KRW',
   ledger_name varchar(80) not null default '가계부',
+  target_asset_amount bigint not null default 0,
   updated_at timestamptz not null default now()
 );
 
@@ -227,3 +228,6 @@ add column if not exists from_asset_account_id uuid references asset_accounts(id
 
 alter table fixed_expenses
 add column if not exists to_asset_account_id uuid references asset_accounts(id) on delete set null;
+
+alter table app_settings
+add column if not exists target_asset_amount bigint not null default 0;
