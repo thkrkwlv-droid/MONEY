@@ -108,6 +108,15 @@ create table if not exists recurring_transactions (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists idx_recurring_transactions_next_run_date
+  on recurring_transactions(next_run_date);
+
+create index if not exists idx_recurring_transactions_is_active
+  on recurring_transactions(is_active);
+
+create index if not exists idx_recurring_transactions_type
+  on recurring_transactions(type);
+
 create table if not exists fixed_expenses (
   id uuid primary key default gen_random_uuid(),
   name varchar(120) not null,
