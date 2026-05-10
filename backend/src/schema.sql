@@ -31,6 +31,15 @@ create table if not exists transactions (
   unique (source_type, source_id, transaction_date)
 );
 
+create table if not exists transaction_histories (
+  id uuid primary key default gen_random_uuid(),
+  transaction_id uuid,
+  action varchar(20) not null check (action in ('update', 'delete')),
+  before_data jsonb not null,
+  after_data jsonb,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists favorites (
   id uuid primary key default gen_random_uuid(),
   name varchar(120) not null,
@@ -117,6 +126,8 @@ create table if not exists app_settings (
 );
 
 create index if not exists idx_transactions_date on transactions(transaction_date desc);
+create index if not exists idx_transaction_histories_transaction_id on transaction_histories(transaction_id);
+create index if not exists idx_transaction_histories_created_at on transaction_histories(created_at desc);
 create index if not exists idx_transactions_category on transactions(category_id);
 create index if not exists idx_transactions_type on transactions(type);
 create index if not exists idx_transactions_payment on transactions(payment_method);
