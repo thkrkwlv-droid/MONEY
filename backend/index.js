@@ -307,14 +307,15 @@ async function getBudgets(month, ledgerContext = {}) {
         b.id,
         b.user_id,
         u.name as user_name,
+        u.role as user_role,
         b.month_start,
         b.amount,
         b.category_id,
         coalesce(c.name, '전체') as category_name,
         coalesce(sum(case when t.type = 'expense' then t.amount else 0 end), 0) as spent
      from budgets b
-     left join categories c on c.id = b.category_id
      left join ledger_users u on u.id = b.user_id
+     left join categories c on c.id = b.category_id
      left join transactions t
        on ${transactionConditions.join(' and ')}
       and (
@@ -322,7 +323,7 @@ async function getBudgets(month, ledgerContext = {}) {
         or t.category_id = b.category_id
       )
      where ${budgetConditions.join(' and ')}
-     group by b.id, c.name, u.name
+     group by b.id, u.name, u.role, c.name
      order by category_name asc`,
     params,
   );
