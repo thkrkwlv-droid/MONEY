@@ -278,8 +278,22 @@ async function ensureCashAsset(client = { query }) {
   }
 
   const created = await client.query(
-    `insert into asset_accounts (name, asset_type, balance, initial_balance, memo)
-     values ('현금 보관함', '현금', 0, 0, '현금 수입/지출 자동 관리용')
+    `insert into asset_accounts (
+       user_id,
+       name,
+       asset_type,
+       balance,
+       initial_balance,
+       memo
+     )
+     values (
+       '00000000-0000-0000-0000-000000000001',
+       '현금 보관함',
+       '현금',
+       0,
+       0,
+       '현금 수입/지출 자동 관리용'
+     )
      returning id, balance`,
   );
 
