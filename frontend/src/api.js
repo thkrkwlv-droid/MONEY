@@ -4,21 +4,11 @@ const BASE_URL = rawBaseUrl.startsWith('http') ? rawBaseUrl : `https://${rawBase
 const DEFAULT_TIMEOUT_MS = 15000;
 const LONG_TIMEOUT_MS = 60000;
 
-const headers = { 'Content-Type': 'application/json' };
+let currentLedgerAuth = null;
 
-if (currentLedgerAuth?.user?.id) {
-  headers['x-ledger-user-id'] = currentLedgerAuth.user.id;
+export function setApiLedgerAuth(auth) {
+  currentLedgerAuth = auth || null;
 }
-
-if (currentLedgerAuth?.viewMode) {
-  headers['x-ledger-view-mode'] = currentLedgerAuth.viewMode;
-}
-
-const options = {
-  method,
-  headers,
-  signal: signal || (controller && controller.signal),
-};
 
 async function request(method, path, body, signal, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const controller = signal ? null : new AbortController();
