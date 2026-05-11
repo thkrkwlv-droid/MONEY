@@ -43,7 +43,7 @@ function getBudgetAlerts(budgets = []) {
     .filter((budget) => budget.isWarning || budget.isExceeded);
 }
 
-function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomation, isSyncing }) {
+function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomation, isSyncing, viewMode }) {
   const incomeRate = calcChangeRate(dashboard?.income || 0, dashboard?.previousIncome || 0);
   const expenseRate = calcChangeRate(dashboard?.expense || 0, dashboard?.previousExpense || 0);
   const budgetAlerts = getBudgetAlerts(budgets);
@@ -86,6 +86,9 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
               >
                 <strong>
                   {budget.isExceeded ? '예산 초과' : '예산 임박'} · {budget.category_name || '전체'}
+                  {viewMode === 'shared' && budget.user_name && (
+                    <span className="badge">{budget.user_name}</span>
+                  )}
                 </strong>
                 <p className="muted">
                   {Number(budget.spent || 0).toLocaleString()}원 / {Number(budget.amount || 0).toLocaleString()}원
@@ -229,7 +232,12 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
             return (
               <div key={budget.id} className="budget-card">
                 <div className="budget-card-header">
-                  <strong>{budget.category_name}</strong>
+                  <div className="inline-badge-group">
+                    <strong>{budget.category_name}</strong>
+                    {viewMode === 'shared' && budget.user_name && (
+                      <span className="badge">{budget.user_name}</span>
+                    )}
+                  </div>
                   <span className={isOver ? 'danger-text' : 'muted'}>
                     {formatAmount(spent)} / {formatAmount(amount)}원
                   </span>
