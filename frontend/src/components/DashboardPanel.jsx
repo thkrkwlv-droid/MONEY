@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   ResponsiveContainer,
   PieChart,
@@ -44,9 +45,41 @@ function getBudgetAlerts(budgets = []) {
 }
 
 function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomation, isSyncing, viewMode }) {
+  const [budgetAlertPage, setBudgetAlertPage] = useState(1);
+  const [budgetStatusPage, setBudgetStatusPage] = useState(1);
+  const [categoryPage, setCategoryPage] = useState(1);
   const incomeRate = calcChangeRate(dashboard?.income || 0, dashboard?.previousIncome || 0);
   const expenseRate = calcChangeRate(dashboard?.expense || 0, dashboard?.previousExpense || 0);
-  const budgetAlerts = getBudgetAlerts(budgets);
+  const budgetAlerts = useMemo(
+    () => getBudgetAlerts(budgets).sort((a, b) => Number(b.spent || 0) - Number(a.spent || 0)),
+    [budgets],
+  );
+
+  const sortedBudgets = useMemo(
+    () => [...(budgets || [])].sort((a, b) => {
+      const aAmount = Number(a.amount || 0);
+      const bAmount = Number(b.amount || 0);
+      const aRate = aAmount > 0 ? Number(a.spent || 0) / aAmount : 0;
+      const bRate = bAmount > 0 ? Number(b.spent || 0) / bAmount : 0;
+  
+      return bRate - aRate;
+    }),
+    [budgets],
+  );
+
+  const sortedCategorySummary = useMemo(
+    () => [...(dashboard?.categorySummary || [])].sort((a, b) => Number(b.total || 0) - Number(a.total || 0)),
+    [dashboard?.categorySummary],
+  );
+
+  const budgetAlertPageItems = budgetAlerts.slice((budgetAlertPage - 1) * 3, budgetAlertPage * 3);
+  const budgetAlertTotalPages = Math.max(1, Math.ceil(budgetAlerts.length / 3));
+
+  const budgetStatusPageItems = sortedBudgets.slice((budgetStatusPage - 1) * 3, budgetStatusPage * 3);
+  const budgetStatusTotalPages = Math.max(1, Math.ceil(sortedBudgets.length / 3));
+
+  const categoryPageItems = sortedCategorySummary.slice((categoryPage - 1) * 3, categoryPage * 3);
+  const categoryTotalPages = Math.max(1, Math.ceil(sortedCategorySummary.length / 3));
   
   const comparisonData = [
     { label: '지난달', income: dashboard?.previousIncome || 0, expense: dashboard?.previousExpense || 0 },
@@ -79,7 +112,7 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
           </div>
 
           <div className="list-grid small-cards">
-            {budgetAlerts.map((budget) => (
+            {budgetAlertPageItems.map((budget) => (
               <div
                 key={budget.id || budget.category_id || 'total'}
                 className={`mini-card budget-alert-card ${budget.isExceeded ? 'danger' : 'warning'}`}
@@ -97,6 +130,18 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
               </div>
             ))}
           </div>
+
+          {budgetAlerts.length > 3 && (
+            <div className="pagination-row">
+              <button type="button" className="secondary-button" onClick={() => setBudgetAlertPage((page) => Math.max(1, page - 1))} disabled={budgetAlertPage === 1}>
+                이전
+              </button>
+              <span className="pagination-status">{budgetAlertPage} / {budgetAlertTotalPages}</span>
+              <button type="button" className="secondary-button" onClick={() => setBudgetAlertPage((page) => Math.min(budgetAlertTotalPages, page + 1))} disabled={budgetAlertPage === budgetAlertTotalPages}>
+                다음
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -127,18 +172,34 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
           <div className="chart-wrap">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={dashboard?.categorySummary || []} dataKey="total" nameKey="category_name" innerRadius={60} outerRadius={90}>
-                  {(dashboard?.categorySummary || []).map((entry) => (
+                <Pie data={sortedCategorySummary} dataKey="total" nameKey="category_name" innerRadius={60} outerRadius={90}>
+                  {sortedCategorySummary.map((entry) => (
                     <Cell key={entry.category_name} fill={entry.category_color || '#6366f1'} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `${formatAmount(value)}원`} />
-                <Legend />
+                <Legend
+                  content={() => (
+                    <div className="category-chart-legend">
+                      {sortedCategorySummary.slice(0, 5).map((item) => (
+                        <div key={item.category_name} className="category-legend-item">
+                          <span className="color-dot" style={{ backgroundColor: item.category_color }} />
+                          <span>{item.category_name}</span>
+                
+                          <div className="category-legend-preview">
+                            <strong>{item.category_name}</strong>
+                            <p>{formatAmount(item.total)}원</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div className="mini-list">
-            {(dashboard?.categorySummary || []).slice(0, 5).map((item) => (
+            {categoryPageItems.map((item) => (
               <div key={item.category_name} className="mini-list-row">
                 <span className="color-dot" style={{ backgroundColor: item.category_color }} />
                 <span>{item.category_name}</span>
@@ -146,6 +207,18 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
               </div>
             ))}
           </div>
+
+          {sortedCategorySummary.length > 3 && (
+            <div className="pagination-row">
+              <button type="button" className="secondary-button" onClick={() => setCategoryPage((page) => Math.max(1, page - 1))} disabled={categoryPage === 1}>
+                이전
+              </button>
+              <span className="pagination-status">{categoryPage} / {categoryTotalPages}</span>
+              <button type="button" className="secondary-button" onClick={() => setCategoryPage((page) => Math.min(categoryTotalPages, page + 1))} disabled={categoryPage === categoryTotalPages}>
+                다음
+              </button>
+            </div>
+          )}
         </article>
 
         <article className="panel chart-panel">
@@ -224,7 +297,7 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
         </div>
         <div className="budget-list">
           {budgets.length === 0 && <p className="muted">아직 등록된 예산이 없습니다.</p>}
-          {budgets.map((budget) => {
+          {budgetStatusPageItems.map((budget) => {
             const spent = Number(budget.spent || 0);
             const amount = Number(budget.amount || 0);
             const percent = amount ? Math.min(Math.round((spent / amount) * 100), 100) : 0;
@@ -250,6 +323,18 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
             );
           })}
         </div>
+
+        {sortedBudgets.length > 3 && (
+          <div className="pagination-row">
+            <button type="button" className="secondary-button" onClick={() => setBudgetStatusPage((page) => Math.max(1, page - 1))} disabled={budgetStatusPage === 1}>
+              이전
+            </button>
+            <span className="pagination-status">{budgetStatusPage} / {budgetStatusTotalPages}</span>
+            <button type="button" className="secondary-button" onClick={() => setBudgetStatusPage((page) => Math.min(budgetStatusTotalPages, page + 1))} disabled={budgetStatusPage === budgetStatusTotalPages}>
+              다음
+            </button>
+          </div>
+        )}
       </article>
     </section>
   );
