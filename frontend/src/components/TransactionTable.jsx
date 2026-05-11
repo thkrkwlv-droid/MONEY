@@ -259,14 +259,16 @@ function TransactionCard({ transaction, onEdit, onDelete, viewMode }) {
         </strong>
       </div>
 
-      <div className="transaction-actions">
-        <button type="button" className="secondary-button" onClick={() => onEdit(transaction)}>
-          수정
-        </button>
-        <button type="button" className="ghost-button" onClick={() => onDelete(transaction.id)}>
-          삭제
-        </button>
-      </div>
+      {viewMode !== 'shared' && (
+        <div className="transaction-actions">
+          <button type="button" className="secondary-button" onClick={() => onEdit(transaction)}>
+            수정
+          </button>
+          <button type="button" className="ghost-button" onClick={() => onDelete(transaction.id)}>
+            삭제
+          </button>
+        </div>
+      )}
     </article>
   );
 }
@@ -706,17 +708,19 @@ function TransactionTable({
           >
             거래 양식 다운로드
           </button>
-          <label className={`secondary-button file-button ${isImportingExcel ? 'disabled' : ''}`}>
-            {isImportingExcel ? '업로드 처리 중...' : '거래 엑셀 업로드'}
-            <input
-              ref={transactionExcelInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleTransactionExcelFile}
-              disabled={isImportingExcel}
-              hidden
-            />
-          </label>
+          {viewMode !== 'shared' && (
+            <label className={`secondary-button file-button ${isImportingExcel ? 'disabled' : ''}`}>
+              {isImportingExcel ? '업로드 처리 중...' : '거래 엑셀 업로드'}
+              <input
+                ref={transactionExcelInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleTransactionExcelFile}
+                disabled={isImportingExcel}
+                hidden
+              />
+            </label>
+          )}
 
           {excelImportStatus && (
             <div className="excel-import-status">
@@ -736,7 +740,7 @@ function TransactionTable({
         </div>
       </div>
 
-      {uploadPreview && (
+      {viewMode !== 'shared' && uploadPreview && (
         <div className="panel stack gap-sm upload-preview-panel">
           <div className="section-heading compact">
             <div>
