@@ -579,8 +579,9 @@ function ManagementPanel({
                   다음 실행 {item.next_run_date}
                 </span>
               </p>
-              <div className="actions">
-                <button type="button" className="secondary-button" onClick={() =>
+              {canEdit && (
+                <div className="actions">
+                  <button type="button" className="secondary-button" onClick={() =>
                   setFixedForm({
                     ...item,
                     type: item.type || 'expense',
@@ -726,12 +727,14 @@ function ManagementPanel({
           </label>
       
           <div className="actions">
-            <button
-              type="submit"
-              className="primary-button"
-            >
-              {assetForm.id ? '기초자산 수정' : '기초자산 추가'}
-            </button>
+            {canEdit && (
+              <button
+                type="submit"
+                className="primary-button"
+              >
+                {assetForm.id ? '기초자산 수정' : '기초자산 추가'}
+              </button>
+            )}
 
             {canEdit && (
               <button
