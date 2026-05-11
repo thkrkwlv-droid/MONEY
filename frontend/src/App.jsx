@@ -841,6 +841,7 @@ function App() {
               onMoveMonth={moveMonth}
               onRunAutomation={handleRunAutomation}
               isSyncing={isSyncing}
+              viewMode={ledgerAuth?.viewMode}
             />
           )}
 
@@ -908,6 +909,7 @@ function App() {
           {activeTab === 'manage' && (
             <ManagementPanel
               month={month}
+              viewMode={ledgerAuth?.viewMode}
               categories={data.categories}
               favorites={data.favorites}
               recurringTransactions={data.recurringTransactions}
