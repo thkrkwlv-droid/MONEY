@@ -57,7 +57,20 @@ function AssetOverview({ assets = [], settings = {} }) {
                 <p className="muted">{asset.asset_type}</p>
               </div>
               <b>{formatAmount(asset.balance)}원</b>
-              {asset.memo && <p className="muted">{asset.memo}</p>}
+              {asset.name === '현금 보관함' ? (
+                <p className="unsettled-cash">
+                  미정산 잔액: {formatAmount(asset.unsettled_cash || 0)}원
+                </p>
+              ) : (
+                asset.memo && <p className="muted">{asset.memo}</p>
+              )}
+              
+              {Number(asset.monthly_change || 0) !== 0 && (
+                <p className={Number(asset.monthly_change || 0) > 0 ? 'positive-text' : 'danger-text'}>
+                  이번 달 증감: {Number(asset.monthly_change || 0) > 0 ? '+' : ''}
+                  {formatAmount(asset.monthly_change)}원
+                </p>
+              )}
             </div>
           ))}
         </div>
