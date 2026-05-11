@@ -545,6 +545,7 @@ function ManagementPanel({
                 )}
               </>
             )}
+          </div>
         </form>
 
         <div className="list-grid small-cards">
@@ -616,7 +617,8 @@ function ManagementPanel({
                 )}
               </>
             )}
-        </form>
+         </div>
+       </form>
 
         <div className="list-grid small-cards">
           {budgets.map((item) => (
