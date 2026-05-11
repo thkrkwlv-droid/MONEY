@@ -51,7 +51,7 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
   const incomeRate = calcChangeRate(dashboard?.income || 0, dashboard?.previousIncome || 0);
   const expenseRate = calcChangeRate(dashboard?.expense || 0, dashboard?.previousExpense || 0);
   const budgetAlerts = useMemo(
-    () => getBudgetAlerts(budgets).sort((a, b) => Number(b.spent || 0) - Number(a.spent || 0)),
+    () => getBudgetAlerts(budgets).sort((a, b) => Number(b.percent || 0) - Number(a.percent || 0)),
     [budgets],
   );
 
