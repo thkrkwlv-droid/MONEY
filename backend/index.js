@@ -286,11 +286,26 @@ async function getFixedExpenses(ledgerContext = {}) {
   return rows;
 }
 
-async function getBudgets(month) {
+async function getBudgets(month, ledgerContext = {}) {
   const { start } = getMonthRange(month);
+
+  const params = [start];
+  const budgetConditions = [`b.month_start = $1`];
+  const transactionConditions = [
+    `t.transaction_date between $1 and ($1::date + interval '1 month - 1 day')`,
+    `t.type = 'expense'`,
+  ];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    budgetConditions.push(`b.user_id = $${params.length}`);
+    transactionConditions.push(`t.user_id = $${params.length}`);
+  }
+
   const { rows } = await query(
     `select
         b.id,
+        b.user_id,
         b.month_start,
         b.amount,
         b.category_id,
@@ -299,17 +314,17 @@ async function getBudgets(month) {
      from budgets b
      left join categories c on c.id = b.category_id
      left join transactions t
-       on t.transaction_date between $1 and ($1::date + interval '1 month - 1 day')
-      and t.type = 'expense'
+       on ${transactionConditions.join(' and ')}
       and (
-        (b.category_id is null) or
-        (t.category_id = b.category_id)
+        b.category_id is null
+        or t.category_id = b.category_id
       )
-     where b.month_start = $1
+     where ${budgetConditions.join(' and ')}
      group by b.id, c.name
      order by category_name asc`,
-    [start],
+    params,
   );
+
   return rows;
 }
 
@@ -872,7 +887,7 @@ async function getBootstrap(month, ledgerContext = {}) {
   );
   const dashboard = await getDashboard(month, ledgerContext);
   const recentCategories = await getRecentCategories();
-  const budgets = await getBudgets(month);
+  const budgets = await getBudgets(month, ledgerContext);
   const assets = await getAssets(ledgerContext);
 
   return {
@@ -966,7 +981,7 @@ app.get('/api/dashboard', asyncHandler(async (req, res) => {
   const ledgerContext = getLedgerRequestContext(req);
 
   const dashboard = await getDashboard(req.query.month, ledgerContext);
-  const budgets = await getBudgets(req.query.month);
+  const budgets = await getBudgets(req.query.month, ledgerContext);
 
   res.json({ dashboard, budgets });
 }));
@@ -2005,27 +2020,51 @@ app.delete('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/budgets', asyncHandler(async (req, res) => {
-  res.json(await getBudgets(req.query.month));
+  const ledgerContext = getLedgerRequestContext(req);
+
+  res.json(await getBudgets(req.query.month, ledgerContext));
 }));
 
 app.post('/api/budgets', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 예산을 추가할 수 없습니다.',
+    });
+  }
+
   const payload = budgetSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
   });
 
   const result = await query(
-    `insert into budgets (month_start, category_id, amount)
-     values ($1, $2, $3)
-     on conflict (month_start, category_id)
+    `insert into budgets (user_id, month_start, category_id, amount)
+     values ($1, $2, $3, $4)
+     on conflict (user_id, month_start, category_id)
      do update set amount = excluded.amount, updated_at = now()
      returning *`,
-    [payload.month_start, payload.category_id, payload.amount],
+    [
+      ledgerContext.userId,
+      payload.month_start,
+      payload.category_id,
+      payload.amount,
+    ],
   );
+
   res.status(201).json(result.rows[0]);
 }));
 
 app.put('/api/budgets/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 예산을 수정할 수 없습니다.',
+    });
+  }
+
   const payload = budgetSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -2038,14 +2077,42 @@ app.put('/api/budgets/:id', asyncHandler(async (req, res) => {
          amount = $3,
          updated_at = now()
      where id = $4
+       and user_id = $5
      returning *`,
-    [payload.month_start, payload.category_id, payload.amount, req.params.id],
+    [
+      payload.month_start,
+      payload.category_id,
+      payload.amount,
+      req.params.id,
+      ledgerContext.userId,
+    ],
   );
+
+  if (!result.rows[0]) {
+    return res.status(404).json({
+      message: '수정할 예산을 찾을 수 없습니다.',
+    });
+  }
+
   res.json(result.rows[0]);
 }));
 
 app.delete('/api/budgets/:id', asyncHandler(async (req, res) => {
-  await query(`delete from budgets where id = $1`, [req.params.id]);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 예산을 삭제할 수 없습니다.',
+    });
+  }
+
+  await query(
+    `delete from budgets
+     where id = $1
+       and user_id = $2`,
+    [req.params.id, ledgerContext.userId],
+  );
+
   res.json({ success: true });
 }));
 
