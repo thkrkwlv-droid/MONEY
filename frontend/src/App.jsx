@@ -842,6 +842,7 @@ function App() {
               fixedExpenses={data.fixedExpenses}
               budgets={data.budgets}
               assets={data.assets}
+              uploadLogs={data.uploadLogs}
               transactionHistories={transactionHistories}
               uploadLogs={uploadLogs}
               settings={data.settings}
