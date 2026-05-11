@@ -47,6 +47,10 @@ const post = (path, body, timeoutMs) => request('POST', path, body, undefined, t
 const put = (path, body, timeoutMs) => request('PUT', path, body, undefined, timeoutMs);
 const del = (path, timeoutMs) => request('DELETE', path, undefined, undefined, timeoutMs);
 
+export const fetchUsers = () => get('/api/users');
+
+export const unlockLedgerUser = (pin) => post('/api/users/unlock', { pin });
+
 // --- 이하 기존 export 함수 그대로 유지 ---
 export const fetchBootstrap = (month) => get(`/api/bootstrap${month ? `?month=${month}` : ''}`);
 export const fetchDashboard = (month) => get(`/api/dashboard${month ? `?month=${month}` : ''}`);
