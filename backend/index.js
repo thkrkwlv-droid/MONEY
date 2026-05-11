@@ -1730,18 +1730,12 @@ app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
   });
 }));
 
-app.get('/api/assets/snapshots', asyncHandler(async (req, res) => {
-  const limit = Math.min(Number(req.query.limit || 90), 365);
+app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
+  await withTransaction(async (client) => {
+    await recalculateAllAssets(client);
+  });
 
-  const { rows } = await query(
-    `select *
-     from asset_snapshots
-     order by snapshot_date desc
-     limit $1`,
-    [limit],
-  );
-
-  res.json(rows);
+  res.json({ success: true });
 }));
 
 app.put('/api/settings/theme', asyncHandler(async (req, res) => {
