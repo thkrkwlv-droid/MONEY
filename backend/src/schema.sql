@@ -1,3 +1,20 @@
+create table if not exists ledger_users (
+  id uuid primary key default gen_random_uuid(),
+  name varchar(50) not null,
+  pin_hash varchar(255),
+  role varchar(20) not null default 'owner' check (role in ('owner', 'partner', 'shared')),
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+insert into ledger_users (id, name, role, is_active)
+values
+  ('00000000-0000-0000-0000-000000000001', '김지웅', 'owner', true),
+  ('00000000-0000-0000-0000-000000000002', '정지원', 'partner', true),
+  ('00000000-0000-0000-0000-000000000003', '공용 보기', 'shared', true)
+on conflict (id) do nothing;
+
 -- Supabase / PostgreSQL schema for the household ledger application.
 create extension if not exists pgcrypto;
 
