@@ -179,8 +179,25 @@ async function getRecentCategories() {
   return rows;
 }
 
-async function getCategories() {
-  const { rows } = await query(`select * from categories order by is_default desc, name asc`);
+async function getCategories(ledgerContext = {}) {
+  const params = [];
+  const conditions = [];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    conditions.push(`user_id = $${params.length}`);
+  }
+
+  const whereClause = conditions.length ? `where ${conditions.join(' and ')}` : '';
+
+  const { rows } = await query(
+    `select *
+     from categories
+     ${whereClause}
+     order by is_default desc, name asc`,
+    params,
+  );
+
   return rows;
 }
 
@@ -267,51 +284,6 @@ async function ensureCashAsset(client = { query }) {
   );
 
   return created.rows[0];
-}
-
-async function getAssets() {
-  const { rows } = await query(
-    `
-    select
-      a.*,
-    
-      (
-        select coalesce(sum(cash_unsettled_amount), 0)
-        from transactions t
-        where t.cash_status = 'unsettled'
-      ) as unsettled_cash,
-    
-      (
-        select coalesce(
-          sum(
-            case
-              when t.type = 'income' then t.amount
-              when t.type = 'expense' then -t.amount
-              when t.type = 'transfer'
-                and t.transfer_to_asset_account_id = a.id
-                then t.amount
-              when t.type = 'transfer'
-                and t.asset_account_id = a.id
-                then -t.amount
-              else 0
-            end
-          ),
-          0
-        )
-        from transactions t
-        where date_trunc('month', t.transaction_date)
-          = date_trunc('month', current_date)
-          and (
-            t.asset_account_id = a.id
-            or t.transfer_to_asset_account_id = a.id
-          )
-      ) as monthly_change
-    from asset_accounts a
-    order by a.balance desc, a.created_at asc
-    `,
-  );
-
-  return rows;
 }
 
 async function applyCashTransaction(client, type, amount) {
@@ -551,9 +523,14 @@ async function reverseAssetBalance(assetAccountId, type, amount) {
   );
 }
 
-async function getTransactions(filters = {}) {
+async function getTransactions(filters = {}, ledgerContext = {}) {
   const conditions = [];
   const params = [];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    conditions.push(`t.user_id = $${params.length}`);
+  }
 
   if (filters.month) {
     const { start, end } = getMonthRange(filters.month);
@@ -743,17 +720,25 @@ async function getAutocomplete(queryText = '') {
   };
 }
 
-async function getBootstrap(month) {
+async function getBootstrap(month, ledgerContext = {}) {
   // await ensureAutomationFresh(); // 주석 처리
 
   const { prevStart, prevEnd } = getMonthRange(month);
 
-  const categories = await getCategories();
+  const categories = await getCategories(ledgerContext);
   const favorites = await getFavorites();
   const recurringTransactions = await getRecurringTransactions();
   const fixedExpenses = await getFixedExpenses();
   const settings = await getSettings();
-  const transactions = await getTransactions({ month });
+  const transactions = await getTransactions({ month }, ledgerContext);
+  const previousTransactionParams = [prevStart, prevEnd];
+  let previousTransactionUserWhere = '';
+  
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    previousTransactionParams.push(ledgerContext.userId);
+    previousTransactionUserWhere = `and t.user_id = $${previousTransactionParams.length}`;
+  }
+  
   const previousTransactionsResult = await query(
     `select
         t.*,
@@ -768,14 +753,15 @@ async function getBootstrap(month) {
      left join asset_accounts a on a.id = t.asset_account_id
      left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
      where t.transaction_date between $1 and $2
+       ${previousTransactionUserWhere}
      order by t.transaction_date desc, t.created_at desc
      limit 300`,
-    [prevStart, prevEnd],
+    previousTransactionParams,
   );
   const dashboard = await getDashboard(month);
   const recentCategories = await getRecentCategories();
   const budgets = await getBudgets(month);
-  const assets = await getAssets();
+  const assets = await getAssets(ledgerContext);
 
   return {
     categories,
@@ -855,7 +841,7 @@ app.get('/api/bootstrap', asyncHandler(async (req, res) => {
 
   console.log('[Ledger Context]', ledgerContext);
 
-  const data = await getBootstrap(req.query.month);
+  const data = await getBootstrap(req.query.month, ledgerContext);
 
   res.json({
     ...data,
@@ -871,7 +857,8 @@ app.get('/api/dashboard', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/transactions', asyncHandler(async (req, res) => {
-  // await ensureAutomationFresh();
+  const ledgerContext = getLedgerRequestContext(req);
+
   const rows = await getTransactions({
     month: req.query.month,
     startDate: req.query.startDate,
@@ -880,7 +867,8 @@ app.get('/api/transactions', asyncHandler(async (req, res) => {
     categoryId: req.query.categoryId,
     search: req.query.search,
     paymentMethod: req.query.paymentMethod,
-  });
+  }, ledgerContext);
+
   res.json(rows);
 }));
 
@@ -1121,6 +1109,12 @@ app.post('/api/transactions/bulk', asyncHandler(async (req, res) => {
 }));
 
 app.post('/api/transactions', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 거래를 등록할 수 없습니다.' });
+  }
+  
   const payload = transactionSchema.parse({
   ...req.body,
   category_id: normalizeUuid(req.body.category_id),
@@ -1162,11 +1156,12 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
     
       const result = await client.query(
         `insert into transactions (
-          transaction_date, type, amount, category_id, asset_account_id, transfer_to_asset_account_id, note, payment_method, source_type, auto_generated
+          user_id, transaction_date, type, amount, category_id, asset_account_id, transfer_to_asset_account_id, note, payment_method, source_type, auto_generated
         )
-        values ($1, 'transfer', $2, null, $3, $4, $5, '자산이동', 'manual', false)
+        values ($1, $2, 'transfer', $3, null, $4, $5, $6, '자산이동', 'manual', false)
         returning *`,
         [
+          ledgerContext.userId,
           payload.transaction_date,
           payload.amount,
           payload.from_asset_account_id,
@@ -1197,11 +1192,12 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
 
     const result = await client.query(
       `insert into transactions (
-        transaction_date, type, amount, category_id, asset_account_id, cash_status, cash_unsettled_amount, note, payment_method, source_type, auto_generated
+        user_id, transaction_date, type, amount, category_id, asset_account_id, cash_status, cash_unsettled_amount, note, payment_method, source_type, auto_generated
       )
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'manual', false)
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'manual', false)
       returning *`,
       [
+        ledgerContext.userId,
         payload.transaction_date,
         payload.type,
         payload.amount,
@@ -1221,6 +1217,11 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+  
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 거래를 수정할 수 없습니다.' });
+  }
   const payload = transactionSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1232,8 +1233,8 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
 
     const updated = await withTransaction(async (client) => {
       const previousResult = await client.query(
-        `select * from transactions where id = $1`,
-        [req.params.id],
+        `select * from transactions where id = $1 and user_id = $2`,
+        [req.params.id, ledgerContext.userId],
       );
   
       const previousTransaction = previousResult.rows[0];
@@ -1263,6 +1264,7 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
              cash_unsettled_amount = 0,
              updated_at = now()
          where id = $6
+           and user_id = $7
          returning *`,
         [
           payload.transaction_date,
@@ -1271,6 +1273,7 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
           payload.to_asset_account_id,
           payload.note,
           req.params.id,
+          ledgerContext.userId,
         ],
       );
     } else {
@@ -1286,6 +1289,7 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
              payment_method = $7,
              updated_at = now()
          where id = $8
+           and user_id = $9
          returning *`,
         [
           payload.transaction_date,
@@ -1296,6 +1300,7 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
           payload.note,
           payload.payment_method,
           req.params.id,
+          ledgerContext.userId,
         ],
       );
     }
@@ -1311,10 +1316,15 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
 }));
 
 app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 거래를 삭제할 수 없습니다.' });
+  }
   await withTransaction(async (client) => {
     const previousResult = await client.query(
-      `select * from transactions where id = $1`,
-      [req.params.id],
+      `select * from transactions where id = $1 and user_id = $2`,
+      [req.params.id, ledgerContext.userId],
     );
 
     const previousTransaction = previousResult.rows[0];
@@ -1322,8 +1332,8 @@ app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
     await recordTransactionHistory(client, 'delete', previousTransaction, null);
 
     await client.query(
-      `delete from transactions where id = $1`,
-      [req.params.id],
+      `delete from transactions where id = $1 and user_id = $2`,
+      [req.params.id, ledgerContext.userId],
     );
 
   });
@@ -1331,20 +1341,69 @@ app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
-app.get('/api/categories', asyncHandler(async (_req, res) => {
-  res.json(await getCategories());
+app.get('/api/categories', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+  res.json(await getCategories(ledgerContext));
 }));
 
-app.post('/api/categories', asyncHandler(async (req, res) => {
-  const payload = categorySchema.parse(req.body);
-  const result = await query(
-    `insert into categories (name, type, color)
-     values ($1, $2, $3)
-     returning *`,
-    [payload.name, payload.type, payload.color],
+async function getAssets(ledgerContext = {}) {
+  const params = [];
+  const conditions = [];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    conditions.push(`a.user_id = $${params.length}`);
+  }
+
+  const whereClause = conditions.length ? `where ${conditions.join(' and ')}` : '';
+
+  const { rows } = await query(
+    `
+    select
+      a.*,
+
+      (
+        select coalesce(sum(cash_unsettled_amount), 0)
+        from transactions t
+        where t.cash_status = 'unsettled'
+          ${ledgerContext.viewMode !== 'shared' && ledgerContext.userId ? `and t.user_id = $1` : ''}
+      ) as unsettled_cash,
+
+      (
+        select coalesce(
+          sum(
+            case
+              when t.type = 'income' then t.amount
+              when t.type = 'expense' then -t.amount
+              when t.type = 'transfer'
+                and t.transfer_to_asset_account_id = a.id
+                then t.amount
+              when t.type = 'transfer'
+                and t.asset_account_id = a.id
+                then -t.amount
+              else 0
+            end
+          ),
+          0
+        )
+        from transactions t
+        where date_trunc('month', t.transaction_date)
+          = date_trunc('month', current_date)
+          and (
+            t.asset_account_id = a.id
+            or t.transfer_to_asset_account_id = a.id
+          )
+          ${ledgerContext.viewMode !== 'shared' && ledgerContext.userId ? `and t.user_id = $1` : ''}
+      ) as monthly_change
+    from asset_accounts a
+    ${whereClause}
+    order by a.balance desc, a.created_at asc
+    `,
+    params,
   );
-  res.status(201).json(result.rows[0]);
-}));
+
+  return rows;
+}
 
 app.put('/api/categories/:id', asyncHandler(async (req, res) => {
   const payload = categorySchema.parse(req.body);
@@ -1675,33 +1734,48 @@ app.delete('/api/budgets/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
-app.get('/api/assets', asyncHandler(async (_req, res) => {
-  res.json(await getAssets());
+app.get('/api/assets', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+  res.json(await getAssets(ledgerContext));
 }));
 
 app.post('/api/assets', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 자산을 추가할 수 없습니다.' });
+  }
+
   const payload = assetSchema.parse({
     ...req.body,
     memo: normalizeText(req.body.memo),
   });
 
   const result = await query(
-    `insert into asset_accounts (name, asset_type, balance, initial_balance, display_order, memo)
- values ($1, $2, $3, $4, $5, $6)
- returning *`,
-[
-  payload.name,
-  payload.asset_type,
-  payload.balance,
-  payload.initial_balance ?? payload.balance,
-  payload.display_order,
-  payload.memo,
-],
-);
+    `insert into asset_accounts (user_id, name, asset_type, balance, initial_balance, display_order, memo)
+     values ($1, $2, $3, $4, $5, $6, $7)
+     returning *`,
+    [
+      ledgerContext.userId,
+      payload.name,
+      payload.asset_type,
+      payload.balance,
+      payload.initial_balance ?? payload.balance,
+      payload.display_order,
+      payload.memo,
+    ],
+  );
+
   res.status(201).json(result.rows[0]);
 }));
 
 app.put('/api/assets/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 자산을 수정할 수 없습니다.' });
+  }
+
   const payload = assetSchema.parse({
     ...req.body,
     memo: normalizeText(req.body.memo),
@@ -1709,31 +1783,49 @@ app.put('/api/assets/:id', asyncHandler(async (req, res) => {
 
   const result = await query(
     `update asset_accounts
- set name = $1,
-     asset_type = $2,
-     balance = $3,
-     initial_balance = $4,
-     display_order = $5,
-     memo = $6,
-     updated_at = now()
- where id = $7
- returning *`,
-[
-  payload.name,
-  payload.asset_type,
-  payload.balance,
-  payload.initial_balance ?? payload.balance,
-  payload.display_order,
-  payload.memo,
-  req.params.id,
-],
+     set name = $1,
+         asset_type = $2,
+         balance = $3,
+         initial_balance = $4,
+         display_order = $5,
+         memo = $6,
+         updated_at = now()
+     where id = $7
+       and user_id = $8
+     returning *`,
+    [
+      payload.name,
+      payload.asset_type,
+      payload.balance,
+      payload.initial_balance ?? payload.balance,
+      payload.display_order,
+      payload.memo,
+      req.params.id,
+      ledgerContext.userId,
+    ],
   );
+
+  if (!result.rows[0]) {
+    return res.status(404).json({ message: '수정할 자산을 찾을 수 없습니다.' });
+  }
 
   res.json(result.rows[0]);
 }));
 
 app.delete('/api/assets/:id', asyncHandler(async (req, res) => {
-  await query(`delete from asset_accounts where id = $1`, [req.params.id]);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 자산을 삭제할 수 없습니다.' });
+  }
+
+  await query(
+    `delete from asset_accounts
+     where id = $1
+       and user_id = $2`,
+    [req.params.id, ledgerContext.userId],
+  );
+
   res.json({ success: true });
 }));
 
