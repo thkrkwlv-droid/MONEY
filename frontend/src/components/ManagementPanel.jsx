@@ -325,7 +325,6 @@ function ManagementPanel({
                     <button type="button" className="ghost-button" onClick={() => onDeleteCategory(item.id)}>삭제</button>
                   </div>
                 )}
-              )}
             </div>
           ))}
         </div>
