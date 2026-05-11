@@ -13,6 +13,7 @@ function QuickEntryForm({
   isSaving,
   editingTransaction,
   onCancelEdit,
+  viewMode,
 }) {
   const recentCategoryIds = new Set(recentCategories.map((item) => item.category_id));
 
@@ -23,6 +24,10 @@ function QuickEntryForm({
       amountInput: digits ? formatAmount(Number(digits)) : '',
     }));
   };
+
+  if (viewMode === 'shared') {
+    return null;
+  }
 
   return (
     <section className="panel stack gap-lg">
