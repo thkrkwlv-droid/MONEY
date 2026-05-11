@@ -24,6 +24,12 @@ const {
 
 const app = express();
 
+const DEFAULT_LEDGER_USER_PINS = {
+  '00000000-0000-0000-0000-000000000001': '1111',
+  '00000000-0000-0000-0000-000000000002': '2222',
+  '00000000-0000-0000-0000-000000000003': '3333',
+};
+
 app.use(
   cors({
     origin(origin, callback) {
@@ -80,6 +86,35 @@ function normalizePaymentMethodText(value, type) {
     .trim();
 
   return text || '현금';
+}
+
+async function ensureDefaultLedgerUserPins() {
+  const { rows } = await query(
+    `select id, pin_hash
+     from ledger_users
+     where id = any($1::uuid[])`,
+    [Object.keys(DEFAULT_LEDGER_USER_PINS)],
+  );
+
+  for (const user of rows) {
+    if (user.pin_hash) continue;
+
+    const plainPin = DEFAULT_LEDGER_USER_PINS[user.id];
+
+    if (!/^\d{1,8}$/.test(plainPin)) {
+      throw new Error('기본 사용자 PIN은 1~8자리 숫자여야 합니다.');
+    }
+
+    const hash = await bcrypt.hash(plainPin, 10);
+
+    await query(
+      `update ledger_users
+       set pin_hash = $1,
+           updated_at = now()
+       where id = $2`,
+      [hash, user.id],
+    );
+  }
 }
 
 async function ensureAutomationFresh() {
@@ -739,6 +774,60 @@ async function getBootstrap(month) {
     assets,
   };
 }
+
+app.get('/api/users', asyncHandler(async (_req, res) => {
+  const { rows } = await query(
+    `select id, name, role, is_active, created_at, updated_at
+     from ledger_users
+     where is_active = true
+     order by
+       case role
+         when 'owner' then 1
+         when 'partner' then 2
+         when 'shared' then 3
+         else 9
+       end,
+       created_at asc`,
+  );
+
+  res.json(rows);
+}));
+
+app.post('/api/users/unlock', asyncHandler(async (req, res) => {
+  const pin = String(req.body?.pin || '').trim();
+
+  if (!/^\d{1,8}$/.test(pin)) {
+    return res.status(400).json({ message: 'PIN은 1~8자리 숫자여야 합니다.' });
+  }
+
+  const { rows } = await query(
+    `select id, name, role, is_active, pin_hash
+     from ledger_users
+     where is_active = true`,
+  );
+
+  for (const user of rows) {
+    if (!user.pin_hash) continue;
+
+    const matched = await bcrypt.compare(pin, user.pin_hash);
+
+    if (matched) {
+      return res.json({
+        success: true,
+        user: {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          is_active: user.is_active,
+        },
+        viewMode: user.role === 'shared' ? 'shared' : 'personal',
+        expiresInMs: 3 * 60 * 60 * 1000,
+      });
+    }
+  }
+
+  return res.status(401).json({ message: 'PIN이 올바르지 않습니다.' });
+}));
 
 app.get('/api/health', asyncHandler(async (_req, res) => {
   res.json({ ok: true, service: 'expense-tracker-backend' });
@@ -2187,6 +2276,7 @@ async function start() {
   try {
     if (config.databaseUrl) {
       await initDatabase();
+      await ensureDefaultLedgerUserPins();
       await runAutomation(true);
       startAutomationScheduler();
     } else {
