@@ -50,29 +50,71 @@ function AssetOverview({ assets = [], settings = {} }) {
         </div>
       ) : (
         <div className="asset-card-grid">
-          {sortedAssets.map((asset) => (
-            <div key={asset.id} className="asset-card panel">
-              <div>
-                <strong>{asset.name}</strong>
-                <p className="muted">{asset.asset_type}</p>
+          {sortedAssets.map((asset) => {
+            const balance = Number(asset.balance || 0);
+          
+            const ratio = totalAsset > 0 && balance > 0
+              ? Math.round((balance / totalAsset) * 100)
+              : 0;
+          
+            const monthlyChange = Number(asset.monthly_change || 0);
+            const previousMonthChange = Number(asset.previous_month_change || 0);
+          
+            const changePercent = previousMonthChange === 0
+              ? null
+              : Math.round(((monthlyChange - previousMonthChange) / Math.abs(previousMonthChange)) * 100);
+          
+            const isCashAsset = asset.name === '현금 보관함';
+          
+            return (
+              <div
+                key={asset.id}
+                className={`asset-card panel ${isCashAsset ? 'cash-asset-card' : ''}`}
+              >
+                <div>
+                  <strong>
+                    {asset.name}
+                    {isCashAsset && <span className="cash-badge">현금</span>}
+                  </strong>
+                  <p className="muted">{asset.asset_type}</p>
+                </div>
+          
+                <b>{formatAmount(balance)}원</b>
+          
+                <p className="asset-ratio">
+                  전체 자산의 {ratio}%
+                </p>
+          
+                {isCashAsset ? (
+                  <p className="unsettled-cash">
+                    미정산 잔액: {formatAmount(asset.unsettled_cash || 0)}원
+                  </p>
+                ) : (
+                  <div className="asset-card-subline">
+                    {monthlyChange !== 0 && (
+                      <span className={monthlyChange > 0 ? 'positive-text' : 'danger-text'}>
+                        {monthlyChange > 0 ? '▲ +' : '▼ '}
+                        {formatAmount(monthlyChange)}원
+                        {changePercent !== null && (
+                          <>
+                            {' '}
+                            ({changePercent > 0 ? '+' : ''}
+                            {changePercent}%)
+                          </>
+                        )}
+                      </span>
+                    )}
+          
+                    {asset.memo && (
+                      <span className="muted">
+                        {asset.memo}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-              <b>{formatAmount(asset.balance)}원</b>
-              {asset.name === '현금 보관함' ? (
-                <p className="unsettled-cash">
-                  미정산 잔액: {formatAmount(asset.unsettled_cash || 0)}원
-                </p>
-              ) : (
-                asset.memo && <p className="muted">{asset.memo}</p>
-              )}
-              
-              {Number(asset.monthly_change || 0) !== 0 && (
-                <p className={Number(asset.monthly_change || 0) > 0 ? 'positive-text' : 'danger-text'}>
-                  이번 달 증감: {Number(asset.monthly_change || 0) > 0 ? '+' : ''}
-                  {formatAmount(asset.monthly_change)}원
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>
