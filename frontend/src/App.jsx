@@ -589,7 +589,6 @@ function App() {
     try {
       await importBackup(payload);
       await refreshCurrentMonth('백업 복원을 완료했습니다. 거래내역, 자산, 설정, 히스토리, 업로드 로그를 다시 불러왔습니다.');
-      await refreshTransactionHistories();
       await refreshUploadLogs();
     } catch (err) {
       setError(err.message || '백업 복원에 실패했습니다.');
