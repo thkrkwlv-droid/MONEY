@@ -62,8 +62,6 @@ function ManagementPanel({
   assets,
   assetSnapshots,
   transactionHistories,
-  uploadLogs,
-  onCreateTodayAssetSnapshot,
   settings,
   onSaveCategory,
   onDeleteCategory,
