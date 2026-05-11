@@ -183,11 +183,16 @@ function App() {
   }, [data.settings?.pin_enabled]);
 
   useEffect(() => {
+    if (!ledgerAuth) return;
+  
+    setApiLedgerAuth(ledgerAuth);
+  
     loadBootstrap(month);
     refreshTransactionHistories();
     refreshUploadLogs(10);
+  
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [month]);
+  }, [month, ledgerAuth]);
 
   useEffect(() => {
     const query = form.note?.trim();
