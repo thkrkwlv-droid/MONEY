@@ -320,7 +320,6 @@ async function applyCashTransaction(client, type, amount, userId = '00000000-000
        order by transaction_date asc, created_at asc`,
       [userId],
       );
-    );
 
     for (const row of unsettledResult.rows) {
       if (remainingIncome <= 0) break;
@@ -429,26 +428,29 @@ async function recordTransactionHistory(client, action, beforeData, afterData = 
 }
 
 async function recalculateAllAssets(client, ledgerContext = {}) {
-  const userFilter =
-    ledgerContext.viewMode !== 'shared' && ledgerContext.userId
-      ? `where user_id = '${ledgerContext.userId}'`
-      : '';
-    
-  const cashAsset = await ensureCashAsset(client);
+  if (!ledgerContext.userId || ledgerContext.viewMode === 'shared') {
+    throw new Error('개인 모드에서만 자산 재계산을 실행할 수 있습니다.');
+  }
+
+  const userId = ledgerContext.userId;
+  const cashAsset = await ensureCashAsset(client, userId);
 
   await client.query(
     `update asset_accounts
      set balance = initial_balance,
          updated_at = now()
-     where name <> '현금 보관함'`,
+     where user_id = $1
+       and name <> '현금 보관함'`,
+    [userId],
   );
 
   await client.query(
     `update asset_accounts
      set balance = 0,
          updated_at = now()
-     where id = $1`,
-    [cashAsset.id],
+     where id = $1
+       and user_id = $2`,
+    [cashAsset.id, userId],
   );
 
   await client.query(
@@ -456,19 +458,27 @@ async function recalculateAllAssets(client, ledgerContext = {}) {
      set cash_status = 'none',
          cash_unsettled_amount = 0,
          updated_at = now()
-     where payment_method = '현금'`,
+     where user_id = $1
+       and payment_method = '현금'`,
+    [userId],
   );
 
   const transactionResult = await client.query(
     `select *
      from transactions
-     ${userFilter}
+     where user_id = $1
      order by transaction_date asc, created_at asc`,
+    [userId],
   );
 
   for (const tx of transactionResult.rows) {
     if (tx.payment_method === '현금') {
-      const cashResult = await applyCashTransaction(client, tx.type, tx.amount);
+      const cashResult = await applyCashTransaction(
+        client,
+        tx.type,
+        tx.amount,
+        userId,
+      );
 
       await client.query(
         `update transactions
@@ -476,12 +486,14 @@ async function recalculateAllAssets(client, ledgerContext = {}) {
              cash_unsettled_amount = $2,
              asset_account_id = $3,
              updated_at = now()
-         where id = $4`,
+         where id = $4
+           and user_id = $5`,
         [
           cashResult.cash_status,
           cashResult.cash_unsettled_amount,
           cashResult.asset_account_id,
           tx.id,
+          userId,
         ],
       );
     } else if (tx.type === 'transfer') {
@@ -490,22 +502,23 @@ async function recalculateAllAssets(client, ledgerContext = {}) {
           `update asset_accounts
            set balance = balance - $1,
                updated_at = now()
-           where id = $2`,
-          [tx.amount, tx.asset_account_id],
+           where id = $2
+             and user_id = $3`,
+          [tx.amount, tx.asset_account_id, userId],
         );
       }
-    
+
       if (tx.transfer_to_asset_account_id) {
         await client.query(
           `update asset_accounts
            set balance = balance + $1,
                updated_at = now()
-           where id = $2`,
-          [tx.amount, tx.transfer_to_asset_account_id],
+           where id = $2
+             and user_id = $3`,
+          [tx.amount, tx.transfer_to_asset_account_id, userId],
         );
       }
-    }
-    else if (tx.asset_account_id) {
+    } else if (tx.asset_account_id) {
       const delta = tx.type === 'income'
         ? Number(tx.amount || 0)
         : -Number(tx.amount || 0);
@@ -514,8 +527,9 @@ async function recalculateAllAssets(client, ledgerContext = {}) {
         `update asset_accounts
          set balance = balance + $1,
              updated_at = now()
-         where id = $2`,
-        [delta, tx.asset_account_id],
+         where id = $2
+           and user_id = $3`,
+        [delta, tx.asset_account_id, userId],
       );
     }
   }
@@ -2042,6 +2056,10 @@ app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
 
 app.post('/api/assets/recalculate', asyncHandler(async (req, res) => {
   const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 자산 재계산을 실행할 수 없습니다.' });
+  }
 
   await withTransaction(async (client) => {
     await recalculateAllAssets(client, ledgerContext);
