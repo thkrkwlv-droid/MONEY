@@ -29,6 +29,7 @@ import {
   createUploadLog,
   fetchUsers,
   unlockLedgerUser,
+  setApiLedgerAuth,
   unlockPin,
   updateBudget,
   updateCategory,
@@ -160,6 +161,10 @@ function App() {
     return () => clearTimeout(timer);
   }, [message, error]);
 
+  useEffect(() => {
+    setApiLedgerAuth(ledgerAuth);
+  }, [ledgerAuth]);
+    
   useEffect(() => {
     document.documentElement.dataset.theme = 
       data.settings?.theme_mode || (data.settings?.dark_mode ? 'dark' : 'light');
