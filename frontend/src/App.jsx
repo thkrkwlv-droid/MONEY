@@ -186,10 +186,7 @@ function App() {
     if (!ledgerAuth) return;
   
     setApiLedgerAuth(ledgerAuth);
-  
     loadBootstrap(month);
-    refreshTransactionHistories();
-    refreshUploadLogs(10);
   
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month, ledgerAuth]);
@@ -672,6 +669,26 @@ function App() {
     setMessage('잠금이 해제되었습니다.');
   }
 
+  function handleLogout() {
+    localStorage.removeItem('money_ledger_auth');
+    setLedgerAuth(null);
+    setApiLedgerAuth(null);
+    setIsUnlocked(false);
+    setData({
+      categories: [],
+      favorites: [],
+      recurringTransactions: [],
+      fixedExpenses: [],
+      settings: { dark_mode: false, theme_mode: 'light', pin_enabled: false, currency: 'KRW', ledger_name: '가계부', target_asset_amount: 0 },
+      transactions: [],
+      previousTransactions: [],
+      dashboard: null,
+      recentCategories: [],
+      budgets: [],
+      assets: [],
+    });
+  }
+
   function handleMonthInputChange(event) {
     const digits = monthToDigits(event.target.value);
     setMonthInput(digits);
@@ -747,6 +764,13 @@ function App() {
       <header className="hero-header panel">
   <div>
     <h1>{data.settings?.ledger_name || '가계부'}</h1>
+      <button
+    type="button"
+    className="secondary-button"
+    onClick={handleLogout}
+  >
+    로그아웃
+  </button>
   </div>
 
   <div className="month-control-panel">
