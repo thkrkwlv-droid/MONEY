@@ -48,6 +48,23 @@ app.use(
 );
 app.use(express.json({ limit: '10mb' }));
 
+function getLedgerRequestContext(req) {
+  const userId =
+    req.headers['x-ledger-user-id'] ||
+    req.query.userId ||
+    null;
+
+  const viewMode =
+    req.headers['x-ledger-view-mode'] ||
+    req.query.viewMode ||
+    'personal';
+
+  return {
+    userId: userId ? String(userId) : null,
+    viewMode: viewMode === 'shared' ? 'shared' : 'personal',
+  };
+}
+
 function asyncHandler(handler) {
   return async (req, res, next) => {
     try {
@@ -834,8 +851,16 @@ app.get('/api/health', asyncHandler(async (_req, res) => {
 }));
 
 app.get('/api/bootstrap', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  console.log('[Ledger Context]', ledgerContext);
+
   const data = await getBootstrap(req.query.month);
-  res.json(data);
+
+  res.json({
+    ...data,
+    ledgerContext,
+  });
 }));
 
 app.get('/api/dashboard', asyncHandler(async (req, res) => {
