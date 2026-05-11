@@ -60,7 +60,6 @@ function ManagementPanel({
   fixedExpenses,
   budgets,
   assets,
-  assetSnapshots,
   transactionHistories,
   settings,
   onSaveCategory,
