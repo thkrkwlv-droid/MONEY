@@ -586,8 +586,18 @@ async function getTransactions(filters = {}, ledgerContext = {}) {
   return rows;
 }
 
-async function getDashboard(month) {
+async function getDashboard(month, ledgerContext = {}) {
   const { start, end, prevStart, prevEnd, month: monthLabel } = getMonthRange(month);
+
+  const userFilter =
+    ledgerContext.viewMode !== 'shared' && ledgerContext.userId
+      ? `and user_id = '${ledgerContext.userId}'`
+      : '';
+
+  const userFilterWithAlias =
+    ledgerContext.viewMode !== 'shared' && ledgerContext.userId
+      ? `and t.user_id = '${ledgerContext.userId}'`
+      : '';
 
   const [totalsResult, previousTotalsResult, categoryResult, paymentResult, openingBalanceResult, dailyResult] =
     await Promise.all([
@@ -597,7 +607,8 @@ async function getDashboard(month) {
             coalesce(sum(case when type = 'expense' then amount else 0 end), 0) as expense
          from transactions
          where transaction_date between $1 and $2
-           and type <> 'transfer'`,
+           and type <> 'transfer'
+           ${userFilter}`,
         [start, end],
       ),
       query(
@@ -606,7 +617,8 @@ async function getDashboard(month) {
             coalesce(sum(case when type = 'expense' then amount else 0 end), 0) as expense
          from transactions
          where transaction_date between $1 and $2
-           and type <> 'transfer'`,
+           and type <> 'transfer'
+           ${userFilter}`,
         [prevStart, prevEnd],
       ),
       query(
@@ -618,16 +630,18 @@ async function getDashboard(month) {
          left join categories c on c.id = t.category_id
          where t.transaction_date between $1 and $2
            and t.type = 'expense'
+           ${userFilterWithAlias}
          group by c.name, c.color
          order by total desc`,
         [start, end],
       ),
       query(
         `select payment_method, sum(amount)::bigint as total
-          from transactions
-          where transaction_date between $1 and $2
-            and type <> 'transfer'
-          group by payment_method
+         from transactions
+         where transaction_date between $1 and $2
+           and type <> 'transfer'
+           ${userFilter}
+         group by payment_method
          order by total desc`,
         [start, end],
       ),
@@ -635,7 +649,8 @@ async function getDashboard(month) {
         `select coalesce(sum(case when type = 'income' then amount else -amount end), 0) as opening_balance
          from transactions
          where transaction_date < $1
-           and type <> 'transfer'`,
+           and type <> 'transfer'
+           ${userFilter}`,
         [start],
       ),
       query(
@@ -645,6 +660,7 @@ async function getDashboard(month) {
          from transactions
          where transaction_date between $1 and $2
            and type <> 'transfer'
+           ${userFilter}
          group by transaction_date
          order by transaction_date asc`,
         [start, end],
@@ -654,8 +670,10 @@ async function getDashboard(month) {
   const totals = totalsResult.rows[0];
   const previous = previousTotalsResult.rows[0];
   let runningBalance = Number(openingBalanceResult.rows[0]?.opening_balance || 0);
+
   const balanceFlow = dailyResult.rows.map((entry) => {
     runningBalance += Number(entry.net_amount || 0);
+
     return {
       date: entry.transaction_date,
       balance: runningBalance,
@@ -758,7 +776,7 @@ async function getBootstrap(month, ledgerContext = {}) {
      limit 300`,
     previousTransactionParams,
   );
-  const dashboard = await getDashboard(month);
+  const dashboard = await getDashboard(month, ledgerContext);
   const recentCategories = await getRecentCategories();
   const budgets = await getBudgets(month);
   const assets = await getAssets(ledgerContext);
@@ -851,8 +869,11 @@ app.get('/api/bootstrap', asyncHandler(async (req, res) => {
 
 app.get('/api/dashboard', asyncHandler(async (req, res) => {
   // await ensureAutomationFresh();
-  const dashboard = await getDashboard(req.query.month);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  const dashboard = await getDashboard(req.query.month, ledgerContext);
   const budgets = await getBudgets(req.query.month);
+
   res.json({ dashboard, budgets });
 }));
 
@@ -1344,6 +1365,25 @@ app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
 app.get('/api/categories', asyncHandler(async (req, res) => {
   const ledgerContext = getLedgerRequestContext(req);
   res.json(await getCategories(ledgerContext));
+}));
+
+app.post('/api/categories', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 카테고리를 추가할 수 없습니다.' });
+  }
+
+  const payload = categorySchema.parse(req.body);
+
+  const result = await query(
+    `insert into categories (user_id, name, type, color)
+     values ($1, $2, $3, $4)
+     returning *`,
+    [ledgerContext.userId, payload.name, payload.type, payload.color],
+  );
+
+  res.status(201).json(result.rows[0]);
 }));
 
 async function getAssets(ledgerContext = {}) {
