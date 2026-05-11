@@ -255,7 +255,19 @@ async function getRecurringTransactions(ledgerContext = {}) {
   return rows;
 }
 
-async function getFixedExpenses() {
+async function getFixedExpenses(ledgerContext = {}) {
+  const params = [];
+  const conditions = [];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    conditions.push(`f.user_id = $${params.length}`);
+  }
+
+  const whereClause = conditions.length
+    ? `where ${conditions.join(' and ')}`
+    : '';
+
   const { rows } = await query(
     `select
         f.*,
@@ -266,7 +278,9 @@ async function getFixedExpenses() {
      left join categories c on c.id = f.category_id
      left join asset_accounts from_asset on from_asset.id = f.from_asset_account_id
      left join asset_accounts to_asset on to_asset.id = f.to_asset_account_id
+     ${whereClause}
      order by f.created_at desc`,
+    params,
   );
 
   return rows;
@@ -823,7 +837,7 @@ async function getBootstrap(month, ledgerContext = {}) {
   const categories = await getCategories(ledgerContext);
   const favorites = await getFavorites(ledgerContext);
   const recurringTransactions = await getRecurringTransactions(ledgerContext);
-  const fixedExpenses = await getFixedExpenses();
+  const fixedExpenses = await getFixedExpenses(ledgerContext);
   const settings = await getSettings();
   const transactions = await getTransactions({ month }, ledgerContext);
   const previousTransactionParams = [prevStart, prevEnd];
@@ -1824,11 +1838,21 @@ app.delete('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
-app.get('/api/fixed-expenses', asyncHandler(async (_req, res) => {
-  res.json(await getFixedExpenses());
+app.get('/api/fixed-expenses', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  res.json(await getFixedExpenses(ledgerContext));
 }));
 
 app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 자동거래를 추가할 수 없습니다.',
+    });
+  }
+
   const payload = fixedExpenseSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1841,21 +1865,34 @@ app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
     if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
       throw new Error('자산이동 자동 거래는 출금 자산과 입금 자산을 모두 선택해주세요.');
     }
-  
+
     if (payload.from_asset_account_id === payload.to_asset_account_id) {
       throw new Error('출금 자산과 입금 자산은 다르게 선택해주세요.');
     }
   }
-  
+
   const nextRunDate = getInitialFixedExpenseNextRunDate(payload);
+
   const result = await query(
     `insert into fixed_expenses (
-      name, type, amount, category_id, from_asset_account_id, to_asset_account_id, note, payment_method,
-      day_of_month, start_date, next_run_date, is_active
-    )
-    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    returning *`,
+       user_id,
+       name,
+       type,
+       amount,
+       category_id,
+       from_asset_account_id,
+       to_asset_account_id,
+       note,
+       payment_method,
+       day_of_month,
+       start_date,
+       next_run_date,
+       is_active
+     )
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+     returning *`,
     [
+      ledgerContext.userId,
       payload.name,
       payload.type,
       payload.amount,
@@ -1871,11 +1908,18 @@ app.post('/api/fixed-expenses', asyncHandler(async (req, res) => {
     ],
   );
 
-// await ensureAutomationFresh();
   res.status(201).json(result.rows[0]);
 }));
 
 app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 자동거래를 수정할 수 없습니다.',
+    });
+  }
+
   const payload = fixedExpenseSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1888,13 +1932,14 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
     if (!payload.from_asset_account_id || !payload.to_asset_account_id) {
       throw new Error('자산이동 자동 거래는 출금 자산과 입금 자산을 모두 선택해주세요.');
     }
-  
+
     if (payload.from_asset_account_id === payload.to_asset_account_id) {
       throw new Error('출금 자산과 입금 자산은 다르게 선택해주세요.');
     }
   }
-  
+
   const nextRunDate = getInitialFixedExpenseNextRunDate(payload);
+
   const result = await query(
     `update fixed_expenses
      set name = $1,
@@ -1911,6 +1956,7 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
          is_active = $12,
          updated_at = now()
      where id = $13
+       and user_id = $14
      returning *`,
     [
       payload.name,
@@ -1926,15 +1972,35 @@ app.put('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
       nextRunDate,
       payload.is_active,
       req.params.id,
+      ledgerContext.userId,
     ],
   );
 
-// await ensureAutomationFresh();
+  if (!result.rows[0]) {
+    return res.status(404).json({
+      message: '수정할 자동거래를 찾을 수 없습니다.',
+    });
+  }
+
   res.json(result.rows[0]);
 }));
 
 app.delete('/api/fixed-expenses/:id', asyncHandler(async (req, res) => {
-  await query(`delete from fixed_expenses where id = $1`, [req.params.id]);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 자동거래를 삭제할 수 없습니다.',
+    });
+  }
+
+  await query(
+    `delete from fixed_expenses
+     where id = $1
+       and user_id = $2`,
+    [req.params.id, ledgerContext.userId],
+  );
+
   res.json({ success: true });
 }));
 
