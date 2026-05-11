@@ -27,6 +27,8 @@ import {
   fetchTransactionHistories,
   fetchUploadLogs,
   createUploadLog,
+  fetchUsers,
+  unlockLedgerUser,
   unlockPin,
   updateBudget,
   updateCategory,
@@ -47,6 +49,7 @@ import MonthlyReport from './components/MonthlyReport';
 import AssetOverview from './components/AssetOverview';
 import ManagementPanel from './components/ManagementPanel';
 import PinLock from './components/PinLock';
+import UserGate from './components/UserGate';
 import { currentMonth, nextMonth, parseAmount, prevMonth, today } from './utils';
 
 function monthToDigits(value) {
@@ -117,6 +120,26 @@ function App() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showTransfers, setShowTransfers] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  
+  const [ledgerAuth, setLedgerAuth] = useState(() => {
+  const saved = localStorage.getItem('money_ledger_auth');
+
+  if (!saved) return null;
+
+  try {
+    const parsed = JSON.parse(saved);
+
+    if (!parsed?.expiresAt || Date.now() > parsed.expiresAt) {
+      localStorage.removeItem('money_ledger_auth');
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    localStorage.removeItem('money_ledger_auth');
+    return null;
+  }
+});
   const [transactionHistories, setTransactionHistories] = useState([]);
   const [uploadLogs, setUploadLogs] = useState([]);
 
@@ -620,6 +643,19 @@ function App() {
     }
   }
 
+  async function handleUnlockLedgerUser(pin) {
+  const result = await unlockLedgerUser(pin);
+
+  const nextAuth = {
+    user: result.user,
+    viewMode: result.viewMode,
+    expiresAt: Date.now() + Number(result.expiresInMs || 3 * 60 * 60 * 1000),
+  };
+
+  localStorage.setItem('money_ledger_auth', JSON.stringify(nextAuth));
+  setLedgerAuth(nextAuth);
+}
+
   async function handleUnlock(pin) {
     await unlockPin(pin);
     setIsUnlocked(true);
@@ -683,6 +719,10 @@ function App() {
     { id: 'assets', label: '내 자산' },
     { id: 'manage', label: '설정/관리' },
   ];
+
+  if (!ledgerAuth) {
+    return <UserGate onUnlock={handleUnlockLedgerUser} />;
+  }
 
   if (loading) {
     return <div className="loading-screen">가계부 데이터를 불러오는 중입니다...</div>;
