@@ -265,12 +265,14 @@ async function getBudgets(month) {
   return rows;
 }
 
-async function ensureCashAsset(client = { query }) {
+async function ensureCashAsset(client = { query }, userId = '00000000-0000-0000-0000-000000000001') {
   const existing = await client.query(
     `select id, balance
      from asset_accounts
      where name = '현금 보관함'
+       and user_id = $1
      limit 1`,
+    [userId],
   );
 
   if (existing.rows[0]) {
@@ -287,7 +289,7 @@ async function ensureCashAsset(client = { query }) {
        memo
      )
      values (
-       '00000000-0000-0000-0000-000000000001',
+       $1,
        '현금 보관함',
        '현금',
        0,
@@ -295,13 +297,14 @@ async function ensureCashAsset(client = { query }) {
        '현금 수입/지출 자동 관리용'
      )
      returning id, balance`,
+    [userId],
   );
 
   return created.rows[0];
 }
 
-async function applyCashTransaction(client, type, amount) {
-  const cashAsset = await ensureCashAsset(client);
+async function applyCashTransaction(client, type, amount, userId = '00000000-0000-0000-0000-000000000001') {
+  const cashAsset = await ensureCashAsset(client, userId);
   const transactionAmount = Number(amount || 0);
 
   if (type === 'income') {
@@ -1215,7 +1218,12 @@ app.post('/api/transactions', asyncHandler(async (req, res) => {
     }
 
     if (payload.payment_method === '현금' && !assetAccountId) {
-      const cashResult = await applyCashTransaction(client, payload.type, payload.amount);
+      const cashResult = await applyCashTransaction(
+        client,
+        payload.type,
+        payload.amount,
+        ledgerContext.userId,
+      );
       assetAccountId = cashResult.asset_account_id;
       cashStatus = cashResult.cash_status;
       cashUnsettledAmount = cashResult.cash_unsettled_amount;
