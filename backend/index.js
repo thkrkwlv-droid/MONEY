@@ -201,23 +201,57 @@ async function getCategories(ledgerContext = {}) {
   return rows;
 }
 
-async function getFavorites() {
+async function getFavorites(ledgerContext = {}) {
+  const params = [];
+  const conditions = [];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    conditions.push(`f.user_id = $${params.length}`);
+  }
+
+  const whereClause = conditions.length
+    ? `where ${conditions.join(' and ')}`
+    : '';
+
   const { rows } = await query(
-    `select f.*, c.name as category_name
+    `select
+        f.*,
+        c.name as category_name
      from favorites f
      left join categories c on c.id = f.category_id
+     ${whereClause}
      order by f.updated_at desc`,
+    params,
   );
+
   return rows;
 }
 
-async function getRecurringTransactions() {
+async function getRecurringTransactions(ledgerContext = {}) {
+  const params = [];
+  const conditions = [];
+
+  if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
+    params.push(ledgerContext.userId);
+    conditions.push(`r.user_id = $${params.length}`);
+  }
+
+  const whereClause = conditions.length
+    ? `where ${conditions.join(' and ')}`
+    : '';
+
   const { rows } = await query(
-    `select r.*, c.name as category_name
+    `select
+        r.*,
+        c.name as category_name
      from recurring_transactions r
      left join categories c on c.id = r.category_id
+     ${whereClause}
      order by r.created_at desc`,
+    params,
   );
+
   return rows;
 }
 
@@ -787,8 +821,8 @@ async function getBootstrap(month, ledgerContext = {}) {
   const { prevStart, prevEnd } = getMonthRange(month);
 
   const categories = await getCategories(ledgerContext);
-  const favorites = await getFavorites();
-  const recurringTransactions = await getRecurringTransactions();
+  const favorites = await getFavorites(ledgerContext);
+  const recurringTransactions = await getRecurringTransactions(ledgerContext);
   const fixedExpenses = await getFixedExpenses();
   const settings = await getSettings();
   const transactions = await getTransactions({ month }, ledgerContext);
@@ -1552,11 +1586,20 @@ app.delete('/api/categories/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
-app.get('/api/favorites', asyncHandler(async (_req, res) => {
-  res.json(await getFavorites());
+app.get('/api/favorites', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+  res.json(await getFavorites(ledgerContext));
 }));
 
 app.post('/api/favorites', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 즐겨찾기를 추가할 수 없습니다.',
+    });
+  }
+
   const payload = favoriteSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1564,15 +1607,40 @@ app.post('/api/favorites', asyncHandler(async (req, res) => {
   });
 
   const result = await query(
-    `insert into favorites (name, type, amount, category_id, note, payment_method)
-     values ($1, $2, $3, $4, $5, $6)
+    `insert into favorites (
+       user_id,
+       name,
+       type,
+       amount,
+       category_id,
+       note,
+       payment_method
+     )
+     values ($1, $2, $3, $4, $5, $6, $7)
      returning *`,
-    [payload.name, payload.type, payload.amount, payload.category_id, payload.note, payload.payment_method],
+    [
+      ledgerContext.userId,
+      payload.name,
+      payload.type,
+      payload.amount,
+      payload.category_id,
+      payload.note,
+      payload.payment_method,
+    ],
   );
+
   res.status(201).json(result.rows[0]);
 }));
 
 app.put('/api/favorites/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 즐겨찾기를 수정할 수 없습니다.',
+    });
+  }
+
   const payload = favoriteSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1589,22 +1657,60 @@ app.put('/api/favorites/:id', asyncHandler(async (req, res) => {
          payment_method = $6,
          updated_at = now()
      where id = $7
+       and user_id = $8
      returning *`,
-    [payload.name, payload.type, payload.amount, payload.category_id, payload.note, payload.payment_method, req.params.id],
+    [
+      payload.name,
+      payload.type,
+      payload.amount,
+      payload.category_id,
+      payload.note,
+      payload.payment_method,
+      req.params.id,
+      ledgerContext.userId,
+    ],
   );
+
+  if (!result.rows[0]) {
+    return res.status(404).json({ message: '수정할 즐겨찾기를 찾을 수 없습니다.' });
+  }
+
   res.json(result.rows[0]);
 }));
 
 app.delete('/api/favorites/:id', asyncHandler(async (req, res) => {
-  await query(`delete from favorites where id = $1`, [req.params.id]);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 즐겨찾기를 삭제할 수 없습니다.',
+    });
+  }
+
+  await query(
+    `delete from favorites
+     where id = $1
+       and user_id = $2`,
+    [req.params.id, ledgerContext.userId],
+  );
+
   res.json({ success: true });
 }));
 
-app.get('/api/recurring-transactions', asyncHandler(async (_req, res) => {
-  res.json(await getRecurringTransactions());
+app.get('/api/recurring-transactions', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  res.json(await getRecurringTransactions(ledgerContext));
 }));
 
 app.post('/api/recurring-transactions', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 반복 거래를 추가할 수 없습니다.',
+    });
+  }
   const payload = recurringSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1614,12 +1720,14 @@ app.post('/api/recurring-transactions', asyncHandler(async (req, res) => {
   const nextRunDate = getInitialRecurringNextRunDate(payload);
   const result = await query(
     `insert into recurring_transactions (
+      user_id,
       name, type, amount, category_id, note, payment_method,
       frequency, interval_count, start_date, weekday, day_of_month, next_run_date, is_active
     )
-    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     returning *`,
     [
+      ledgerContext.userId,
       payload.name,
       payload.type,
       payload.amount,
@@ -1641,6 +1749,13 @@ app.post('/api/recurring-transactions', asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 반복 거래를 수정할 수 없습니다.',
+    });
+  }
   const payload = recurringSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
@@ -1665,6 +1780,7 @@ app.put('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
          is_active = $13,
          updated_at = now()
      where id = $14
+       and user_id = $15
      returning *`,
     [
       payload.name,
@@ -1681,6 +1797,7 @@ app.put('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
       nextRunDate,
       payload.is_active,
       req.params.id,
+      ledgerContext.userId,
     ],
   );
 
@@ -1689,7 +1806,21 @@ app.put('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
 }));
 
 app.delete('/api/recurring-transactions/:id', asyncHandler(async (req, res) => {
-  await query(`delete from recurring_transactions where id = $1`, [req.params.id]);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 반복 거래를 삭제할 수 없습니다.',
+    });
+  }
+
+  await query(
+    `delete from recurring_transactions
+     where id = $1
+       and user_id = $2`,
+    [req.params.id, ledgerContext.userId],
+  );
+
   res.json({ success: true });
 }));
 
