@@ -997,7 +997,11 @@ function ManagementPanel({
         </div>
       </Section>
       
-      <Section title="백업 · 복원 · 잠금 · 다크모드" description="개인용 서비스 운영에 필요한 보조 기능을 제공합니다.">
+      {canEdit && (
+        <Section title="백업 · 복원 · 잠금 · 다크모드" description="개인용 서비스 운영에 필요한 보조 기능을 제공합니다.">
+          기존 내용 그대로
+        </Section>
+      )}
         <div className="settings-grid">
                     <div className="mini-card stack gap-sm">
             <strong>가계부 이름</strong>
