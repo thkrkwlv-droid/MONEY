@@ -428,7 +428,12 @@ async function recordTransactionHistory(client, action, beforeData, afterData = 
   );
 }
 
-async function recalculateAllAssets(client) {
+async function recalculateAllAssets(client, ledgerContext = {}) {
+  const userFilter =
+    ledgerContext.viewMode !== 'shared' && ledgerContext.userId
+      ? `where user_id = '${ledgerContext.userId}'`
+      : '';
+    
   const cashAsset = await ensureCashAsset(client);
 
   await client.query(
@@ -457,6 +462,7 @@ async function recalculateAllAssets(client) {
   const transactionResult = await client.query(
     `select *
      from transactions
+     ${userFilter}
      order by transaction_date asc, created_at asc`,
   );
 
@@ -2034,9 +2040,11 @@ app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
   });
 }));
 
-app.post('/api/assets/recalculate', asyncHandler(async (_req, res) => {
+app.post('/api/assets/recalculate', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
   await withTransaction(async (client) => {
-    await recalculateAllAssets(client);
+    await recalculateAllAssets(client, ledgerContext);
   });
 
   res.json({ success: true });
