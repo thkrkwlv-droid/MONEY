@@ -2178,7 +2178,7 @@ body {
 
 .category-legend-item:hover .category-legend-preview {
   opacity: 1;
-  transform: translateX(-50%) translateY(2px);
+  transform: translateY(2px);
 }
 
 .category-legend-preview strong {
@@ -2227,7 +2227,7 @@ body {
   grid-template-rows: repeat(4, auto);
   grid-auto-flow: column;
   grid-auto-columns: max-content;
-  gap: 6px 18px;
+  gap: 2px 18px;
   padding: 10px 12px;
   border-radius: 14px;
   background: rgba(15, 23, 42, 0.96);
