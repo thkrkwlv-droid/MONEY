@@ -187,8 +187,15 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
                           <span>{item.category_name}</span>
                 
                           <div className="category-legend-preview">
-                            <strong>{item.category_name}</strong>
-                            <p>{formatAmount(item.total)}원</p>
+                            {sortedCategorySummary.map((previewItem) => (
+                              <div key={previewItem.category_name} className="category-preview-row">
+                                <span
+                                  className="color-dot"
+                                  style={{ backgroundColor: previewItem.category_color }}
+                                />
+                                <span>{previewItem.category_name}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
