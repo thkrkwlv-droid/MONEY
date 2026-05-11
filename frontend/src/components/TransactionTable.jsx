@@ -226,6 +226,12 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
               </span>
             ) : (
               <>
+                {transaction.user_name && (
+                  <span className="badge">
+                    {transaction.user_name}
+                  </span>
+                )}
+                
                 <span>{transaction.category_name || '미분류'}</span>
                 <span>{transaction.payment_method}</span>
                 <span>{transaction.asset_account_name || '\u00A0'}</span>
