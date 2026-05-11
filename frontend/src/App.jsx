@@ -849,6 +849,7 @@ function App() {
               showTransfers={showTransfers}
               setShowTransfers={setShowTransfers}
               onImportTransactionsExcel={importTransactionsExcel}
+              viewMode={ledgerAuth?.viewMode}
               onMoveToMonth={(nextMonth) => {
                 setMonth(nextMonth);
                 setMonthInput(monthToDigits(nextMonth));
