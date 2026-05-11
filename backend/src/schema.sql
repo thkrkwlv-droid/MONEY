@@ -193,12 +193,15 @@ create index if not exists idx_fixed_expenses_type
 
 create table if not exists budgets (
   id uuid primary key default gen_random_uuid(),
+
+  user_id uuid references ledger_users(id) on delete cascade,
+
   month_start date not null,
-  category_id uuid references categories(id) on delete cascade,
-  amount bigint not null check (amount >= 0),
+  category_id uuid references categories(id) on delete set null,
+  amount numeric(17, 2) not null default 0,
+
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (month_start, category_id)
+  updated_at timestamptz not null default now()
 );
 
 create index if not exists idx_budgets_month_start
@@ -276,13 +279,20 @@ begin
     alter table transactions
     add constraint transactions_source_unique unique (source_type, source_id, transaction_date);
   end if;
+end $$;
 
+alter table budgets
+drop constraint if exists budgets_month_category_unique;
+
+do $$
+begin
   if not exists (
     select 1 from pg_constraint
-    where conname = 'budgets_month_category_unique'
+    where conname = 'budgets_user_month_category_unique'
   ) then
     alter table budgets
-    add constraint budgets_month_category_unique unique (month_start, category_id);
+    add constraint budgets_user_month_category_unique
+    unique (user_id, month_start, category_id);
   end if;
 end $$;
 
