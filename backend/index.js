@@ -580,18 +580,21 @@ async function getTransactions(filters = {}, ledgerContext = {}) {
   const whereClause = conditions.length ? `where ${conditions.join(' and ')}` : '';
   const { rows } = await query(
     `select
-        t.*,
-        c.color as category_color,
-        c.name as category_name,
-        a.name as asset_account_name,
-        a.asset_type as asset_account_type,
-        ta.name as transfer_to_asset_account_name,
-        ta.asset_type as transfer_to_asset_account_type
-     from transactions t
-     left join categories c on c.id = t.category_id
-     left join asset_accounts a on a.id = t.asset_account_id
-     left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
-     ${whereClause}
+          t.*,
+          c.color as category_color,
+          c.name as category_name,
+          a.name as asset_account_name,
+          a.asset_type as asset_account_type,
+          ta.name as transfer_to_asset_account_name,
+          ta.asset_type as transfer_to_asset_account_type,
+          u.name as user_name,
+          u.role as user_role
+       from transactions t
+       left join categories c on c.id = t.category_id
+       left join asset_accounts a on a.id = t.asset_account_id
+       left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
+       left join ledger_users u on u.id = t.user_id
+       ${whereClause}
      order by t.transaction_date desc, t.created_at desc
      limit 300`,
     params,
@@ -773,18 +776,21 @@ async function getBootstrap(month, ledgerContext = {}) {
   
   const previousTransactionsResult = await query(
     `select
-        t.*,
-        c.color as category_color,
-        c.name as category_name,
-        a.name as asset_account_name,
-        a.asset_type as asset_account_type,
-        ta.name as transfer_to_asset_account_name,
-        ta.asset_type as transfer_to_asset_account_type
-     from transactions t
-     left join categories c on c.id = t.category_id
-     left join asset_accounts a on a.id = t.asset_account_id
-     left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
-     where t.transaction_date between $1 and $2
+          t.*,
+          c.color as category_color,
+          c.name as category_name,
+          a.name as asset_account_name,
+          a.asset_type as asset_account_type,
+          ta.name as transfer_to_asset_account_name,
+          ta.asset_type as transfer_to_asset_account_type,
+          u.name as user_name,
+          u.role as user_role
+       from transactions t
+       left join categories c on c.id = t.category_id
+       left join asset_accounts a on a.id = t.asset_account_id
+       left join asset_accounts ta on ta.id = t.transfer_to_asset_account_id
+       left join ledger_users u on u.id = t.user_id
+       where t.transaction_date between $1 and $2
        ${previousTransactionUserWhere}
      order by t.transaction_date desc, t.created_at desc
      limit 300`,
