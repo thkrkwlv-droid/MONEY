@@ -226,7 +226,7 @@ function TransactionCard({ transaction, onEdit, onDelete }) {
               </span>
             ) : (
               <>
-                {transaction.user_name && (
+                {viewMode === 'shared' && transaction.user_name && (
                   <span className="badge">
                     {transaction.user_name}
                   </span>
@@ -282,6 +282,7 @@ function TransactionTable({
   showTransfers,
   setShowTransfers,
   onImportTransactionsExcel,
+  viewMode,
   onMoveToMonth,
 }) {
   const [page, setPage] = useState(1);
