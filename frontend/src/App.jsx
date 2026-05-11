@@ -117,8 +117,8 @@ function App() {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showTransfers, setShowTransfers] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [assetSnapshots, setAssetSnapshots] = useState([]);
   const [transactionHistories, setTransactionHistories] = useState([]);
+  const [uploadLogs, setUploadLogs] = useState([]);
 
   const defaultCategoryId = useMemo(() => {
     return (
@@ -468,7 +468,6 @@ function App() {
 
       await refreshCurrentMonth(message);
       await refreshTransactionHistories();
-      await refreshAssetSnapshots();
     } catch (err) {
       const detailMessage = Array.isArray(err.details)
         ? `\n${err.details.join('\n')}`
@@ -592,7 +591,6 @@ function App() {
       await refreshCurrentMonth('백업 복원을 완료했습니다. 거래내역, 자산, 설정, 히스토리, 업로드 로그를 다시 불러왔습니다.');
       await refreshTransactionHistories();
       await refreshUploadLogs();
-      await refreshAssetSnapshots();
     } catch (err) {
       setError(err.message || '백업 복원에 실패했습니다.');
     }
@@ -842,7 +840,6 @@ function App() {
               fixedExpenses={data.fixedExpenses}
               budgets={data.budgets}
               assets={data.assets}
-              uploadLogs={data.uploadLogs}
               transactionHistories={transactionHistories}
               uploadLogs={uploadLogs}
               settings={data.settings}
