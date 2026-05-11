@@ -673,6 +673,14 @@ function ManagementPanel({
             >
               {assetForm.id ? '기초자산 수정' : '기초자산 추가'}
             </button>
+
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onRecalculateAssets}
+            >
+              자산 재계산
+            </button>
       
             {assetForm.id && (
               <button
