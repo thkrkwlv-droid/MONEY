@@ -54,6 +54,7 @@ function Section({ title, description, children }) {
 
 function ManagementPanel({
   month,
+  viewMode,
   categories = [],
   favorites = [],
   recurringTransactions = [],
@@ -571,7 +572,12 @@ function ManagementPanel({
         <div className="list-grid small-cards">
           {budgets.map((item) => (
             <div key={item.id} className="mini-card">
-              <strong>{item.category_name}</strong>
+              <div className="inline-badge-group">
+                <strong>{item.category_name}</strong>
+                {viewMode === 'shared' && item.user_name && (
+                  <span className="badge">{item.user_name}</span>
+                )}
+              </div>
               <p className="muted">예산 {formatAmount(item.amount)}원 / 사용 {formatAmount(item.spent)}원</p>
               <div className="actions">
                 <button type="button" className="secondary-button" onClick={() => setBudgetForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
