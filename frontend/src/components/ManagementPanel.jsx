@@ -581,16 +581,29 @@ function ManagementPanel({
               </p>
               {canEdit && (
                 <div className="actions">
-                  <button type="button" className="secondary-button" onClick={() =>
-                  setFixedForm({
-                    ...item,
-                    type: item.type || 'expense',
-                    amountInput: formatAmount(item.amount),
-                  })
-                }
-                >수정</button>
-                <button type="button" className="ghost-button" onClick={() => onDeleteFixedExpense(item.id)}>삭제</button>
-              </div>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() =>
+                      setFixedForm({
+                        ...item,
+                        type: item.type || 'expense',
+                        amountInput: formatAmount(item.amount),
+                      })
+                    }
+                  >
+                    수정
+                  </button>
+
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => onDeleteFixedExpense(item.id)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -953,30 +966,32 @@ function ManagementPanel({
                   </p>
                 )}
       
-                <div className="actions">
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() =>
-                      setAssetForm({
-                        ...item,
-                        balanceInput: formatAmount(item.balance),
-                        display_order: item.display_order || 0,
-                        memo: item.memo || '',
-                      })
-                    }
-                  >
-                    수정
-                  </button>
-      
-                  <button
-                    type="button"
-                    className="ghost-button"
-                    onClick={() => onDeleteAsset(item.id)}
-                  >
-                    삭제
-                  </button>
-                </div>
+                {canEdit && (
+                  <div className="actions">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        setAssetForm({
+                          ...item,
+                          balanceInput: formatAmount(item.balance),
+                          display_order: item.display_order || 0,
+                          memo: item.memo || '',
+                        })
+                      }
+                    >
+                      수정
+                    </button>
+
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => onDeleteAsset(item.id)}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
         </div>
