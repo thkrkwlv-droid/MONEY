@@ -2202,3 +2202,30 @@ body {
     display: none !important;
   }
 }
+
+.pagination-row .secondary-button {
+  padding: 6px 12px;
+  min-width: 60px;
+  height: 36px;
+}
+
+.category-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.category-legend-preview {
+  z-index: 100;
+}
+
+.category-legend-item {
+  position: relative;
+}
+
+.category-legend-preview {
+  position: absolute;
+  top: 28px;
+  left: 0;
+}
