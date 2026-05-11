@@ -20,7 +20,8 @@ create extension if not exists pgcrypto;
 
 create table if not exists categories (
   id uuid primary key default gen_random_uuid(),
-  name varchar(100) not null unique,
+  user_id uuid references ledger_users(id) on delete cascade,
+  name varchar(100) not null,
   type varchar(10) not null default 'expense' check (type in ('income', 'expense', 'both')),
   color varchar(20) not null default '#6366f1',
   is_default boolean not null default false,
@@ -262,14 +263,6 @@ do $$
 begin
   if not exists (
     select 1 from pg_constraint
-    where conname = 'categories_name_unique'
-  ) then
-    alter table categories
-    add constraint categories_name_unique unique (name);
-  end if;
-
-  if not exists (
-    select 1 from pg_constraint
     where conname = 'app_settings_id_unique'
   ) then
     alter table app_settings
@@ -330,20 +323,44 @@ check (type in ('income', 'expense', 'transfer'));
 insert into app_settings (id) values (true)
 on conflict (id) do nothing;
 
-insert into categories (name, type, color, is_default)
+alter table categories
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+update categories
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+alter table categories
+drop constraint if exists categories_name_unique;
+
+alter table categories
+drop constraint if exists categories_name_key;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'categories_user_name_unique'
+  ) then
+    alter table categories
+    add constraint categories_user_name_unique unique (user_id, name);
+  end if;
+end $$;
+
+insert into categories (user_id, name, type, color, is_default)
 values
-  ('미분류', 'both', '#64748b', true),
-  ('식비', 'expense', '#f97316', true),
-  ('교통', 'expense', '#06b6d4', true),
-  ('주거', 'expense', '#8b5cf6', true),
-  ('쇼핑', 'expense', '#ec4899', true),
-  ('취미', 'expense', '#14b8a6', true),
-  ('고정지출', 'expense', '#ef4444', true),
-  ('적금', 'expense', '#10b981', true),
-  ('주식 투자', 'expense', '#6366f1', true),
-  ('주식 실현손익', 'both', '#f59e0b', true),
-  ('수입', 'income', '#22c55e', true)
-on conflict (name) do nothing;
+  ('00000000-0000-0000-0000-000000000001', '미분류', 'both', '#64748b', true),
+  ('00000000-0000-0000-0000-000000000001', '식비', 'expense', '#f97316', true),
+  ('00000000-0000-0000-0000-000000000001', '교통', 'expense', '#06b6d4', true),
+  ('00000000-0000-0000-0000-000000000001', '주거', 'expense', '#8b5cf6', true),
+  ('00000000-0000-0000-0000-000000000001', '쇼핑', 'expense', '#ec4899', true),
+  ('00000000-0000-0000-0000-000000000001', '취미', 'expense', '#14b8a6', true),
+  ('00000000-0000-0000-0000-000000000001', '고정지출', 'expense', '#ef4444', true),
+  ('00000000-0000-0000-0000-000000000001', '적금', 'expense', '#10b981', true),
+  ('00000000-0000-0000-0000-000000000001', '주식 투자', 'expense', '#6366f1', true),
+  ('00000000-0000-0000-0000-000000000001', '주식 실현손익', 'both', '#f59e0b', true),
+  ('00000000-0000-0000-0000-000000000001', '수입', 'income', '#22c55e', true)
+on conflict (user_id, name) do nothing;
 
 alter table fixed_expenses
 add column if not exists type varchar(20) not null default 'expense';
