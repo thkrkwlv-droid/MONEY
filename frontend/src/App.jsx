@@ -27,8 +27,6 @@ import {
   fetchTransactionHistories,
   fetchUploadLogs,
   createUploadLog,
-  fetchAssetSnapshots,
-  createTodayAssetSnapshot,
   unlockPin,
   updateBudget,
   updateCategory,
@@ -121,8 +119,6 @@ function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [assetSnapshots, setAssetSnapshots] = useState([]);
   const [transactionHistories, setTransactionHistories] = useState([]);
-  const [uploadLogs, setUploadLogs] = useState([]);
-  const [isSavingAssetSnapshot, setIsSavingAssetSnapshot] = useState(false);
 
   const defaultCategoryId = useMemo(() => {
     return (
@@ -160,7 +156,6 @@ function App() {
 
   useEffect(() => {
     loadBootstrap(month);
-    refreshAssetSnapshots();
     refreshTransactionHistories();
     refreshUploadLogs(10);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -195,31 +190,6 @@ function App() {
       setTransactionHistories(rows);
     } catch (err) {
       console.error(err);
-    }
-  }
-
-    async function refreshAssetSnapshots() {
-    try {
-      const rows = await fetchAssetSnapshots();
-      setAssetSnapshots(rows);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  async function handleCreateTodayAssetSnapshot() {
-    setIsSavingAssetSnapshot(true);
-    setError('');
-    setMessage('');
-  
-    try {
-      await createTodayAssetSnapshot();
-      await refreshAssetSnapshots();
-      setMessage('오늘 기준 자산 기록을 저장했습니다.');
-    } catch (err) {
-      setError(err.message || '자산 기록 저장에 실패했습니다.');
-    } finally {
-      setIsSavingAssetSnapshot(false);
     }
   }
 
@@ -484,12 +454,6 @@ function App() {
         });
 
         await refreshUploadLogs();
-      }
-
-      try {
-        await createTodayAssetSnapshot();
-      } catch (snapshotError) {
-        console.error(snapshotError);
       }
 
       await refreshCurrentMonth();
@@ -866,7 +830,6 @@ function App() {
             <AssetOverview
               assets={data.assets}
               settings={data.settings}
-              assetSnapshots={assetSnapshots}
             />
           )}
           
@@ -879,10 +842,8 @@ function App() {
               fixedExpenses={data.fixedExpenses}
               budgets={data.budgets}
               assets={data.assets}
-              assetSnapshots={assetSnapshots}
               transactionHistories={transactionHistories}
               uploadLogs={uploadLogs}
-              onCreateTodayAssetSnapshot={handleCreateTodayAssetSnapshot}
               settings={data.settings}
               onSaveCategory={saveCategory}
               onDeleteCategory={removeCategory}
