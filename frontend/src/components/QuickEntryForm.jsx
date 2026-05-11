@@ -248,16 +248,19 @@ function QuickEntryForm({
               </select>
             </label>
           )}
-          <select
-            value={form.payment_method}
-            onChange={(e) => setForm((prev) => ({ ...prev, payment_method: e.target.value }))}
-          >
-            {PAYMENT_METHODS.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </select>
+          <label className="field-span-2">
+            <span>메모</span>
+            <input
+              value={form.note || ''}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  note: e.target.value,
+                }))
+              }
+              placeholder="메모 입력"
+            />
+          </label>
         </label>
 
         <div className="field-span-2 stack gap-sm">
