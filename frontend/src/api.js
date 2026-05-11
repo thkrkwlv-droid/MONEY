@@ -68,7 +68,8 @@ export const fetchUsers = () => get('/api/users');
 export const unlockLedgerUser = (pin) => post('/api/users/unlock', { pin });
 
 // --- 이하 기존 export 함수 그대로 유지 ---
-export const fetchBootstrap = (month) => get(`/api/bootstrap${month ? `?month=${month}` : ''}`);
+export const fetchBootstrap = (month) =>
+  get(`/api/bootstrap${month ? `?month=${month}` : ''}`, undefined, LONG_TIMEOUT_MS);
 export const fetchDashboard = (month) => get(`/api/dashboard${month ? `?month=${month}` : ''}`);
 export const fetchTransactions = (filters = {}) => {
   const params = new URLSearchParams();
