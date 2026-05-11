@@ -114,7 +114,7 @@ async function ensureDefaultLedgerUserPins() {
   );
 
   for (const user of rows) {
-    if (user.pin_hash) continue;
+    // if (user.pin_hash) continue;
 
     const plainPin = DEFAULT_LEDGER_USER_PINS[user.id];
 
