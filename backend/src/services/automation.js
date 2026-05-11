@@ -8,9 +8,12 @@ let lastRunAt = 0;
 
 async function processRecurringTransactions(client, todayIso) {
   const { rows } = await client.query(
-    `select * from recurring_transactions
-     where is_active = true and next_run_date <= $1
-     order by next_run_date asc`,
+    `select
+        r.*
+     from recurring_transactions r
+     where r.is_active = true
+       and r.next_run_date <= $1
+     order by r.next_run_date asc`,
     [todayIso],
   );
 
@@ -23,12 +26,21 @@ async function processRecurringTransactions(client, todayIso) {
       const dueDate = cursor.format('YYYY-MM-DD');
       await client.query(
         `insert into transactions (
-          transaction_date, type, amount, category_id, note, payment_method,
-          source_type, source_id, auto_generated
+           user_id,
+           transaction_date,
+           type,
+           amount,
+           category_id,
+           note,
+           payment_method,
+           source_type,
+           source_id,
+           auto_generated
         )
-        values ($1, $2, $3, $4, $5, $6, 'recurring', $7, true)
+        values ($1, $2, $3, $4, $5, $6, $7, 'recurring', $8, true)
         on conflict (source_type, source_id, transaction_date) do nothing`,
         [
+          item.user_id,
           dueDate,
           item.type,
           item.amount,
@@ -36,7 +48,7 @@ async function processRecurringTransactions(client, todayIso) {
           item.note,
           item.payment_method,
           item.id,
-        ],
+        ]
       );
       lastGeneratedOn = dueDate;
       cursor = dayjs(getNextRecurringDate(item, dueDate));
@@ -57,9 +69,12 @@ async function processRecurringTransactions(client, todayIso) {
 
 async function processFixedExpenses(client, todayIso) {
   const { rows } = await client.query(
-    `select * from fixed_expenses
-     where is_active = true and next_run_date <= $1
-     order by next_run_date asc`,
+    `select
+        f.*
+     from fixed_expenses f
+     where f.is_active = true
+       and f.next_run_date <= $1
+     order by f.next_run_date asc`,
     [todayIso],
   );
 
@@ -72,6 +87,7 @@ async function processFixedExpenses(client, todayIso) {
       const dueDate = cursor.format('YYYY-MM-DD');
       await client.query(
         `insert into transactions (
+          user_id,
           transaction_date,
           type,
           amount,
@@ -84,9 +100,10 @@ async function processFixedExpenses(client, todayIso) {
           source_id,
           auto_generated
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, 'fixed_expense', $9, true)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'fixed_expense', $10, true)
         on conflict (source_type, source_id, transaction_date) do nothing`,
         [
+          item.user_id,
           dueDate,
           item.type || 'expense',
           item.amount,
@@ -96,7 +113,7 @@ async function processFixedExpenses(client, todayIso) {
           item.note || item.name,
           item.type === 'transfer' ? '자산이동' : item.payment_method,
           item.id,
-        ],
+        ]
       );
 
       if (item.type === 'transfer') {
