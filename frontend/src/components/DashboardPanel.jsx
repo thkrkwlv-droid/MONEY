@@ -96,9 +96,12 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
         <div className="toolbar-actions">
           <button type="button" className="secondary-button" onClick={() => onMoveMonth(-1)}>이전 달</button>
           <button type="button" className="secondary-button" onClick={() => onMoveMonth(1)}>다음 달</button>
-          <button type="button" className="secondary-button" onClick={onRunAutomation} disabled={isSyncing}>
-            {isSyncing ? '자동 반영 처리 중...' : '자동 반영 즉시 실행'}
-          </button>
+          
+          {viewMode !== 'shared' && (
+            <button type="button" className="secondary-button" onClick={onRunAutomation} disabled={isSyncing}>
+              {isSyncing ? '자동 반영 처리 중...' : '자동 반영 즉시 실행'}
+            </button>
+          )}
         </div>
       </div>
 
