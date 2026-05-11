@@ -1465,7 +1465,34 @@ async function getAssets(ledgerContext = {}) {
             or t.transfer_to_asset_account_id = a.id
           )
           ${ledgerContext.viewMode !== 'shared' && ledgerContext.userId ? `and t.user_id = $1` : ''}
-      ) as monthly_change
+            ) as monthly_change,
+
+      (
+        select coalesce(
+          sum(
+            case
+              when t.type = 'income' then t.amount
+              when t.type = 'expense' then -t.amount
+              when t.type = 'transfer'
+                and t.transfer_to_asset_account_id = a.id
+                then t.amount
+              when t.type = 'transfer'
+                and t.asset_account_id = a.id
+                then -t.amount
+              else 0
+            end
+          ),
+          0
+        )
+        from transactions t
+        where date_trunc('month', t.transaction_date)
+          = date_trunc('month', current_date - interval '1 month')
+          and (
+            t.asset_account_id = a.id
+            or t.transfer_to_asset_account_id = a.id
+          )
+          ${ledgerContext.viewMode !== 'shared' && ledgerContext.userId ? `and t.user_id = $1` : ''}
+      ) as previous_month_change
     from asset_accounts a
     ${whereClause}
     order by a.balance desc, a.created_at asc
