@@ -198,7 +198,7 @@ function downloadTransactionTemplate() {
   downloadExcel('MONEY_거래내역_업로드_양식.xlsx', rows);
 }
 
-function TransactionCard({ transaction, onEdit, onDelete }) {
+function TransactionCard({ transaction, onEdit, onDelete, viewMode }) {
   return (
     <article className="transaction-card">
       <div className="transaction-main">
@@ -969,6 +969,7 @@ function TransactionTable({
                 transaction={transaction}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                viewMode={viewMode}
               />
             ))}
           </div>
@@ -988,6 +989,7 @@ function TransactionTable({
                 transaction={transaction}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                viewMode={viewMode}
               />
             ))}
           </div>
@@ -1008,6 +1010,7 @@ function TransactionTable({
                   transaction={transaction}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  viewMode={viewMode}
                 />
               ))}
             </div>
