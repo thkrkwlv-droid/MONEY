@@ -390,3 +390,77 @@ alter column file_name type varchar(255);
 
 alter table upload_logs
 alter column error_message type varchar(1000);
+
+-- 사용자 분리 1차 준비: 기존 데이터는 기본 사용자(지웅)에게 귀속
+alter table categories
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table favorites
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table recurring_transactions
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table fixed_expenses
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table budgets
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table asset_accounts
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table transactions
+add column if not exists user_id uuid references ledger_users(id) on delete cascade;
+
+alter table transaction_histories
+add column if not exists user_id uuid references ledger_users(id) on delete set null;
+
+alter table upload_logs
+add column if not exists user_id uuid references ledger_users(id) on delete set null;
+
+update categories
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update favorites
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update recurring_transactions
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update fixed_expenses
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update budgets
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update asset_accounts
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update transactions
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update transaction_histories
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+update upload_logs
+set user_id = '00000000-0000-0000-0000-000000000001'
+where user_id is null;
+
+create index if not exists idx_categories_user_id on categories(user_id);
+create index if not exists idx_favorites_user_id on favorites(user_id);
+create index if not exists idx_recurring_transactions_user_id on recurring_transactions(user_id);
+create index if not exists idx_fixed_expenses_user_id on fixed_expenses(user_id);
+create index if not exists idx_budgets_user_id on budgets(user_id);
+create index if not exists idx_asset_accounts_user_id on asset_accounts(user_id);
+create index if not exists idx_transactions_user_id on transactions(user_id);
+create index if not exists idx_transaction_histories_user_id on transaction_histories(user_id);
+create index if not exists idx_upload_logs_user_id on upload_logs(user_id);
