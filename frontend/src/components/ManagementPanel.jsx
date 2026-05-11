@@ -123,6 +123,7 @@ function ManagementPanel({
   
   const [pin, setPin] = useState('');
   const [showAllHistories, setShowAllHistories] = useState(false);
+  const canEdit = viewMode !== 'shared';
 
   const visibleTransactionHistories = showAllHistories
     ? transactionHistories || []
@@ -294,8 +295,18 @@ function ManagementPanel({
             <input type="color" value={categoryForm.color} onChange={(e) => setCategoryForm((prev) => ({ ...prev, color: e.target.value }))} />
           </label>
           <div className="actions">
-            <button type="submit" className="primary-button">{categoryForm.id ? '카테고리 수정' : '카테고리 추가'}</button>
-            {categoryForm.id && <button type="button" className="secondary-button" onClick={resetCategoryForm}>취소</button>}
+            {canEdit && (
+              <>
+                <button type="submit" className="primary-button">
+                  {categoryForm.id ? '카테고리 수정' : '카테고리 추가'}
+                </button>
+                {categoryForm.id && (
+                  <button type="button" className="secondary-button" onClick={resetCategoryForm}>
+                    취소
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </form>
 
@@ -308,10 +319,13 @@ function ManagementPanel({
                 {item.is_default && <span className="badge">기본</span>}
               </div>
               <p className="muted">유형: {item.type}</p>
-              <div className="actions">
-                <button type="button" className="secondary-button" onClick={() => setCategoryForm(item)}>수정</button>
-                <button type="button" className="ghost-button" onClick={() => onDeleteCategory(item.id)}>삭제</button>
-              </div>
+                {canEdit && (
+                  <div className="actions">
+                    <button type="button" className="secondary-button" onClick={() => setCategoryForm(item)}>수정</button>
+                    <button type="button" className="ghost-button" onClick={() => onDeleteCategory(item.id)}>삭제</button>
+                  </div>
+                )}
+              )}
             </div>
           ))}
         </div>
@@ -347,8 +361,18 @@ function ManagementPanel({
             </select>
           </label>
           <div className="actions">
-            <button type="submit" className="primary-button">{favoriteForm.id ? '즐겨찾기 수정' : '즐겨찾기 추가'}</button>
-            {favoriteForm.id && <button type="button" className="secondary-button" onClick={resetFavoriteForm}>취소</button>}
+            {canEdit && (
+              <>
+                <button type="submit" className="primary-button">
+                  {favoriteForm.id ? '즐겨찾기 수정' : '즐겨찾기 추가'}
+                </button>
+                {favoriteForm.id && (
+                  <button type="button" className="secondary-button" onClick={resetFavoriteForm}>
+                    취소
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </form>
 
@@ -357,10 +381,12 @@ function ManagementPanel({
             <div key={item.id} className="mini-card">
               <strong>{item.name}</strong>
               <p className="muted">{item.category_name || '미분류'} · {formatAmount(item.amount)}원 · {item.payment_method}</p>
-              <div className="actions">
-                <button type="button" className="secondary-button" onClick={() => setFavoriteForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
-                <button type="button" className="ghost-button" onClick={() => onDeleteFavorite(item.id)}>삭제</button>
-              </div>
+              {canEdit && (
+                <div className="actions">
+                  <button type="button" className="secondary-button" onClick={() => setFavoriteForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
+                  <button type="button" className="ghost-button" onClick={() => onDeleteFavorite(item.id)}>삭제</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -507,7 +533,19 @@ function ManagementPanel({
           )}
           <label className="field-span-2"><span>메모</span><input value={fixedForm.note} onChange={(e) => setFixedForm((prev) => ({ ...prev, note: e.target.value }))} placeholder="예: 월세" /></label>
           <label className="toggle-row"><input type="checkbox" checked={fixedForm.is_active} onChange={(e) => setFixedForm((prev) => ({ ...prev, is_active: e.target.checked }))} /><span>활성화</span></label>
-          <div className="actions"><button type="submit" className="primary-button">{fixedForm.id ? '자동 거래 수정' : '자동 거래 추가'}</button>{fixedForm.id && <button type="button" className="secondary-button" onClick={resetFixedForm}>취소</button>}</div>
+          <div className="actions">
+            {canEdit && (
+              <>
+                <button type="submit" className="primary-button">
+                  {fixedForm.id ? '자동 거래 수정' : '자동 거래 추가'}
+                </button>
+                {fixedForm.id && (
+                  <button type="button" className="secondary-button" onClick={resetFixedForm}>
+                    취소
+                  </button>
+                )}
+              </>
+            )}
         </form>
 
         <div className="list-grid small-cards">
@@ -566,7 +604,19 @@ function ManagementPanel({
           <label><span>기준 월</span><input type="date" value={budgetForm.month_start} onChange={(e) => setBudgetForm((prev) => ({ ...prev, month_start: e.target.value }))} required /></label>
           <label><span>카테고리</span><select value={budgetForm.category_id} onChange={(e) => setBudgetForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">전체</option>{expenseCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <label><span>예산</span><input value={budgetForm.amountInput} onChange={(e) => setBudgetForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
-          <div className="actions"><button type="submit" className="primary-button">{budgetForm.id ? '예산 수정' : '예산 추가'}</button>{budgetForm.id && <button type="button" className="secondary-button" onClick={resetBudgetForm}>취소</button>}</div>
+          <div className="actions">
+            {canEdit && (
+              <>
+                <button type="submit" className="primary-button">
+                  {budgetForm.id ? '예산 수정' : '예산 추가'}
+                </button>
+                {budgetForm.id && (
+                  <button type="button" className="secondary-button" onClick={resetBudgetForm}>
+                    취소
+                  </button>
+                )}
+              </>
+            )}
         </form>
 
         <div className="list-grid small-cards">
@@ -579,10 +629,12 @@ function ManagementPanel({
                 )}
               </div>
               <p className="muted">예산 {formatAmount(item.amount)}원 / 사용 {formatAmount(item.spent)}원</p>
-              <div className="actions">
-                <button type="button" className="secondary-button" onClick={() => setBudgetForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
-                <button type="button" className="ghost-button" onClick={() => onDeleteBudget(item.id)}>삭제</button>
-              </div>
+              {canEdit && (
+                <div className="actions">
+                  <button type="button" className="secondary-button" onClick={() => setBudgetForm({ ...item, amountInput: formatAmount(item.amount) })}>수정</button>
+                  <button type="button" className="ghost-button" onClick={() => onDeleteBudget(item.id)}>삭제</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -680,13 +732,15 @@ function ManagementPanel({
               {assetForm.id ? '기초자산 수정' : '기초자산 추가'}
             </button>
 
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={onRecalculateAssets}
-            >
-              자산 재계산
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={onRecalculateAssets}
+              >
+                자산 재계산
+              </button>
+            )}
       
             {assetForm.id && (
               <button
