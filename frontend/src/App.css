@@ -2138,3 +2138,67 @@ body {
     pointer-events: none !important;
   }
 }
+
+.category-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.category-legend-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: default;
+}
+
+.category-legend-preview {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: 180px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.96);
+  color: white;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.18s ease;
+  z-index: 50;
+  text-align: center;
+}
+
+.category-legend-item:hover .category-legend-preview {
+  opacity: 1;
+  transform: translateX(-50%) translateY(2px);
+}
+
+.category-legend-preview strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.category-legend-preview p {
+  margin: 0;
+  font-size: 13px;
+}
+
+@media (hover: none), (max-width: 720px) {
+  .category-legend-preview {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-legend-preview {
+    display: none !important;
+  }
+}
