@@ -316,7 +316,10 @@ async function applyCashTransaction(client, type, amount, userId = '00000000-000
        where payment_method = '현금'
          and cash_status = 'unsettled'
          and cash_unsettled_amount > 0
+         and user_id = $1
        order by transaction_date asc, created_at asc`,
+      [userId],
+      );
     );
 
     for (const row of unsettledResult.rows) {
