@@ -999,96 +999,106 @@ function ManagementPanel({
       
       {canEdit && (
         <Section title="백업 · 복원 · 잠금 · 다크모드" description="개인용 서비스 운영에 필요한 보조 기능을 제공합니다.">
-          기존 내용 그대로
-        </Section>
-      )}
-        <div className="settings-grid">
-                    <div className="mini-card stack gap-sm">
-            <strong>가계부 이름</strong>
-            <p className="muted">상단에 표시될 가계부 이름을 설정합니다.</p>
-            <input
-              value={ledgerName}
-              maxLength={80}
-              onChange={(e) => setLedgerName(e.target.value)}
-              placeholder="예: 우리 가계부"
-            />
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => onSaveLedgerName(ledgerName)}
-            >
-              이름 저장
-            </button>
-          </div>
+          <div className="settings-grid">
+            <div className="mini-card stack gap-sm">
+              <strong>가계부 이름</strong>
+              <p className="muted">상단에 표시될 가계부 이름을 설정합니다.</p>
+              <input
+                value={ledgerName}
+                maxLength={80}
+                onChange={(e) => setLedgerName(e.target.value)}
+                placeholder="예: 우리 가계부"
+              />
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onSaveLedgerName(ledgerName)}
+              >
+                이름 저장
+              </button>
+            </div>
 
-          <div className="mini-card stack gap-sm">
-            <strong>목표 자산</strong>
-          
-            <p className="muted">
-              목표 자산 금액을 설정하고 진행률을 확인합니다.
-            </p>
-          
-            <input
-              value={targetAssetAmount}
-              onChange={(e) =>
-                setTargetAssetAmount(
-                  e.target.value.replace(/[^0-9]/g, '')
-                    ? formatAmount(
-                        Number(e.target.value.replace(/[^0-9]/g, ''))
-                      )
-                    : ''
-                )
-              }
-              placeholder="예: 10,000,000"
-            />
-          
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() =>
-                onSaveTargetAsset(
-                  parseAmount(targetAssetAmount)
-                )
-              }
-            >
-              목표 저장
-            </button>
-          </div>
-                    
-          <div className="mini-card stack gap-sm">
-            <strong>테마 모드</strong>
-            <p className="muted">원하는 색감의 화면 테마를 선택합니다.</p>
-            <select
-              value={settings?.theme_mode || (settings?.dark_mode ? 'dark' : 'light')}
-              onChange={(e) => onChangeTheme(e.target.value)}
-            >
-              {THEME_OPTIONS.map((theme) => (
-                <option key={theme.value} value={theme.value}>
-                  {theme.label}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="mini-card stack gap-sm">
+              <strong>목표 자산</strong>
+              <p className="muted">목표 자산 금액을 설정하고 진행률을 확인합니다.</p>
+              <input
+                value={targetAssetAmount}
+                onChange={(e) =>
+                  setTargetAssetAmount(
+                    e.target.value.replace(/[^0-9]/g, '')
+                      ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, '')))
+                      : ''
+                  )
+                }
+                placeholder="예: 10,000,000"
+              />
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onSaveTargetAsset(parseAmount(targetAssetAmount))}
+              >
+                목표 저장
+              </button>
+            </div>
 
-          <div className="mini-card stack gap-sm">
-            <strong>잠금 기능</strong>
-            <label className="toggle-row"><input type="checkbox" checked={pinEnabled} onChange={(e) => setPinEnabled(e.target.checked)} /><span>PIN 잠금 사용</span></label>
-            {pinEnabled && <input type="password" inputMode="numeric" maxLength={8} value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="4~8자리 숫자" />}
-            <button type="button" className="secondary-button" onClick={() => onSavePin(pinEnabled, pin)}>잠금 설정 저장</button>
-          </div>
+            <div className="mini-card stack gap-sm">
+              <strong>테마 모드</strong>
+              <p className="muted">원하는 색감의 화면 테마를 선택합니다.</p>
+              <select
+                value={settings?.theme_mode || (settings?.dark_mode ? 'dark' : 'light')}
+                onChange={(e) => onChangeTheme(e.target.value)}
+              >
+                {THEME_OPTIONS.map((theme) => (
+                  <option key={theme.value} value={theme.value}>
+                    {theme.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="mini-card stack gap-sm">
-            <strong>백업 / 복원</strong>
-            <button type="button" className="secondary-button" onClick={onExportBackup}>JSON 백업 다운로드</button>
-            <label className="upload-button">
-              백업 파일 복원
-              <input type="file" accept="application/json" onChange={handleBackupFile} />
-            </label>
-          </div>
-        </div>
-      </Section>
-    </section>
-  );
-}
+            <div className="mini-card stack gap-sm">
+              <strong>잠금 기능</strong>
+              <label className="toggle-row">
+                <input
+                  type="checkbox"
+                  checked={pinEnabled}
+                  onChange={(e) => setPinEnabled(e.target.checked)}
+                />
+                <span>PIN 잠금 사용</span>
+              </label>
+              {pinEnabled && (
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="4~8자리 숫자"
+                />
+              )}
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => onSavePin(pinEnabled, pin)}
+              >
+                잠금 설정 저장
+              </button>
+            </div>
+
+            <div className="mini-card stack gap-sm">
+              <strong>백업 / 복원</strong>
+              <button type="button" className="secondary-button" onClick={onExportBackup}>
+                JSON 백업 다운로드
+              </button>
+              <label className="upload-button">
+                백업 파일 복원
+                <input type="file" accept="application/json" onChange={handleBackupFile} />
+              </label>
+            </div>
+          </Section>
+        )}
+      </section>
+    );
+  }
 
 export default ManagementPanel;
