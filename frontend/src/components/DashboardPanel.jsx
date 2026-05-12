@@ -14,7 +14,7 @@ import {
   Line,
   Legend,
 } from 'recharts';
-import { calcChangeRate, formatAmount, formatMonthKo } from '../utils';
+import { calcChangeRate, formatAmount } from '../utils';
 
 function StatCard({ title, value, tone = 'neutral', subtitle }) {
   return (
@@ -88,23 +88,6 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
 
   return (
     <section className="stack gap-lg">
-      <div className="panel toolbar-row">
-        <div>
-          <h2>{formatMonthKo(month)} 요약</h2>
-          <p className="muted">이번 달 수입 / 지출 / 잔액, 카테고리 합계와 흐름 그래프를 한 번에 볼 수 있습니다.</p>
-        </div>
-        <div className="toolbar-actions">
-          <button type="button" className="secondary-button" onClick={() => onMoveMonth(-1)}>이전 달</button>
-          <button type="button" className="secondary-button" onClick={() => onMoveMonth(1)}>다음 달</button>
-          
-          {viewMode !== 'shared' && (
-            <button type="button" className="secondary-button" onClick={onRunAutomation} disabled={isSyncing}>
-              {isSyncing ? '자동 반영 처리 중...' : '자동 반영 즉시 실행'}
-            </button>
-          )}
-        </div>
-      </div>
-
       {budgetAlerts.length > 0 && (
         <div className="panel stack gap-sm">
           <div className="section-heading compact">
