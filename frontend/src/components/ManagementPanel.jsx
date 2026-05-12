@@ -1049,30 +1049,6 @@ function ManagementPanel({
 
           {canEdit && (
             <>
-              <div className="mini-card stack gap-sm">
-                <strong>잠금 기능</strong>
-                <label className="toggle-row">
-                  <input
-                    type="checkbox"
-                    checked={pinEnabled}
-                    onChange={(e) => setPinEnabled(e.target.checked)}
-                  />
-                  <span>PIN 잠금 사용</span>
-                </label>
-                {pinEnabled && (
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={8}
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="4~8자리 숫자"
-                  />
-                )}
-                <button type="button" className="secondary-button" onClick={() => onSavePin(pinEnabled, pin)}>
-                  잠금 설정 저장
-                </button>
-              </div>
 
               <div className="mini-card stack gap-sm">
                 <strong>백업 / 복원</strong>
