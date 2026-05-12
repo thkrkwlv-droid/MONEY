@@ -25,6 +25,7 @@ import {
   runAutomation,
   cleanupCache,
   fetchTransactionHistories,
+  deleteTransactionHistories,
   fetchUploadLogs,
   createUploadLog,
   fetchUsers,
@@ -192,6 +193,16 @@ function App() {
   }, [month, ledgerAuth]);
 
   useEffect(() => {
+    if (!ledgerAuth) return;
+    if (activeTab !== 'manage') return;
+
+    refreshUploadLogs();
+    refreshTransactionHistories();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, ledgerAuth]);
+
+  useEffect(() => {
     const query = form.note?.trim();
     const timer = setTimeout(async () => {
       try {
@@ -220,6 +231,18 @@ function App() {
       setTransactionHistories(rows);
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  async function handleDeleteTransactionHistories() {
+    if (!window.confirm('거래 수정/삭제 히스토리를 모두 삭제할까요? 실제 거래내역은 삭제되지 않습니다.')) return;
+
+    try {
+      await deleteTransactionHistories();
+      setTransactionHistories([]);
+      setMessage('거래 수정/삭제 히스토리를 삭제했습니다.');
+    } catch (err) {
+      setError(err.message || '거래 수정/삭제 히스토리 삭제에 실패했습니다.');
     }
   }
 
@@ -940,6 +963,7 @@ function App() {
               onSavePin={handleSavePin}
               onExportBackup={handleExportBackup}
               onImportBackup={handleImportBackup}
+              onDeleteTransactionHistories={handleDeleteTransactionHistories}
             />
           )}
         </main>
