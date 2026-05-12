@@ -113,7 +113,6 @@ function App() {
     endDate: '',
   });
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [mobileNavPage, setMobileNavPage] = useState('main');
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -788,7 +787,7 @@ function App() {
     ],
   ];
 
-  const visibleMobileTabs = mobileNavPage === 'main' ? mobileMainTabs : mobileMoreTabs;
+  const visibleMobileTabs = mobileMenuPages[mobileMenuPage] || mobileMenuPages[0];
 
   if (!ledgerAuth) {
     return <UserGate onUnlock={handleUnlockLedgerUser} />;
@@ -1004,9 +1003,9 @@ function App() {
 
         <button
           type="button"
-          className={`mobile-nav-toggle ${mobileNavPage === 'more' ? 'active' : ''}`}
+          className={`mobile-nav-toggle ${mobileMenuPage === 1 ? 'active' : ''}`}
           onClick={() =>
-            setMobileNavPage((prev) => (prev === 'main' ? 'more' : 'main'))
+            setMobileMenuPage((prev) => (prev === 0 ? 1 : 0))
           }
           aria-label="메뉴 전환"
         >
