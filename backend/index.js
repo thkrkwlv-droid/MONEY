@@ -153,7 +153,7 @@ async function getUncategorizedCategoryId(client) {
 }
 
 async function getSettings(ledgerContext = {}) {
-  if (ledgerContext.userId && ledgerContext.viewMode !== 'shared') {
+  if (ledgerContext.userId) {
     const { rows } = await query(
       `select *
        from ledger_user_settings
@@ -174,9 +174,7 @@ async function getSettings(ledgerContext = {}) {
     return created.rows[0];
   }
 
-  const { rows } = await query(`select * from app_settings where id = true limit 1`);
-
-  return rows[0] || {
+  return {
     dark_mode: false,
     theme_mode: 'light',
     pin_enabled: false,
@@ -2360,8 +2358,8 @@ app.post('/api/assets/recalculate', asyncHandler(async (req, res) => {
 app.put('/api/settings/theme', asyncHandler(async (req, res) => {
   const ledgerContext = getLedgerRequestContext(req);
 
-  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
-    return res.status(403).json({ message: '공용 모드에서는 테마를 변경할 수 없습니다.' });
+  if (!ledgerContext.userId) {
+    return res.status(403).json({ message: '사용자 정보가 없어 테마를 변경할 수 없습니다.' });
   }
 
   const allowedThemes = ['light', 'dark', 'pastel-pink', 'pastel-blue', 'pastel-purple', 'mint', 'yellow', 'beige', 'gray'];
@@ -2386,8 +2384,8 @@ app.put('/api/settings/theme', asyncHandler(async (req, res) => {
 app.put('/api/settings/ledger-name', asyncHandler(async (req, res) => {
   const ledgerContext = getLedgerRequestContext(req);
 
-  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
-    return res.status(403).json({ message: '공용 모드에서는 가계부 이름을 변경할 수 없습니다.' });
+  if (!ledgerContext.userId) {
+    return res.status(403).json({ message: '사용자 정보가 없어 가계부 이름을 변경할 수 없습니다.' });
   }
 
   const ledgerName = String(req.body.ledger_name || '가계부').trim().slice(0, 80) || '가계부';
@@ -2409,10 +2407,10 @@ app.put('/api/settings/ledger-name', asyncHandler(async (req, res) => {
 app.put('/api/settings/target-asset', asyncHandler(async (req, res) => {
   const ledgerContext = getLedgerRequestContext(req);
 
-  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
-    return res.status(403).json({ message: '공용 모드에서는 목표 자산을 변경할 수 없습니다.' });
+  if (!ledgerContext.userId) {
+    return res.status(403).json({ message: '사용자 정보가 없어 목표 자산을 변경할 수 없습니다.' });
   }
-
+  
   const targetAssetAmount = Math.max(0, Number(req.body.target_asset_amount || 0));
 
   const result = await query(
