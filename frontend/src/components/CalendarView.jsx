@@ -81,9 +81,6 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
 
           <h2>{formatMonthKo(month)} 달력</h2>
 
-          <p className="muted">
-            날짜별 수입/지출 합계를 확인하고 날짜를 눌러 상세 내역을 봅니다.
-          </p>
         </div>
       </div>
 
