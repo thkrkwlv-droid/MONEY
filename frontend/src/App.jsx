@@ -113,6 +113,7 @@ function App() {
     endDate: '',
   });
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileNavPage, setMobileNavPage] = useState('main');
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -786,6 +787,8 @@ function App() {
       { id: 'manage', label: '설정', icon: '⚙' },
     ],
   ];
+
+  const visibleMobileTabs = mobileNavPage === 'main' ? mobileMainTabs : mobileMoreTabs;
 
   if (!ledgerAuth) {
     return <UserGate onUnlock={handleUnlockLedgerUser} />;
