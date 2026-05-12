@@ -548,3 +548,9 @@ create table if not exists ledger_user_settings (
 
   updated_at timestamptz not null default now()
 );
+
+alter table favorites
+add column if not exists asset_account_id uuid references asset_accounts(id) on delete set null;
+
+create index if not exists idx_favorites_asset_account_id
+on favorites(asset_account_id);
