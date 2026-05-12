@@ -230,7 +230,6 @@ function MonthlyReport({
         <div className="toolbar-row">
           <div>
             <h2>{formatMonthKo(month)} 월간 리포트</h2>
-            <p className="muted">한 달 동안의 수입과 지출을 다양한 기준으로 확인합니다.</p>
           </div>
         </div>
 
