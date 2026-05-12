@@ -24,6 +24,7 @@ const favoriteSchema = z.object({
   type: z.enum(['income', 'expense']).default('expense'),
   amount: z.coerce.number().int().nonnegative(),
   category_id: z.string().uuid().nullable().optional(),
+  asset_account_id: z.string().uuid().nullable().optional(),
   note: z.string().max(500).nullable().optional(),
   payment_method: z.string().max(50).default('현금'),
 });
