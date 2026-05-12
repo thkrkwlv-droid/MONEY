@@ -990,28 +990,28 @@ function App() {
       </div>
 
       <nav className="mobile-bottom-nav">
-        <div className="mobile-bottom-menu">
-          {mobileMenuPages[mobileMenuPage].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`mobile-bottom-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="mobile-bottom-icon">{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-
+        {visibleMobileTabs.map((tab) => (
           <button
+            key={tab.id}
             type="button"
-            className={`mobile-bottom-switch ${mobileMenuPage === 1 ? 'active' : ''}`}
-            onClick={() => setMobileMenuPage((prev) => (prev === 0 ? 1 : 0))}
-            aria-label="하단 메뉴 전환"
+            className={`mobile-nav-button ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
           >
-            <span />
+            <span className="mobile-nav-icon">{tab.icon}</span>
+            <span>{tab.label}</span>
           </button>
-        </div>
+        ))}
+
+        <button
+          type="button"
+          className={`mobile-nav-toggle ${mobileNavPage === 'more' ? 'active' : ''}`}
+          onClick={() =>
+            setMobileNavPage((prev) => (prev === 'main' ? 'more' : 'main'))
+          }
+          aria-label="메뉴 전환"
+        >
+          <span className="mobile-toggle-pill" />
+        </button>
       </nav>
     </div>
   );
