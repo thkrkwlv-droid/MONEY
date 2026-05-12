@@ -236,9 +236,12 @@ async function getFavorites(ledgerContext = {}) {
   const { rows } = await query(
     `select
         f.*,
-        c.name as category_name
+        c.name as category_name,
+        a.name as asset_account_name,
+        a.asset_type as asset_account_type
      from favorites f
      left join categories c on c.id = f.category_id
+     left join asset_accounts a on a.id = f.asset_account_id
      ${whereClause}
      order by f.updated_at desc`,
     params,
@@ -1651,10 +1654,11 @@ app.post('/api/favorites', asyncHandler(async (req, res) => {
       message: '공용 모드에서는 즐겨찾기를 추가할 수 없습니다.',
     });
   }
-
+  
   const payload = favoriteSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
+    asset_account_id: normalizeUuid(req.body.asset_account_id),
     note: normalizeText(req.body.note),
   });
 
@@ -1665,10 +1669,11 @@ app.post('/api/favorites', asyncHandler(async (req, res) => {
        type,
        amount,
        category_id,
+       asset_account_id,
        note,
        payment_method
      )
-     values ($1, $2, $3, $4, $5, $6, $7)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
      returning *`,
     [
       ledgerContext.userId,
@@ -1676,6 +1681,7 @@ app.post('/api/favorites', asyncHandler(async (req, res) => {
       payload.type,
       payload.amount,
       payload.category_id,
+      payload.asset_account_id,
       payload.note,
       payload.payment_method,
     ],
@@ -1692,30 +1698,33 @@ app.put('/api/favorites/:id', asyncHandler(async (req, res) => {
       message: '공용 모드에서는 즐겨찾기를 수정할 수 없습니다.',
     });
   }
-
+  
   const payload = favoriteSchema.parse({
     ...req.body,
     category_id: normalizeUuid(req.body.category_id),
+    asset_account_id: normalizeUuid(req.body.asset_account_id),
     note: normalizeText(req.body.note),
   });
 
   const result = await query(
     `update favorites
      set name = $1,
-         type = $2,
-         amount = $3,
-         category_id = $4,
-         note = $5,
-         payment_method = $6,
-         updated_at = now()
-     where id = $7
-       and user_id = $8
+          type = $2,
+          amount = $3,
+          category_id = $4,
+          asset_account_id = $5,
+          note = $6,
+          payment_method = $7,
+          updated_at = now()
+      where id = $8
+        and user_id = $9
      returning *`,
     [
       payload.name,
       payload.type,
       payload.amount,
       payload.category_id,
+      payload.asset_account_id,
       payload.note,
       payload.payment_method,
       req.params.id,
