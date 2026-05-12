@@ -14,7 +14,6 @@ function AssetOverview({ assets = [], settings = {} }) {
       <div className="panel toolbar-row">
         <div>
           <h2>내 자산</h2>
-          <p className="muted">기초자산 관리에 등록한 은행별 잔액과 총 자산을 확인합니다.</p>
         </div>
       </div>
 
