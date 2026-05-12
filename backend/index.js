@@ -152,8 +152,30 @@ async function getUncategorizedCategoryId(client) {
   return inserted.rows[0].id;
 }
 
-async function getSettings() {
+async function getSettings(ledgerContext = {}) {
+  if (ledgerContext.userId && ledgerContext.viewMode !== 'shared') {
+    const { rows } = await query(
+      `select *
+       from ledger_user_settings
+       where user_id = $1
+       limit 1`,
+      [ledgerContext.userId],
+    );
+
+    if (rows[0]) return rows[0];
+
+    const created = await query(
+      `insert into ledger_user_settings (user_id)
+       values ($1)
+       returning *`,
+      [ledgerContext.userId],
+    );
+
+    return created.rows[0];
+  }
+
   const { rows } = await query(`select * from app_settings where id = true limit 1`);
+
   return rows[0] || {
     dark_mode: false,
     theme_mode: 'light',
@@ -163,7 +185,6 @@ async function getSettings() {
     target_asset_amount: 0,
   };
 }
-
 async function getRecentCategories() {
   const { rows } = await query(
     `select distinct on (t.category_id)
@@ -856,7 +877,7 @@ async function getBootstrap(month, ledgerContext = {}) {
   const favorites = await getFavorites(ledgerContext);
   const recurringTransactions = await getRecurringTransactions(ledgerContext);
   const fixedExpenses = await getFixedExpenses(ledgerContext);
-  const settings = await getSettings();
+  const settings = await getSettings(ledgerContext);
   const transactions = await getTransactions({ month }, ledgerContext);
   const previousTransactionParams = [prevStart, prevEnd];
   let previousTransactionUserWhere = '';
@@ -2214,8 +2235,9 @@ app.delete('/api/assets/:id', asyncHandler(async (req, res) => {
   res.json({ success: true });
 }));
 
-app.get('/api/settings', asyncHandler(async (_req, res) => {
-  const settings = await getSettings();
+app.get('/api/settings', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+  const settings = await getSettings(ledgerContext);
   res.json({
     dark_mode: settings.dark_mode,
     theme_mode: settings.theme_mode || (settings.dark_mode ? 'dark' : 'light'),
@@ -2336,62 +2358,84 @@ app.post('/api/assets/recalculate', asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/settings/theme', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 테마를 변경할 수 없습니다.' });
+  }
+
   const allowedThemes = ['light', 'dark', 'pastel-pink', 'pastel-blue', 'pastel-purple', 'mint', 'yellow', 'beige', 'gray'];
   const themeMode = allowedThemes.includes(req.body.theme_mode) ? req.body.theme_mode : 'light';
   const darkMode = themeMode === 'dark';
 
   const result = await query(
-    `update app_settings
-     set dark_mode = $1,
-         theme_mode = $2,
-         updated_at = now()
-     where id = true
-     returning dark_mode, theme_mode, pin_enabled, currency`,
-    [darkMode, themeMode],
+    `insert into ledger_user_settings (user_id, dark_mode, theme_mode, updated_at)
+     values ($1, $2, $3, now())
+     on conflict (user_id)
+     do update set
+       dark_mode = excluded.dark_mode,
+       theme_mode = excluded.theme_mode,
+       updated_at = now()
+     returning dark_mode, theme_mode, pin_enabled, currency, ledger_name, target_asset_amount`,
+    [ledgerContext.userId, darkMode, themeMode],
   );
 
   res.json(result.rows[0]);
 }));
 
 app.put('/api/settings/ledger-name', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 가계부 이름을 변경할 수 없습니다.' });
+  }
+
   const ledgerName = String(req.body.ledger_name || '가계부').trim().slice(0, 80) || '가계부';
 
   const result = await query(
-    `update app_settings
-     set ledger_name = $1,
-         updated_at = now()
-     where id = true
-     returning dark_mode, theme_mode, pin_enabled, currency, ledger_name`,
-    [ledgerName],
+    `insert into ledger_user_settings (user_id, ledger_name, updated_at)
+     values ($1, $2, now())
+     on conflict (user_id)
+     do update set
+       ledger_name = excluded.ledger_name,
+       updated_at = now()
+     returning dark_mode, theme_mode, pin_enabled, currency, ledger_name, target_asset_amount`,
+    [ledgerContext.userId, ledgerName],
   );
 
   res.json(result.rows[0]);
 }));
 
 app.put('/api/settings/target-asset', asyncHandler(async (req, res) => {
-  const targetAssetAmount = Math.max(
-    0,
-    Number(req.body.target_asset_amount || 0),
-  );
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 목표 자산을 변경할 수 없습니다.' });
+  }
+
+  const targetAssetAmount = Math.max(0, Number(req.body.target_asset_amount || 0));
 
   const result = await query(
-    `update app_settings
-     set target_asset_amount = $1,
-         updated_at = now()
-     where id = true
-     returning dark_mode,
-               theme_mode,
-               pin_enabled,
-               currency,
-               ledger_name,
-               target_asset_amount`,
-    [targetAssetAmount],
+    `insert into ledger_user_settings (user_id, target_asset_amount, updated_at)
+     values ($1, $2, now())
+     on conflict (user_id)
+     do update set
+       target_asset_amount = excluded.target_asset_amount,
+       updated_at = now()
+     returning dark_mode, theme_mode, pin_enabled, currency, ledger_name, target_asset_amount`,
+    [ledgerContext.userId, targetAssetAmount],
   );
 
   res.json(result.rows[0]);
 }));
 
 app.put('/api/settings/pin', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({ message: '공용 모드에서는 PIN을 변경할 수 없습니다.' });
+  }
+
   const enabled = Boolean(req.body.enabled);
   let hash = null;
 
@@ -2401,26 +2445,31 @@ app.put('/api/settings/pin', asyncHandler(async (req, res) => {
   }
 
   const result = await query(
-    `update app_settings
-     set pin_enabled = $1,
-         pin_hash = $2,
-         updated_at = now()
-     where id = true
-     returning dark_mode, pin_enabled, currency`,
-    [enabled, hash],
+    `insert into ledger_user_settings (user_id, pin_enabled, pin_hash, updated_at)
+     values ($1, $2, $3, now())
+     on conflict (user_id)
+     do update set
+       pin_enabled = excluded.pin_enabled,
+       pin_hash = excluded.pin_hash,
+       updated_at = now()
+     returning dark_mode, theme_mode, pin_enabled, currency, ledger_name, target_asset_amount`,
+    [ledgerContext.userId, enabled, hash],
   );
+
   res.json(result.rows[0]);
 }));
 
 app.post('/api/settings/unlock', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
   const payload = pinSchema.parse({ pin: req.body.pin });
-  const settings = await getSettings();
+  const settings = await getSettings(ledgerContext);
 
   if (!settings.pin_enabled || !settings.pin_hash) {
     return res.json({ success: true });
   }
 
   const isValid = await bcrypt.compare(payload.pin, settings.pin_hash);
+
   if (!isValid) {
     return res.status(401).json({ message: 'PIN이 올바르지 않습니다.' });
   }
