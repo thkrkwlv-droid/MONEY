@@ -85,6 +85,7 @@ function ManagementPanel({
   onSavePin,
   onExportBackup,
   onImportBackup,
+  onDeleteTransactionHistories,
 }) {
   const [categoryForm, setCategoryForm] = useState({ id: '', name: '', type: 'expense', color: '#6366f1' });
   const [favoriteForm, setFavoriteForm] = useState({ id: '', name: '', type: 'expense', amountInput: '', category_id: '', note: '', payment_method: '현금' });
@@ -122,12 +123,9 @@ function ManagementPanel({
   );
   
   const [pin, setPin] = useState('');
-  const [showAllHistories, setShowAllHistories] = useState(false);
   const canEdit = viewMode !== 'shared';
 
-  const visibleTransactionHistories = showAllHistories
-    ? transactionHistories || []
-    : (transactionHistories || []).slice(0, 10);
+  const visibleTransactionHistories = (transactionHistories || []).slice(0, 3);
 
   const expenseCategories = useMemo(() => categories.filter((item) => item.type !== 'income'), [categories]);
 
@@ -835,70 +833,70 @@ function ManagementPanel({
             )}
           </div>
         </div>
-        <div className="asset-maintenance-card wide-card">
-          <div>
-            <strong>거래 수정/삭제 히스토리</strong>
-      
-            <p className="muted">
-              최근 거래 수정 및 삭제 기록을 확인합니다. 원본 거래내역을 복구하거나 변경하지는 않습니다.
-            </p>
-          </div>
-      
-          {(transactionHistories || []).length > 10 && (
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => setShowAllHistories((prev) => !prev)}
-            >
-              {showAllHistories
-                ? '최근 10개만 보기'
-                : `전체 보기 (${transactionHistories.length}건)`}
-            </button>
-          )}
-      
-          <div className="history-list">
-            {(transactionHistories || []).length > 0 ? (
-              visibleTransactionHistories.map((history) => {
-                const beforeData = history.before_data || {};
-                const afterData = history.after_data || null;
-      
-                return (
-                  <div key={history.id} className="history-card">
-                    <div className="history-card-header">
-                      <strong>
-                        {history.action === 'delete' ? '삭제' : '수정'}
-                      </strong>
-      
-                      <span className="muted">
-                        {history.created_at
-                          ? new Date(history.created_at).toLocaleString('ko-KR')
-                          : '-'}
-                      </span>
-                    </div>
-      
-                    <p>
-                      <b>수정 전:</b>{' '}
-                      {beforeData.transaction_date || '-'} / {beforeData.note || '메모 없음'} /{' '}
-                      {Number(beforeData.amount || 0).toLocaleString()}원
-                    </p>
-      
-                    {afterData && (
-                      <p>
-                        <b>수정 후:</b>{' '}
-                        {afterData.transaction_date || '-'} / {afterData.note || '메모 없음'} /{' '}
-                        {Number(afterData.amount || 0).toLocaleString()}원
-                      </p>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
+        {canEdit && (
+          <div className="asset-maintenance-card wide-card">
+            <div>
+              <strong>거래 수정/삭제 히스토리</strong>
+
               <p className="muted">
-                아직 거래 수정/삭제 히스토리가 없습니다.
+                최근 거래 수정 및 삭제 기록을 3건까지 확인합니다. 원본 거래내역을 복구하거나 변경하지는 않습니다.
               </p>
+            </div>
+
+            {(transactionHistories || []).length > 0 && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={onDeleteTransactionHistories}
+              >
+                히스토리 전체 삭제
+              </button>
             )}
+
+            <div className="history-list">
+              {(transactionHistories || []).length > 0 ? (
+                visibleTransactionHistories.map((history) => {
+                  const beforeData = history.before_data || {};
+                  const afterData = history.after_data || null;
+
+                  return (
+                    <div key={history.id} className="history-card">
+                      <div className="history-card-header">
+                        <strong>
+                          {history.action === 'delete' ? '삭제' : '수정'}
+                        </strong>
+
+                        <span className="muted">
+                          {history.created_at
+                            ? new Date(history.created_at).toLocaleString('ko-KR')
+                            : '-'}
+                        </span>
+                      </div>
+
+                      <p>
+                        <b>수정 전:</b>{' '}
+                        {beforeData.transaction_date || '-'} / {beforeData.note || '메모 없음'} /{' '}
+                        {Number(beforeData.amount || 0).toLocaleString()}원
+                      </p>
+
+                      {afterData && (
+                        <p>
+                          <b>수정 후:</b>{' '}
+                          {afterData.transaction_date || '-'} / {afterData.note || '메모 없음'} /{' '}
+                          {Number(afterData.amount || 0).toLocaleString()}원
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="muted">
+                  아직 거래 수정/삭제 히스토리가 없습니다.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       
         <div className="asset-maintenance-card">
           <div>
