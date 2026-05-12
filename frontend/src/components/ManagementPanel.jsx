@@ -88,7 +88,16 @@ function ManagementPanel({
   onDeleteTransactionHistories,
 }) {
   const [categoryForm, setCategoryForm] = useState({ id: '', name: '', type: 'expense', color: '#6366f1' });
-  const [favoriteForm, setFavoriteForm] = useState({ id: '', name: '', type: 'expense', amountInput: '', category_id: '', note: '', payment_method: '현금' });
+  const [favoriteForm, setFavoriteForm] = useState({
+    id: '',
+    name: '',
+    type: 'expense',
+    amountInput: '',
+    category_id: '',
+    asset_account_id: '',
+    note: '',
+    payment_method: '현금',
+  });
   const [recurringForm, setRecurringForm] = useState({
     id: '', name: '', type: 'expense', amountInput: '', category_id: '', note: '', payment_method: '현금',
     frequency: 'monthly', interval_count: 1, start_date: today(), weekday: 1, day_of_month: 25, is_active: true,
@@ -138,7 +147,16 @@ function ManagementPanel({
   }, [fixedForm.type, incomeCategories, expenseCategories]);
 
   const resetCategoryForm = () => setCategoryForm({ id: '', name: '', type: 'expense', color: '#6366f1' });
-  const resetFavoriteForm = () => setFavoriteForm({ id: '', name: '', type: 'expense', amountInput: '', category_id: '', note: '', payment_method: '현금' });
+  const resetFavoriteForm = () => setFavoriteForm({
+    id: '',
+    name: '',
+    type: 'expense',
+    amountInput: '',
+    category_id: '',
+    asset_account_id: '',
+    note: '',
+    payment_method: '현금',
+  });
   const resetRecurringForm = () => setRecurringForm({
     id: '', name: '', type: 'expense', amountInput: '', category_id: '', note: '', payment_method: '현금',
     frequency: 'monthly', interval_count: 1, start_date: today(), weekday: 1, day_of_month: 25, is_active: true,
@@ -350,7 +368,39 @@ function ManagementPanel({
               {categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select>
           </label>
-          <label className="field-span-2"><span>메모</span><input value={favoriteForm.note} onChange={(e) => setFavoriteForm((prev) => ({ ...prev, note: e.target.value }))} /></label>
+          <label>
+            <span>메모</span>
+            <input
+              value={favoriteForm.note}
+              onChange={(e) =>
+                setFavoriteForm((prev) => ({
+                  ...prev,
+                  note: e.target.value,
+                }))
+              }
+            />
+          </label>
+
+          <label>
+            <span>자산/계좌</span>
+            <select
+              value={favoriteForm.asset_account_id || ''}
+              onChange={(e) =>
+                setFavoriteForm((prev) => ({
+                  ...prev,
+                  asset_account_id: e.target.value,
+                }))
+              }
+            >
+              <option value="">선택 안 함</option>
+              {assets.map((asset) => (
+                <option key={asset.id} value={asset.id}>
+                  {asset.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label>
             <span>결제수단</span>
             <select value={favoriteForm.payment_method} onChange={(e) => setFavoriteForm((prev) => ({ ...prev, payment_method: e.target.value }))}>
