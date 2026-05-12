@@ -499,11 +499,12 @@ async function recordTransactionHistory(client, action, beforeData, afterData = 
 
   await client.query(
     `insert into transaction_histories (
-      transaction_id, action, before_data, after_data
+      user_id, transaction_id, action, before_data, after_data
     ) values (
-      $1, $2, $3::jsonb, $4::jsonb
+      $1, $2, $3, $4::jsonb, $5::jsonb
     )`,
     [
+      beforeData.user_id || null,
       beforeData.id,
       action,
       JSON.stringify(beforeData),
@@ -2298,17 +2299,45 @@ app.post('/api/upload-logs', asyncHandler(async (req, res) => {
 }));
 
 app.get('/api/transaction-histories', asyncHandler(async (req, res) => {
-  const limit = Math.min(Number(req.query.limit || 50), 200);
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.json([]);
+  }
+
+  const limit = Math.min(Math.max(Number(req.query.limit || 30), 1), 200);
 
   const { rows } = await query(
     `select *
      from transaction_histories
+     where user_id = $1
      order by created_at desc
-     limit $1`,
-    [limit],
+     limit $2`,
+    [ledgerContext.userId, limit],
   );
 
   res.json(rows);
+}));
+
+app.delete('/api/transaction-histories', asyncHandler(async (req, res) => {
+  const ledgerContext = getLedgerRequestContext(req);
+
+  if (ledgerContext.viewMode === 'shared' || !ledgerContext.userId) {
+    return res.status(403).json({
+      message: '공용 모드에서는 거래 히스토리를 삭제할 수 없습니다.',
+    });
+  }
+
+  const result = await query(
+    `delete from transaction_histories
+     where user_id = $1`,
+    [ledgerContext.userId],
+  );
+
+  res.json({
+    success: true,
+    deleted_count: result.rowCount,
+  });
 }));
 
 app.post('/api/system/cleanup-cache', asyncHandler(async (_req, res) => {
