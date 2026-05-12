@@ -128,3 +128,4 @@ export const cleanupCache = () => post('/api/system/cleanup-cache', {});
 export const fetchTransactionHistories = () => get('/api/transaction-histories?limit=50');
 export const fetchUploadLogs = (limit = 30) => get(`/api/upload-logs?limit=${limit}`);
 export const createUploadLog = (data) => post('/api/upload-logs', data);
+export const deleteTransactionHistories = () => del('/api/transaction-histories');
