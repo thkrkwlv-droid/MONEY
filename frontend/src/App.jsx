@@ -358,7 +358,9 @@ function App() {
       type: favorite.type,
       amountInput: Number(favorite.amount).toLocaleString('ko-KR'),
       category_id: favorite.category_id || defaultCategoryId || '',
-      asset_account_id: '',
+      asset_account_id: favorite.asset_account_id || '',
+      from_asset_account_id: favorite.asset_account_id || '',
+      to_asset_account_id: '',
       note: favorite.note || '',
       payment_method: favorite.payment_method || '체크카드',
     });
