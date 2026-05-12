@@ -677,8 +677,7 @@ function TransactionTable({
       <div className="section-heading">
         <div>
           <p className="eyebrow">내역 관리</p>
-          <h2>검색 · 필터 · 수정 · 삭제</h2>
-          <p className="muted">메모 포함 검색, 날짜/카테고리/수입·지출 필터를 지원합니다.</p>
+          <h2>사용 내역</h2>
         </div>
 
         <div className="inline-actions">
