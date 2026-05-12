@@ -35,7 +35,7 @@ function QuickEntryForm({
         <div>
           <p className="eyebrow">빠른 입력</p>
           <h2>{editingTransaction ? '내역 수정' : '오늘의 가계부 입력'}</h2>
-          <p className="muted"></p>
+          <p className="muted">메모는 선택 사항이고, 카테고리 + 금액만으로 바로 저장할 수 있습니다.</p>
         </div>
         <div className="inline-badge-group">
           <span className="badge positive">입력 후 금액/메모 초기화</span>
