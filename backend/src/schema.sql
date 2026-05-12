@@ -234,6 +234,46 @@ create table if not exists app_settings (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists ledger_user_settings (
+  user_id uuid primary key references ledger_users(id) on delete cascade,
+  dark_mode boolean not null default false,
+  theme_mode varchar(30) not null default 'light',
+  pin_enabled boolean not null default false,
+  pin_hash text,
+  currency varchar(10) not null default 'KRW',
+  ledger_name varchar(80) not null default '가계부',
+  target_asset_amount bigint not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+insert into ledger_user_settings (
+  user_id,
+  dark_mode,
+  theme_mode,
+  pin_enabled,
+  pin_hash,
+  currency,
+  ledger_name,
+  target_asset_amount
+)
+select
+  u.id,
+  coalesce(s.dark_mode, false),
+  coalesce(s.theme_mode, 'light'),
+  coalesce(s.pin_enabled, false),
+  s.pin_hash,
+  coalesce(s.currency, 'KRW'),
+  case
+    when u.id = '00000000-0000-0000-0000-000000000001' then coalesce(s.ledger_name, '가계부')
+    when u.id = '00000000-0000-0000-0000-000000000002' then '지원 가계부'
+    else '공용 보기'
+  end,
+  coalesce(s.target_asset_amount, 0)
+from ledger_users u
+left join app_settings s on s.id = true
+where u.role in ('owner', 'partner')
+on conflict (user_id) do nothing;
+
 create table if not exists asset_snapshots (
   id uuid primary key default gen_random_uuid(),
   snapshot_date date not null unique,
