@@ -1095,10 +1095,11 @@ function ManagementPanel({
                 <input type="file" accept="application/json" onChange={handleBackupFile} />
               </label>
             </div>
-          </Section>
-        )}
-      </section>
-    );
-  }
+          </div>
+        </Section>
+      )}
+    </section>
+  );
+}
 
 export default ManagementPanel;
