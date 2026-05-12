@@ -531,3 +531,20 @@ create index if not exists idx_asset_accounts_user_id on asset_accounts(user_id)
 create index if not exists idx_transactions_user_id on transactions(user_id);
 create index if not exists idx_transaction_histories_user_id on transaction_histories(user_id);
 create index if not exists idx_upload_logs_user_id on upload_logs(user_id);
+
+create table if not exists ledger_user_settings (
+  user_id uuid primary key references ledger_users(id) on delete cascade,
+
+  dark_mode boolean not null default false,
+  theme_mode varchar(30) not null default 'light',
+
+  pin_enabled boolean not null default false,
+  pin_hash text,
+
+  currency varchar(10) not null default 'KRW',
+
+  ledger_name varchar(80) not null default '가계부',
+  target_asset_amount bigint not null default 0,
+
+  updated_at timestamptz not null default now()
+);
