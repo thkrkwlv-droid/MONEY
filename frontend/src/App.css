@@ -2304,7 +2304,8 @@ body {
   }
 
   .mobile-nav-icon {
-    font-size: 20px;
+    width: 23px;
+    height: 23px;
     line-height: 1;
   }
 
