@@ -316,6 +316,7 @@ async function getBudgets(month, ledgerContext = {}) {
   const transactionConditions = [
     `t.transaction_date between $1 and ($1::date + interval '1 month - 1 day')`,
     `t.type = 'expense'`,
+    `t.user_id = b.user_id`,
   ];
 
   if (ledgerContext.viewMode !== 'shared' && ledgerContext.userId) {
