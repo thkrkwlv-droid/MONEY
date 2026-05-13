@@ -58,7 +58,7 @@ import {
   Calculator,
   CalendarHeart,
   CircleDollarSign,
-  FileCheckCorner,
+  FileCheck,
   ChartPie,
   UserRoundCog,
 } from 'lucide-react';
@@ -790,7 +790,7 @@ function App() {
       { id: 'assets', label: '자산', Icon: CircleDollarSign },
     ],
     [
-      { id: 'history', label: '내역', Icon: FileCheckCorner },
+      { id: 'history', label: '내역', Icon: FileCheck },
       { id: 'monthly-report', label: '리포트', Icon: ChartPie },
       { id: 'manage', label: '설정', Icon: UserRoundCog },
     ],
