@@ -776,13 +776,13 @@ function App() {
   const mobileMenuPages = [
     [
       { id: 'dashboard', label: '홈', icon: '⌂' },
-      { id: 'entry', label: '입력', icon: '＋' },
-      { id: 'history', label: '내역', icon: '≡' },
-      { id: 'calendar', label: '달력', icon: '□' },
+      { id: 'entry', label: '입력', icon: '▣' },
+      { id: 'calendar', label: '달력', icon: '▦' },
+      { id: 'assets', label: '자산', icon: '₩' },
     ],
     [
+      { id: 'history', label: '내역', icon: '≡' },
       { id: 'monthly-report', label: '리포트', icon: '◔' },
-      { id: 'assets', label: '자산', icon: '◇' },
       { id: 'manage', label: '설정', icon: '⚙' },
     ],
   ];
