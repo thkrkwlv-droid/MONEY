@@ -339,11 +339,12 @@ async function getBudgets(month, ledgerContext = {}) {
      left join ledger_users u on u.id = b.user_id
      left join categories c on c.id = b.category_id
      left join transactions t
-       on ${transactionConditions.join(' and ')}
-      and (
-        b.category_id is null
-        or t.category_id = b.category_id
-      )
+      on ${transactionConditions.join(' and ')}
+     and t.user_id = b.user_id
+     and (
+       b.category_id is null
+       or t.category_id = b.category_id
+     )
      where ${budgetConditions.join(' and ')}
      group by b.id, u.name, u.role, c.name
      order by category_name asc`,
@@ -1541,6 +1542,8 @@ async function getAssets(ledgerContext = {}) {
     `
     select
       a.*,
+      u.name as user_name,
+      u.role as user_role,
 
       (
         select coalesce(sum(cash_unsettled_amount), 0)
@@ -1603,6 +1606,7 @@ async function getAssets(ledgerContext = {}) {
           ${ledgerContext.viewMode !== 'shared' && ledgerContext.userId ? `and t.user_id = $1` : ''}
       ) as previous_month_change
     from asset_accounts a
+    left join ledger_users u on u.id = a.user_id
     ${whereClause}
     order by a.balance desc, a.created_at asc
     `,
