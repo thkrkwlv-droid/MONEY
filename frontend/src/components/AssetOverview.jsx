@@ -73,6 +73,7 @@ function AssetOverview({ assets = [], settings = {} }) {
                 <div>
                   <strong>
                     {asset.name}
+                    {asset.user_name && <span className="badge">{asset.user_name}</span>}
                     {isCashAsset && <span className="cash-badge">현금</span>}
                   </strong>
                   <p className="muted">{asset.asset_type}</p>
