@@ -53,6 +53,15 @@ import ManagementPanel from './components/ManagementPanel';
 import PinLock from './components/PinLock';
 import UserGate from './components/UserGate';
 import { currentMonth, nextMonth, parseAmount, prevMonth, today } from './utils';
+import {
+  House,
+  Calculator,
+  CalendarHeart,
+  CircleDollarSign,
+  FileCheckCorner,
+  ChartPie,
+  UserRoundCog,
+} from 'lucide-react';
 
 function monthToDigits(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 6);
@@ -775,15 +784,15 @@ function App() {
 
   const mobileMenuPages = [
     [
-      { id: 'dashboard', label: '홈', icon: '⌂' },
-      { id: 'entry', label: '입력', icon: '▣' },
-      { id: 'calendar', label: '달력', icon: '▦' },
-      { id: 'assets', label: '자산', icon: '₩' },
+      { id: 'dashboard', label: '홈', Icon: House },
+      { id: 'entry', label: '입력', Icon: Calculator },
+      { id: 'calendar', label: '달력', Icon: CalendarHeart },
+      { id: 'assets', label: '자산', Icon: CircleDollarSign },
     ],
     [
-      { id: 'history', label: '내역', icon: '≡' },
-      { id: 'monthly-report', label: '리포트', icon: '◔' },
-      { id: 'manage', label: '설정', icon: '⚙' },
+      { id: 'history', label: '내역', Icon: FileCheckCorner },
+      { id: 'monthly-report', label: '리포트', Icon: ChartPie },
+      { id: 'manage', label: '설정', Icon: UserRoundCog },
     ],
   ];
 
@@ -989,17 +998,21 @@ function App() {
       </div>
 
       <nav className="mobile-bottom-nav">
-        {visibleMobileTabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`mobile-nav-button ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <span className="mobile-nav-icon">{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        ))}
+        {visibleMobileTabs.map((tab) => {
+          const Icon = tab.Icon;
+        
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`mobile-nav-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <Icon className="mobile-nav-icon" strokeWidth={2.3} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
 
         <button
           type="button"
