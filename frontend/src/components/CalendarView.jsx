@@ -171,6 +171,7 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                     
                             <span className="calendar-hover-text">
                               {item.note || item.category_name || '내역'}
+                              {item.user_name ? ` · ${item.user_name}` : ''}
                             </span>
                     
                             <strong
@@ -247,6 +248,7 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                         <div>
                           <strong>{item.note || item.category_name || '미분류'}</strong>
                           <p className="muted">
+                            {item.user_name && <span className="badge">{item.user_name}</span>}
                             {item.category_name || '미분류'}
                             {item.asset_account_name ? ` · ${item.asset_account_name}` : ''}
                           </p>
@@ -276,6 +278,7 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                         <div>
                           <strong>{item.note || item.category_name || '미분류'}</strong>
                           <p className="muted">
+                            {item.user_name && <span className="badge">{item.user_name}</span>}
                             {item.category_name || '미분류'}
                             {item.asset_account_name ? ` · ${item.asset_account_name}` : ''}
                           </p>
@@ -303,6 +306,7 @@ function CalendarView({ month, transactions = [], showTransfers = false }) {
                           <div>
                             <strong>{item.note || '자산이동'}</strong>
                             <p className="muted">
+                              {item.user_name && <span className="badge">{item.user_name}</span>}
                               {item.asset_account_name || '출금 자산'} → {item.transfer_to_asset_account_name || '입금 자산'}
                             </p>
                           </div>
