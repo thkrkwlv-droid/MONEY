@@ -888,6 +888,7 @@ function App() {
             <DashboardPanel
               dashboard={data.dashboard}
               budgets={data.budgets}
+              assets={data.assets}
               month={month}
               onMoveMonth={moveMonth}
               onRunAutomation={handleRunAutomation}
