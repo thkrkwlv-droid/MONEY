@@ -44,7 +44,7 @@ function getBudgetAlerts(budgets = []) {
     .filter((budget) => budget.isWarning || budget.isExceeded);
 }
 
-function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomation, isSyncing, viewMode }) {
+function DashboardPanel({ dashboard, budgets, assets = [], month, onMoveMonth, onRunAutomation, isSyncing, viewMode }) {
   const [budgetAlertPage, setBudgetAlertPage] = useState(1);
   const [budgetStatusPage, setBudgetStatusPage] = useState(1);
   const [categoryPage, setCategoryPage] = useState(1);
@@ -80,6 +80,11 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
 
   const categoryPageItems = sortedCategorySummary.slice((categoryPage - 1) * 3, categoryPage * 3);
   const categoryTotalPages = Math.max(1, Math.ceil(sortedCategorySummary.length / 3));
+
+  const totalAssetAmount = assets.reduce(
+    (sum, asset) => sum + Number(asset.balance || 0),
+    0
+  );
   
   const comparisonData = [
     { label: '지난달', income: dashboard?.previousIncome || 0, expense: dashboard?.previousExpense || 0 },
@@ -144,7 +149,12 @@ function DashboardPanel({ dashboard, budgets, month, onMoveMonth, onRunAutomatio
           tone="danger"
           subtitle={expenseRate == null ? '지난달 비교 데이터 없음' : `지난달 대비 ${expenseRate > 0 ? '+' : ''}${expenseRate}%`}
         />
-        <StatCard title="현재 잔액" value={dashboard?.balance || 0} tone="accent" subtitle="월말 누적 잔액" />
+        <StatCard
+          title="총 자산"
+          value={totalAssetAmount}
+          tone="accent"
+          subtitle={`월말 누적 잔액 : ${formatAmount(dashboard?.balance || 0)}원`}
+        />
       </div>
 
       <div className="dashboard-grid">
