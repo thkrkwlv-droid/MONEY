@@ -2477,12 +2477,28 @@ body {
 
   .mobile-pin-keypad {
     gap: 16px;
-    margin-top: 80px;
+    margin-top: 100px;
   }
 
   .mobile-pin-key {
     height: 78px;
     border-radius: 28px;
     font-size: 34px;
+  }
+}
+
+/* 모바일 로그인 화면 스크롤 고정 */
+@media (max-width: 720px) {
+  .pin-lock-screen {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  body:has(.pin-lock-screen) {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
   }
 }
