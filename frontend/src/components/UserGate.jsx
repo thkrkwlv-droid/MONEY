@@ -49,7 +49,7 @@ function UserGate({ onUnlock }) {
     <div className="pin-lock-screen">
       <div className="pin-lock-card panel mobile-pin-card">
         <div>
-          <h1>MONEY</h1>
+          <h1>가계부</h1>
           <p className="muted">사용자 PIN을 입력해주세요.</p>
         </div>
 
