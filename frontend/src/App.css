@@ -2477,6 +2477,7 @@ body {
 
   .mobile-pin-keypad {
     gap: 16px;
+    margin-top: 26px;
   }
 
   .mobile-pin-key {
