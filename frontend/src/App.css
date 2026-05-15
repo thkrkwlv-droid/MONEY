@@ -2334,3 +2334,115 @@ body {
     background: var(--warning);
   }
 }
+
+/* 모바일 PIN 키패드 */
+
+.mobile-pin-card {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.mobile-pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.mobile-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: transparent;
+  transition: all 0.18s ease;
+}
+
+.mobile-pin-dot.filled {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.mobile-pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.mobile-pin-key {
+  height: 72px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  color: var(--text);
+  font-size: 28px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.mobile-pin-key:hover {
+  transform: scale(0.98);
+}
+
+.mobile-pin-key:active {
+  transform: scale(0.94);
+}
+
+.mobile-pin-key:disabled {
+  opacity: 0.55;
+}
+
+.del-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.del-icon {
+  position: relative;
+  width: 34px;
+  height: 24px;
+  border: 3px solid var(--primary);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+}
+
+.del-icon::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
+  border-right: 14px solid var(--primary);
+}
+
+.del-x {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -56%);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+@media (min-width: 721px) {
+  .mobile-pin-card {
+    width: 420px;
+  }
+
+  .mobile-pin-key {
+    height: 68px;
+  }
+}
