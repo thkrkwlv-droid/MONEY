@@ -707,9 +707,12 @@ function ManagementPanel({
         <form className="form-grid compact-form" onSubmit={async (e) => {
           e.preventDefault();
       
+          const parsedBalance = parseAmount(assetForm.balanceInput);
+
           await onSaveAsset({
             ...assetForm,
-            balance: parseAmount(assetForm.balanceInput),
+            balance: parsedBalance,
+            initial_balance: parsedBalance,
           });
       
           resetAssetForm();
