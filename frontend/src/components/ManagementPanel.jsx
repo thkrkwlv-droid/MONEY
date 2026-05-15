@@ -708,11 +708,16 @@ function ManagementPanel({
           e.preventDefault();
       
           const parsedBalance = parseAmount(assetForm.balanceInput);
-
+          
+          const currentBalance = Number(assetForm.balance || 0);
+          const currentInitialBalance = Number(assetForm.initial_balance || 0);
+          
+          const diff = parsedBalance - currentBalance;
+          
           await onSaveAsset({
             ...assetForm,
             balance: parsedBalance,
-            initial_balance: parsedBalance,
+            initial_balance: currentInitialBalance + diff,
           });
       
           resetAssetForm();
