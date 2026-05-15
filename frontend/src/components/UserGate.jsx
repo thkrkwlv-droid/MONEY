@@ -1,56 +1,68 @@
 import { useState } from 'react';
 
+const PIN_LENGTH = 4;
+
 function UserGate({ onUnlock }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [isUnlocking, setIsUnlocking] = useState(false);
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-
-    const normalizedPin = String(pin || '').trim();
-
-    if (!/^\d{1,8}$/.test(normalizedPin)) {
-      setError('PIN은 1~8자리 숫자로 입력해주세요.');
-      return;
-    }
+  async function submitPin(nextPin) {
+    if (nextPin.length !== PIN_LENGTH || isUnlocking) return;
 
     setIsUnlocking(true);
     setError('');
 
     try {
-      await onUnlock(normalizedPin);
+      await onUnlock(nextPin);
       setPin('');
     } catch (err) {
       setError(err.message || 'PIN이 올바르지 않습니다.');
+      setPin('');
     } finally {
       setIsUnlocking(false);
     }
   }
 
+  function handlePress(value) {
+    if (isUnlocking) return;
+
+    setError('');
+
+    if (value === 'del') {
+      setPin((prev) => prev.slice(0, -1));
+      return;
+    }
+
+    setPin((prev) => {
+      const next = `${prev}${value}`.slice(0, PIN_LENGTH);
+
+      if (next.length === PIN_LENGTH) {
+        setTimeout(() => submitPin(next), 80);
+      }
+
+      return next;
+    });
+  }
+
   return (
     <div className="pin-lock-screen">
-      <form className="pin-lock-card panel" onSubmit={handleSubmit}>
+      <div className="pin-lock-card panel mobile-pin-card">
         <div>
           <h1>MONEY</h1>
           <p className="muted">사용자 PIN을 입력해주세요.</p>
         </div>
 
-        <label>
-          <span>PIN</span>
-          <input
-            type="password"
-            inputMode="numeric"
-            maxLength={8}
-            value={pin}
-            onChange={(event) => {
-              setPin(event.target.value.replace(/[^0-9]/g, '').slice(0, 8));
-              setError('');
-            }}
-            placeholder="1~8자리 숫자"
-            autoFocus
-          />
-        </label>
+        <div className="mobile-pin-dots">
+          {Array.from({ length: PIN_LENGTH }).map((_, index) => (
+            <span
+              key={index}
+              className={`mobile-pin-dot ${
+                pin.length > index ? 'filled' : ''
+              }`}
+            />
+          ))}
+        </div>
 
         {error && (
           <p className="danger-text">
@@ -58,14 +70,47 @@ function UserGate({ onUnlock }) {
           </p>
         )}
 
-        <button
-          type="submit"
-          className="primary-button"
-          disabled={isUnlocking}
-        >
-          {isUnlocking ? '확인 중...' : '들어가기'}
-        </button>
-      </form>
+        <div className="mobile-pin-keypad">
+          {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((number) => (
+            <button
+              key={number}
+              type="button"
+              className="mobile-pin-key"
+              onClick={() => handlePress(String(number))}
+              disabled={isUnlocking}
+            >
+              {number}
+            </button>
+          ))}
+
+          <div />
+
+          <button
+            type="button"
+            className="mobile-pin-key"
+            onClick={() => handlePress('0')}
+            disabled={isUnlocking}
+          >
+            0
+          </button>
+
+          <button
+            type="button"
+            className="mobile-pin-key del-key"
+            onClick={() => handlePress('del')}
+            disabled={isUnlocking || pin.length === 0}
+            aria-label="삭제"
+          >
+            <div className="del-icon">
+              <span className="del-x">×</span>
+            </div>
+          </button>
+        </div>
+
+        {isUnlocking && (
+          <p className="muted">확인 중...</p>
+        )}
+      </div>
     </div>
   );
 }
