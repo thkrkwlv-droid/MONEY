@@ -71,7 +71,7 @@ function UserGate({ onUnlock }) {
         )}
 
         <div className="mobile-pin-keypad">
-          {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((number) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
             <button
               key={number}
               type="button"
