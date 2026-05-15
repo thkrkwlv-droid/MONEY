@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { formatAmount } from '../utils';
 
 function AmountKeypad({ value, onChange, onClose }) {
@@ -17,7 +18,7 @@ function AmountKeypad({ value, onChange, onClose }) {
     onChange('');
   }
 
-  return (
+  const keypad = (
     <div className="amount-keypad-overlay" onClick={onClose}>
       <div className="amount-keypad-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="amount-keypad-display">
@@ -27,7 +28,12 @@ function AmountKeypad({ value, onChange, onClose }) {
 
         <div className="amount-keypad-grid">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
-            <button key={number} type="button" className="amount-keypad-key" onClick={() => applyDigit(number)}>
+            <button
+              key={number}
+              type="button"
+              className="amount-keypad-key"
+              onClick={() => applyDigit(number)}
+            >
               {number}
             </button>
           ))}
@@ -51,6 +57,8 @@ function AmountKeypad({ value, onChange, onClose }) {
       </div>
     </div>
   );
+
+  return createPortal(keypad, document.body);
 }
 
 export default AmountKeypad;
