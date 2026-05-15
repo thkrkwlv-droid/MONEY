@@ -1472,6 +1472,8 @@ app.put('/api/transactions/:id', asyncHandler(async (req, res) => {
 
     await recordTransactionHistory(client, 'update', previousTransaction, updatedTransaction);
 
+    await recalculateAllAssets(client, ledgerContext);
+    
     return updatedTransaction;
   });
 
@@ -1498,6 +1500,8 @@ app.delete('/api/transactions/:id', asyncHandler(async (req, res) => {
       `delete from transactions where id = $1 and user_id = $2`,
       [req.params.id, ledgerContext.userId],
     );
+
+    await recalculateAllAssets(client, ledgerContext);
 
   });
 
