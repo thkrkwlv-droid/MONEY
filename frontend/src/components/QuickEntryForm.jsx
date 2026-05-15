@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { PAYMENT_METHODS, formatAmount, parseAmount, today } from '../utils';
+import AmountKeypad from './AmountKeypad';
 
 function QuickEntryForm({
   categories,
@@ -15,15 +17,8 @@ function QuickEntryForm({
   onCancelEdit,
   viewMode,
 }) {
+  const [isAmountKeypadOpen, setIsAmountKeypadOpen] = useState(false);
   const recentCategoryIds = new Set(recentCategories.map((item) => item.category_id));
-
-  const handleAmountChange = (event) => {
-    const digits = event.target.value.replace(/[^0-9]/g, '');
-    setForm((prev) => ({
-      ...prev,
-      amountInput: digits ? formatAmount(Number(digits)) : '',
-    }));
-  };
 
   if (viewMode === 'shared') {
     return null;
@@ -88,11 +83,13 @@ function QuickEntryForm({
           <span>금액</span>
           <input
             value={form.amountInput}
-            onChange={(e) => setForm((prev) => ({ ...prev, amountInput: e.target.value }))}
+            onFocus={() => setIsAmountKeypadOpen(true)}
+            onClick={() => setIsAmountKeypadOpen(true)}
+            readOnly
             placeholder="0"
             required
           />
-        
+
           <div className="amount-quick-buttons">
             {[
               { label: '+1만', value: 10000 },
@@ -116,7 +113,7 @@ function QuickEntryForm({
                 {button.label}
               </button>
             ))}
-        
+
             <button
               type="button"
               className="amount-chip reset"
@@ -135,7 +132,7 @@ function QuickEntryForm({
                 value={form.category_id || ''}
                 onChange={(e) => {
                   const selectedCategory = categories.find((category) => category.id === e.target.value);
-          
+
                   setForm((prev) => ({
                     ...prev,
                     category_id: e.target.value,
@@ -157,7 +154,7 @@ function QuickEntryForm({
               </select>
             </label>
           )}
-          
+
           {form.type === 'transfer' ? (
             <>
               <label>
@@ -180,7 +177,7 @@ function QuickEntryForm({
                   ))}
                 </select>
               </label>
-          
+
               <label>
                 <span>입금 자산</span>
                 <select
@@ -223,11 +220,11 @@ function QuickEntryForm({
               </select>
             </label>
           )}
-          
+
           {form.type !== 'transfer' && (
             <label>
               <span>결제수단</span>
-          
+
               <select
                 value={form.payment_method || '체크카드'}
                 onChange={(e) =>
@@ -247,6 +244,7 @@ function QuickEntryForm({
               </select>
             </label>
           )}
+
           <label className="field-span-2">
             <span>메모</span>
             <input
@@ -299,6 +297,19 @@ function QuickEntryForm({
           <li>금액만 바꿔 빠르게 연속 입력할 수 있도록 결제수단과 최근 카테고리를 유지합니다.</li>
         </ul>
       </div>
+
+      {isAmountKeypadOpen && (
+        <AmountKeypad
+          value={form.amountInput}
+          onChange={(nextValue) =>
+            setForm((prev) => ({
+              ...prev,
+              amountInput: nextValue,
+            }))
+          }
+          onClose={() => setIsAmountKeypadOpen(false)}
+        />
+      )}
     </section>
   );
 }
