@@ -2335,6 +2335,19 @@ body {
   }
 }
 
+/* PC 로그인 화면 중앙 정렬 */
+.pin-lock-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pin-lock-card {
+  width: min(420px, 100%);
+}
+
 /* 모바일 PIN 키패드 */
 
 .mobile-pin-card {
