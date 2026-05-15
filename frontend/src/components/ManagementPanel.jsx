@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PAYMENT_METHODS, formatAmount, parseAmount, today, WEEKDAY_NAMES } from '../utils';
+import AmountKeypad from './AmountKeypad';
 
 const ASSET_TYPES = ['입출금', '저축/적금', '현금', '증권', '카드대금', '기타'];
 
@@ -132,7 +133,48 @@ function ManagementPanel({
   );
   
   const [pin, setPin] = useState('');
+  const [activeAmountKeypad, setActiveAmountKeypad] = useState(null);
   const canEdit = viewMode !== 'shared';
+  
+  function openAmountKeypad(target) {
+    setActiveAmountKeypad(target);
+  }
+  
+  function closeAmountKeypad() {
+    setActiveAmountKeypad(null);
+  }
+  
+  function updateAmountValue(nextValue) {
+    if (activeAmountKeypad === 'favorite') {
+      setFavoriteForm((prev) => ({ ...prev, amountInput: nextValue }));
+    }
+  
+    if (activeAmountKeypad === 'fixed') {
+      setFixedForm((prev) => ({ ...prev, amountInput: nextValue }));
+    }
+  
+    if (activeAmountKeypad === 'budget') {
+      setBudgetForm((prev) => ({ ...prev, amountInput: nextValue }));
+    }
+  
+    if (activeAmountKeypad === 'asset') {
+      setAssetForm((prev) => ({ ...prev, balanceInput: nextValue }));
+    }
+  
+    if (activeAmountKeypad === 'targetAsset') {
+      setTargetAssetAmount(nextValue);
+    }
+  }
+  
+  function getActiveAmountValue() {
+    if (activeAmountKeypad === 'favorite') return favoriteForm.amountInput;
+    if (activeAmountKeypad === 'fixed') return fixedForm.amountInput;
+    if (activeAmountKeypad === 'budget') return budgetForm.amountInput;
+    if (activeAmountKeypad === 'asset') return assetForm.balanceInput;
+    if (activeAmountKeypad === 'targetAsset') return targetAssetAmount;
+  
+    return '';
+  }
 
   const visibleTransactionHistories = (transactionHistories || []).slice(0, 3);
 
@@ -360,7 +402,17 @@ function ManagementPanel({
               <option value="income">수입</option>
             </select>
           </label>
-          <label><span>금액</span><input value={favoriteForm.amountInput} onChange={(e) => setFavoriteForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
+          <label>
+            <span>금액</span>
+            <input
+              value={favoriteForm.amountInput}
+              onFocus={() => openAmountKeypad('favorite')}
+              onClick={() => openAmountKeypad('favorite')}
+              readOnly
+              placeholder="0"
+              required
+            />
+          </label>
           <label>
             <span>카테고리</span>
             <select value={favoriteForm.category_id} onChange={(e) => setFavoriteForm((prev) => ({ ...prev, category_id: e.target.value }))}>
@@ -463,7 +515,17 @@ function ManagementPanel({
               <option value="transfer">자산이동</option>
             </select>
           </label>
-          <label><span>금액</span><input value={fixedForm.amountInput} onChange={(e) => setFixedForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
+          <label>
+            <span>금액</span>
+            <input
+              value={fixedForm.amountInput}
+              onFocus={() => openAmountKeypad('fixed')}
+              onClick={() => openAmountKeypad('fixed')}
+              readOnly
+              placeholder="0"
+              required
+            />
+          </label>
           {fixedForm.type === 'transfer' ? (
             <>
               <label>
@@ -665,7 +727,17 @@ function ManagementPanel({
         }}>
           <label><span>기준 월</span><input type="date" value={budgetForm.month_start} onChange={(e) => setBudgetForm((prev) => ({ ...prev, month_start: e.target.value }))} required /></label>
           <label><span>카테고리</span><select value={budgetForm.category_id} onChange={(e) => setBudgetForm((prev) => ({ ...prev, category_id: e.target.value }))}><option value="">전체</option>{expenseCategories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-          <label><span>예산</span><input value={budgetForm.amountInput} onChange={(e) => setBudgetForm((prev) => ({ ...prev, amountInput: e.target.value.replace(/[^0-9]/g, '') ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, ''))) : '' }))} required /></label>
+          <label>
+            <span>예산</span>
+            <input
+              value={budgetForm.amountInput}
+              onFocus={() => openAmountKeypad('budget')}
+              onClick={() => openAmountKeypad('budget')}
+              readOnly
+              placeholder="0"
+              required
+            />
+          </label>
           <div className="actions">
             {canEdit && (
               <>
@@ -763,19 +835,9 @@ function ManagementPanel({
       
             <input
               value={assetForm.balanceInput}
-              onChange={(e) =>
-                setAssetForm((prev) => ({
-                  ...prev,
-                  balanceInput:
-                    e.target.value.replace(/[^0-9]/g, '')
-                      ? formatAmount(
-                          Number(
-                            e.target.value.replace(/[^0-9]/g, '')
-                          )
-                        )
-                      : '',
-                }))
-              }
+              onFocus={() => openAmountKeypad('asset')}
+              onClick={() => openAmountKeypad('asset')}
+              readOnly
               placeholder="예: 1,000,000"
               required
             />
@@ -1074,13 +1136,9 @@ function ManagementPanel({
             <p className="muted">목표 자산 금액을 설정하고 진행률을 확인합니다.</p>
             <input
               value={targetAssetAmount}
-              onChange={(e) =>
-                setTargetAssetAmount(
-                  e.target.value.replace(/[^0-9]/g, '')
-                    ? formatAmount(Number(e.target.value.replace(/[^0-9]/g, '')))
-                    : ''
-                )
-              }
+              onFocus={() => openAmountKeypad('targetAsset')}
+              onClick={() => openAmountKeypad('targetAsset')}
+              readOnly
               placeholder="예: 10,000,000"
             />
             <button type="button" className="secondary-button" onClick={() => onSaveTargetAsset(parseAmount(targetAssetAmount))}>
@@ -1120,6 +1178,13 @@ function ManagementPanel({
           )}
         </div>
       </Section>
+      {activeAmountKeypad && (
+        <AmountKeypad
+          value={getActiveAmountValue()}
+          onChange={updateAmountValue}
+          onClose={closeAmountKeypad}
+        />
+      )}
     </section>
   );
 }
